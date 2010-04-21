@@ -22,6 +22,10 @@ OsmTag::~OsmTag()
 
 void OsmWay::Resolve(IdObjectStore *store)
 {
+    if (!m_nodeRefs)
+    {
+        return;
+    }
 
     unsigned size = m_nodeRefs->GetSize();
 
@@ -46,6 +50,11 @@ void OsmWay::Resolve(IdObjectStore *store)
 void OsmRelation::Resolve(IdObjectStore *nodeStore, IdObjectStore *wayStore)
 {
     OsmWay::Resolve(nodeStore);
+
+    if (!m_wayRefs)
+    {
+        return;
+    }
 
     unsigned size = m_wayRefs->GetSize();
 
