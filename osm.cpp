@@ -181,7 +181,7 @@ void OsmData::EndWay()
 
 void OsmData::StartRelation(unsigned id)
 {
-    assert(m_parsingState == PARSE_RELATION);
+    assert(m_parsingState == PARSE_TOPLEVEL);
 
     m_parsingState = PARSE_RELATION;
 
