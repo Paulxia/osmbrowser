@@ -105,6 +105,7 @@ class IdObjectWithTags
         IdObjectWithTags(unsigned id = 0, IdObjectWithTags *next = NULL)
             : IdObject(id, next)
         {
+            m_tags = NULL;
         }
         
         ~IdObjectWithTags()
