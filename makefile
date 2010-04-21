@@ -7,20 +7,20 @@
 #      - make clean will delete the object files and the executable
 #      - make veryclean will delete all generated files (also core files and *~ and *.bkp)
 
-CPP_OBJECTS_BARE=
+CPP_OBJECTS_BARE= wxmain wxcanvas osmcanvas
 
-C_OBJECTS_BARE = osm parse main
+C_OBJECTS_BARE = osm parse
 
-LIBS= -lexpat
+LIBS= -lexpat `wx-config --libs`
 
-PROGNAME= osmparse
+PROGNAME= wxosmparse
 
 CC=gcc
 CXX=g++
 LD=g++
 
-CFLAGS = -Wall -Werror -O0 -g -D_FILE_OFFSET_BITS=64
-CXXFLAGS =
+CFLAGS = -Wall -Werror -O0 -g -Wno-unused -D_FILE_OFFSET_BITS=64
+CXXFLAGS = $(CFLAGS) `wx-config --cxxflags`
 LDFLAGS = -g
 
 RM=rm -f
