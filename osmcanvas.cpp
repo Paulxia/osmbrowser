@@ -30,28 +30,28 @@ void OsmCanvas::Render()
     int w = m_backBuffer.GetWidth();
     int h = m_backBuffer.GetHeight();
 
-    double xscale = w / (m_data->maxlon - m_data->minlon);
-    double yscale = h / (m_data->maxlat - m_data->minlat);
-    double xoff = m_data->minlon;
-    double yoff = m_data->minlat;
+    double xscale = w / (m_data->m_maxlon - m_data->m_minlon);
+    double yscale = h / (m_data->m_maxlat - m_data->m_minlat);
+    double xoff = m_data->m_minlon;
+    double yoff = m_data->m_minlat;
 
     wxMemoryDC dc;
     dc.SelectObject(m_backBuffer);
     dc.SetPen(*wxBLACK_PEN);
     dc.Clear();
 
-    for (unsigned i = 0; i < m_data->numWays; i++)
+    for (OsmWay *w = static_cast<OsmWay *>(m_data->m_ways.m_content); w ; w = static_cast<OsmWay *>(w->m_next))
     {
-        for (unsigned j = 0; j < m_data->ways[i].numResolvedNodes - 1; j++)
+        for (unsigned j = 0; j < w->m_numResolvedNodes - 1; j++)
         {
-            OSMNODE *node1 = m_data->ways[i].resolvedNodes[j];
-            OSMNODE *node2 = m_data->ways[i].resolvedNodes[j+1];
+            OsmNode *node1 = w->m_resolvedNodes[j];
+            OsmNode *node2 = w->m_resolvedNodes[j+1];
             if (node1 && node2)
             {
-                int x1 = (node1->lon - xoff) * xscale;
-                int y1 = (node1->lat - yoff) * yscale;
-                int x2 = (node2->lon - xoff) * xscale;
-                int y2 = (node2->lat - yoff) * yscale;
+                int x1 = (node1->m_lon - xoff) * xscale;
+                int y1 = (node1->m_lat - yoff) * yscale;
+                int x2 = (node2->m_lon - xoff) * xscale;
+                int y2 = (node2->m_lat - yoff) * yscale;
                 y1 = h - y1;
                 y2 = h - y2;
                 dc.DrawLine(x1,y1, x2,y2);
@@ -64,7 +64,7 @@ void OsmCanvas::Render()
 
 OsmCanvas::~OsmCanvas()
 {
-    osmdata_destroy(m_data);
+    delete m_data;
 }
 
 void OsmCanvas::OnMouseWheel(wxMouseEvent &evt)

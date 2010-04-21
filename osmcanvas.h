@@ -12,7 +12,7 @@ class OsmCanvas
         void Render();
         ~OsmCanvas();
     private:
-        OSMDATA *m_data;
+        OsmData *m_data;
         DECLARE_EVENT_TABLE();
 
         void OnMouseWheel(wxMouseEvent &evt);

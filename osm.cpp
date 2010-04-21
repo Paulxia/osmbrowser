@@ -1,490 +1,246 @@
 #include "osm.h"
-#include <assert.h> // for laye memory allocation checking
+#include <assert.h> // for lazy memory allocation checking
 #include <stdlib.h>
 #include <string.h>
 
-OSMTAG *create_tag(char const *key, char const *value, OSMTAG *tail)
+
+OsmTag::OsmTag(char const *k, char const *v, OsmTag *next)
+    : ListObject(next)
 {
-    OSMTAG *ret = malloc(sizeof(OSMTAG));
-    assert(ret);
+    m_key = strdup(k);
+    m_value = strdup(v);
 
-    ret->key = strdup(key);
-    assert(ret->key);
+    assert(m_key && m_value);
+}
 
-    ret->value = strdup(value);
-    assert(ret->value);
-
-    ret->next = tail;
-
-    return ret;
+OsmTag::~OsmTag()
+{
+    free(m_value);
+    free(m_key);
 }
 
 
-// frees the memory for all tags in the list
-void destroy_tags(OSMTAG *tags)
+void OsmWay::Resolve(IdObjectStore *store)
 {
-    // first clean up the rest of the list
-    if (tags->next)
-        destroy_tags(tags->next);
 
-    free(tags->key);
-    free(tags->value);
-    free(tags);
-}
+    unsigned size = m_nodeRefs->GetSize();
 
-// -----------------------------------------------
+    assert((!m_numResolvedNodes) || (m_numResolvedNodes == size));
 
-// setup a node in the space pointed to. this is a bit rivial, but for consistency with ways and relations it is implemented anyway
-void create_node(OSMNODE *node, unsigned id, double lat, double lon)
-{
-    node->id = id;
-    node->lat = lat;
-    node->lon = lon;
-    node->tags = NULL;
-}
+    m_numResolvedNodes = size;
 
-void node_add_tag(OSMNODE *node, char const *key, char const *value)
-{
-    node->tags = create_tag(key, value, node->tags);
-}
-
-// frees all tags and resets members
-void node_reset(OSMNODE *node)
-{
-    if (node->tags)
-        destroy_tags(node->tags);
-
-    create_node(node, 0, 0.0, 0.0);
-}
-
-// -----------------------------------------------
-
-
-OSMNODEREF *create_noderef(unsigned id, OSMNODEREF *tail)
-{
-    OSMNODEREF *ret = malloc(sizeof(OSMNODEREF));
-    assert(ret);
-    ret->id = id;
-    ret->next = tail;
-    return ret;
-}
-
-// destroys all in the list
-void destroy_noderefs(OSMNODEREF *refs)
-{
-    if (refs->next)
+    if (!m_resolvedNodes)
     {
-        destroy_noderefs(refs->next);
+        m_resolvedNodes = new OsmNode *[size];
     }
 
-    free(refs);
-}
-
-// -----------------------------------------------
-
-// initilize a way in the pointed to memory
-void create_way(OSMWAY *way, unsigned id)
-{
-    way->id = id;
-    way->nodes = NULL;
-    way->resolvedNodes = NULL;
-    way->tags = NULL;
-    way->numResolvedNodes = 0;
-}
-
-
-
-void way_add_tag(OSMWAY *way, char const *key, char const *value)
-{
-    // add the tag to the head of the list
-    way->tags = create_tag(key, value, way->tags);
-}
-
-void way_add_noderef(OSMWAY *way, unsigned id)
-{
-    way->nodes = create_noderef(id, way->nodes);
-}
-
-// frees tags, noderefs and resolvedNodes
-void way_reset(OSMWAY *way)
-{
-    destroy_tags(way->tags);
-    if (way->nodes)
+    IdObject *o = m_nodeRefs;
+    for (unsigned i = 0; i < size; i++)
     {
-        destroy_noderefs(way->nodes);
-    }
-    if (way->resolvedNodes)
-    {
-        free(way->resolvedNodes);
+        m_resolvedNodes[i] = (OsmNode *)store->GetObject(o->m_id);
+        o = (IdObject *)o->m_next;
     }
 
-    create_way(way, 0);
 }
 
-// -----------------------------------------------
-
-OSMWAYREF *create_wayref(unsigned id, OSMWAYREF *tail)
+void OsmRelation::Resolve(IdObjectStore *nodeStore, IdObjectStore *wayStore)
 {
-    OSMWAYREF *ret = malloc(sizeof(OSMWAYREF));
-    assert(ret);
+    OsmWay::Resolve(nodeStore);
 
-    ret->id = id;
-    ret->next = tail;
+    unsigned size = m_wayRefs->GetSize();
 
-    return ret;
-}
+    assert((!m_numResolvedWays) || (m_numResolvedWays == size));
 
+    m_numResolvedWays = size;
 
-void destroy_wayrefs(OSMWAYREF *wayrefs)
-{
-    if (wayrefs->next)
+    if (!m_resolvedWays)
     {
-        destroy_wayrefs(wayrefs->next);
+        m_resolvedWays = new OsmWay *[size];
     }
 
-    free(wayrefs);
-}
-
-// -----------------------------------------------
-
-void create_relation(OSMRELATION *r, unsigned id)
-{
-    r->id = id;
-    r->nodes = NULL;
-    r->ways = NULL;
-    r->tags = NULL;
-
-    r->resolvedNodes = NULL;
-    r->numResolvedNodes = 0;
-    r->resolvedWays = NULL;
-    r->numResolvedWays = 0;
-}
-
-
-void relation_add_noderef(OSMRELATION *r, unsigned id)
-{
-    r->nodes = create_noderef(id, r->nodes);
-}
-
-void relation_add_wayref(OSMRELATION *r, unsigned id)
-{
-    r->ways = create_wayref(id, r->ways);
-}
-
-void relation_add_tag(OSMRELATION *r, char const *k, char const *v)
-{
-    r->tags = create_tag(k, v, r->tags);
-}
-
-void relation_reset(OSMRELATION *r)
-{
-    if (r->tags)
-        destroy_tags(r->tags);
-
-    if (r->nodes)
-        destroy_noderefs(r->nodes);
-
-    if (r->ways)
-        destroy_wayrefs(r->ways);
-
-    if (r->resolvedNodes)
-        free(r->resolvedNodes);
-
-    if (r->resolvedWays)
-        free(r->resolvedWays);
-
-    create_relation(r, 0);
-}
-
-
-// -----------------------------------------------
-// some static helper functions
-
-static OSMNODE *find_node(unsigned id, OSMNODE *nodes, unsigned num)
-{
-    unsigned i;
-
-    // stupid linear search. change to binary search later
-    for (i = 0; i < num ; i++)
+    IdObject *o = m_nodeRefs;
+    for (unsigned i = 0; i < size; i++)
     {
-        if (nodes[i].id == id)
+        m_resolvedWays[i] = (OsmWay *)wayStore->GetObject(o->m_id);
+        o = (IdObject *)o->m_next;
+    }
+
+}
+
+IdObjectStore::IdObjectStore(unsigned bitmaskSize)
+{
+    m_size = 1 << bitmaskSize;
+    m_mask = 0;
+
+    for (unsigned i = 0; i < bitmaskSize; i++)
+        m_mask |= 1 << i;
+
+    m_content = NULL;
+    m_locator = new ObjectList *[m_size];
+
+    memset(m_locator, 0, sizeof(ObjectList *) * m_size);
+    
+}
+
+
+IdObjectStore::~IdObjectStore()
+{
+    for (int i = 0; i < m_size; i++)
+    {
+        if (m_locator[i])
+            delete m_locator[i];
+    }
+
+    delete [] m_locator;
+}
+
+void IdObjectStore::AddObject(IdObject *o)
+{
+    if (!o)
+        return;
+
+    o->m_next = m_content;
+    m_content = o;
+
+    unsigned key = o->m_id & m_mask;
+
+    m_locator[key] = new ObjectList(o, m_locator[key]);
+    
+}
+
+IdObject *IdObjectStore::GetObject(unsigned id)
+{
+    unsigned key = id & m_mask;
+
+    ObjectList *o = m_locator[key];
+
+    while (o)
+    {
+        if (o->m_object->m_id == id)
         {
-            return nodes + i;
+            return o->m_object;
         }
-    }
-
-    return NULL;
-
-}
-
-static OSMWAY *find_way(unsigned id, OSMWAY *ways, unsigned num)
-{
-    unsigned i;
-
-    // stupid linear search. change to binary search later
-    for (i = 0; i < num ; i++)
-    {
-        if (ways[i].id == id)
-        {
-            return ways + i;
-        }
+        o = o->m_next;
     }
 
     return NULL;
 }
 
 
-
-
-// this will scan all noderefs and look up the nodes and fill the resolvedNodes array
-// it returns the number of nodes
-static unsigned resolve_nodes(OSMNODEREF *refs, OSMNODE ***resolvedNodes, OSMNODE *nodes, unsigned numNodes)
+OsmData::OsmData()
+    : m_nodes(16), m_ways(16), m_relations(16)
 {
-    // first count the number of nodes in this way
-    int i;
-    int nodeCount = 0;
-    OSMNODEREF *r;
-
-    if (!refs)
-        return 0;
-
-    for (r = refs; r; r = r->next)
-    {
-        nodeCount++;
-    }
-
-    (*resolvedNodes) = malloc(sizeof(OSMNODE *) * nodeCount);
-
-    // add them in reverse, since they got reversed during adding to the list
-    for (i = nodeCount - 1, r = refs ; i >=0; i--, r = r->next)
-    {
-        (*resolvedNodes)[i] = find_node(r->id, nodes, numNodes);
-    }
-
-    return nodeCount;
+    m_minlat = m_maxlat = m_minlon = m_maxlon = 0;
+    m_parsingState = PARSE_TOPLEVEL;
 }
 
-static unsigned resolve_ways(OSMWAYREF *refs, OSMWAY ***resolvedWays, OSMWAY *ways, unsigned numWays)
+void OsmData::StartNode(unsigned id, double lat, double lon)
 {
-    int i;
-    int wayCount = 0;
-    OSMWAYREF *r;
+    assert(m_parsingState == PARSE_TOPLEVEL);
 
-    if (!refs)
-        return 0;
+    m_parsingState = PARSE_NODE;
 
-    for (r = refs; r; r = r->next)
-    {
-        wayCount++;
-    }
+    OsmNode *node = new OsmNode(id, lat, lon);
 
-    (*resolvedWays) = malloc(sizeof(OSMWAY *) * wayCount);
-
-    // add them in reverse, since they got reversed during adding to the list
-    for (i = wayCount - 1, r = refs ; i >=0; i--, r = r->next)
-    {
-        (*resolvedWays)[i] = find_way(r->id, ways, numWays);
-    }
-
-    return wayCount;
+    m_nodes.AddObject(node);
 }
 
-
-// -----------------------------------------------
-
-#define INITIAL_COUNTS 1024
-
-OSMDATA *create_osmdata()
+void OsmData::EndNode()
 {
-    OSMDATA *ret = malloc(sizeof(OSMDATA));
+    assert(m_parsingState == PARSE_NODE);
 
-    assert(ret);
-
-    ret->numNodes = ret->numWays = ret->numRelations = 0;
-    ret->maxNumNodes = ret->maxNumWays = ret->maxNumRelations = INITIAL_COUNTS;
-
-    ret->nodes = malloc(sizeof(OSMNODE) * INITIAL_COUNTS);
-    ret->ways = malloc(sizeof(OSMWAY) * INITIAL_COUNTS);
-    ret->relations = malloc(sizeof(OSMRELATION) * INITIAL_COUNTS);
-
-    assert(ret->nodes && ret->ways && ret->relations);
-
-    ret->parsingState = PARSE_TOPLEVEL;
-
-    ret->minlat = ret->maxlat = ret->minlon = ret->maxlon = 0;
-
-    return ret;
+    m_parsingState = PARSE_TOPLEVEL;
 }
 
-void osmdata_add_node(OSMDATA *data, unsigned id, double lat, double lon)
+void OsmData::StartWay(unsigned id)
 {
-    assert(data->parsingState == PARSE_TOPLEVEL);
+    assert(m_parsingState == PARSE_TOPLEVEL);
 
-    if (!data->numNodes)
-    {
-        data->minlat = data->maxlat = lat;
-        data->minlon = data->maxlon = lon;
-    }
-    else
-    {
-        if (lat < data->minlat)
-            data->minlat = lat;
+    m_parsingState = PARSE_WAY;
 
-        if (lon < data->minlon)
-            data->minlon = lon;
+    OsmWay *way = new OsmWay(id);
 
-        if (lat > data->maxlat)
-            data->maxlat = lat;
-
-        if (lon > data->maxlon)
-            data->maxlon = lon;
-    }
-
-
-    if (data->numNodes >= data->maxNumNodes)
-    {
-        data->maxNumNodes *=2;
-        data->nodes = realloc(data->nodes, sizeof(OSMNODE) * data->maxNumNodes);
-        assert(data->nodes);
-    }
-
-    create_node(data->nodes + data->numNodes, id, lat, lon);
-    data->parsingState = PARSE_NODE;
+    m_ways.AddObject(way);
 }
 
-void osmdata_end_node(OSMDATA *data)
+void OsmData::EndWay()
 {
-    data->numNodes++;
-    data->parsingState = PARSE_TOPLEVEL;
+    assert(m_parsingState == PARSE_WAY);
+
+    m_parsingState = PARSE_TOPLEVEL;
 }
 
-void osmdata_add_way(OSMDATA *data, unsigned id)
+void OsmData::StartRelation(unsigned id)
 {
-    assert(data->parsingState == PARSE_TOPLEVEL);
+    assert(m_parsingState == PARSE_RELATION);
 
-    if (data->numWays >= data->maxNumWays)
-    {
-        data->maxNumWays *=2;
-        data->ways = realloc(data->ways, sizeof(OSMWAY) * data->maxNumWays);
-        assert(data->ways);
-    }
+    m_parsingState = PARSE_RELATION;
 
-    create_way(data->ways + data->numWays, id);
-    data->parsingState = PARSE_WAY;
+    OsmRelation *rel = new OsmRelation(id);
+
+    m_relations.AddObject(rel);
+
 }
 
-void osmdata_end_way(OSMDATA *data)
+void OsmData::EndRelation()
 {
-    data->numWays++;
-    data->parsingState = PARSE_TOPLEVEL;
-}
+    assert(m_parsingState == PARSE_RELATION);
 
-void osmdata_add_relation(OSMDATA *data, unsigned id)
-{
-    assert(data->parsingState == PARSE_TOPLEVEL);
-
-    if (data->numRelations >= data->maxNumRelations)
-    {
-        data->maxNumRelations *=2;
-        data->relations = realloc(data->relations, sizeof(OSMRELATION) * data->maxNumRelations);
-        assert(data->relations);
-    }
-
-    create_relation(data->relations + data->numRelations, id);
-    data->parsingState = PARSE_RELATION;
-}
-
-void osmdata_end_relation(OSMDATA *data)
-{
-    data->numRelations++;
-    data->parsingState = PARSE_TOPLEVEL;
+    m_parsingState = PARSE_TOPLEVEL;
 }
 
 
-void osmdata_add_noderef(OSMDATA *data, unsigned id)
+void OsmData::AddNodeRef(unsigned id)
 {
-    if (data->parsingState == PARSE_WAY)
+    switch (m_parsingState)
     {
-        way_add_noderef(data->ways + data->numWays, id);
-    }
-    else
-    {
-        assert(data->parsingState == PARSE_RELATION);
-        relation_add_noderef(data->relations + data->numRelations, id);
+        default:
+            abort();
+            break;
+        case PARSE_WAY:
+            ((OsmWay *)m_ways.m_content)->AddNodeRef(id);
+            break;
+        case PARSE_RELATION:
+            ((OsmRelation *)m_relations.m_content)->AddNodeRef(id);
+            break;
     }
 }
 
-
-void osmdata_add_wayref(OSMDATA *data, unsigned id)
+void OsmData::AddWayRef(unsigned id)
 {
-    assert(data->parsingState == PARSE_RELATION);
+    assert(m_parsingState == PARSE_RELATION);
 
-    relation_add_wayref(data->relations + data->numRelations, id);
+    ((OsmRelation *)(m_relations.m_content))->AddWayRef(id);
 }
 
-void osmdata_add_tag(OSMDATA *data, char const *k, char const *v)
+void OsmData::AddTag(char const *key, char const *value)
 {
-    // add the tag to the currenly parsed element
-    switch (data->parsingState)
+    switch(m_parsingState)
     {
-        case PARSE_TOPLEVEL:
+        default:
             abort();
             break;
         case PARSE_NODE:
-            node_add_tag(data->nodes + data->numNodes, k, v);
+            static_cast<IdObjectWithTags *>(m_nodes.m_content)->AddTag(key, value);
             break;
         case PARSE_WAY:
-            way_add_tag(data->ways + data->numWays, k, v);
+            static_cast<IdObjectWithTags *>(m_ways.m_content)->AddTag(key, value);
             break;
         case PARSE_RELATION:
-            relation_add_tag(data->relations + data->numRelations, k, v);
+            static_cast<IdObjectWithTags *>(m_relations.m_content)->AddTag(key, value);
             break;
     }
 }
 
-// call this after parsinf to resolve all refs
-void osmdata_resolve(OSMDATA *data)
+void OsmData::Resolve()
 {
-    int i;
-    for (i = 0; i < data->numWays; i++)
+    for (OsmWay *w = static_cast<OsmWay *>(m_ways.m_content); w; w = static_cast<OsmWay *>(w->m_next))
     {
-        data->ways[i].numResolvedNodes = resolve_nodes(data->ways[i].nodes, &(data->ways[i].resolvedNodes), data->nodes, data->numNodes);
-        // we could free the refs here to regain some memory.
+        w->Resolve(&m_nodes);
     }
-    for (i = 0; i < data->numRelations; i++)
-    {
-        data->relations[i].numResolvedNodes = resolve_nodes(data->relations[i].nodes, &(data->relations[i].resolvedNodes), data->nodes, data->numNodes);
-        data->relations[i].numResolvedWays = resolve_ways(data->relations[i].ways, &(data->relations[i].resolvedWays), data->ways, data->numWays);
-    }
-
-}
-
-void osmdata_destroy(OSMDATA *data)
-{
-    int i;
-
-    for (i = 0; i < data->numNodes; i++)
-    {
-        node_reset(&(data->nodes[i]));
-    }
-
-    free(data->nodes);
     
-    for (i = 0; i < data->numWays; i++)
+    for (OsmRelation *r = static_cast<OsmRelation *>(m_ways.m_content); r; r = static_cast<OsmRelation *>(r->m_next))
     {
-        way_reset(&(data->ways[i]));
+        r->Resolve(&m_nodes, &m_ways);
     }
-
-    free(data->ways);
-
-    for (i = 0; i < data->numRelations; i++)
-    {
-        relation_reset(&(data->relations[i]));
-    }
-
-    free(data->relations);
-
-    free(data);
-    
 }
-

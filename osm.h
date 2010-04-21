@@ -1,171 +1,266 @@
 #ifndef __OSMDATA_H__
 #define __OSMDATA_H__
 
-// overview data layout
-// 
-//     OSMDATA
-//         NODES[numNodes]              (array of nodes)
-//           ID                         (each node in the array)
-//           LAT
-//           LON
-//           TAG->TAG->TAG...           (<- linked list)
-//         WAYS[numWays]
-//           ID
-//           NODEPOINTERS[numNodesInWay]  (array of pointers which point into the array of nodes above)
-//           TAG->TAG->TAG...           (<- linked list)
-//         RELATIONS[numRelations]
-//           ID
-//           WAYPOINTERS[numWaysInRelation] (array of pointers which point into the array of ways above)
-//           NODEPOINTERS[numNodesInRelation] (array of pointers which point into the array of nodes above)
-//           TAG->TAG->TAG...           (<- linked list)
-//
-//           NODEREFS and WAYREFS are used during parsing, but unneeded afterwards
+#include <stdlib.h>
 
-
-// to keep memory management simple (though maybe inefficient) we'll store stuff in linked lists
-// during parsing, since then we don't need to know in advance how much we need to allocate and
-// can avoid slow reallocs
-typedef struct OSMTAG
+class ListObject
 {
-    char *key;
-    char *value;
-    struct OSMTAG *next;
+    public:
+      ListObject(ListObject *next = NULL)
+      {
+        m_next = next;
 
-} OSMTAG;
+        m_size = m_next ? m_next->m_size + 1 : 1;
+      }
+      
+      virtual ~ListObject()
+      {
+      }
+      
+      void DestroyList()
+      {
+        if (m_next)
+        {
+            m_next->DestroyList();
+        }
+        delete this;
+      }
 
-// create a tag (copies the strings, so you can free the afterwards
-OSMTAG *create_tag(char const *key, char const *value, OSMTAG *tail);
+      unsigned GetSize()
+      {
+        return m_size;
+      }
 
-// frees the memory for all tags in the list
-void destroy_tags(OSMTAG *tags);
+      ListObject *m_next;
+      unsigned m_size;
 
-typedef struct OSMNODE
+};
+
+class OsmTag
+    : public ListObject
 {
-    IDOBJECT o;
-    double lat;
-    double lon;
+    public:
+    OsmTag(char const *key, char const *value, OsmTag *next = NULL);
+    ~OsmTag();
+    char *m_key;
+    char *m_value;
+};
 
-    // this is a linked list of tags, the will end up in the reverse order as in the file since we'll add
-    // new tags to the head of the list
-    OSMTAG *tags;
-} OSMNODE;
-
-// setup a node in the space pointed to
-void node_create(OSMNODE *node, unsigned id, double lat, double lon);
-void node_add_tag(OSMNODE *node, char const *key, char const *value);
-
-// frees all tags (and maybe ste lat/lon/id to 0 for debugging?)
-void node_reset(OSMNODE *node);
-
-typedef struct OSMNODEREF
+class IdObject
+    : public ListObject
 {
-    unsigned id;
-    struct OSMNODEREF *next;
-} OSMNODEREF;
+    public:
+        IdObject(unsigned id = 0, IdObject *next = NULL)
+            : ListObject(next)
+        {
+            m_id = id;
+        }
+            
+        unsigned m_id;
+};
 
-OSMNODEREF *create_noderef(unsigned id, OSMNODEREF *tail);
-// destroys all in the list
-void destroy_noderefs(OSMNODEREF *refs);
 
-typedef struct OSMWAY
+
+class IdObjectStore
 {
-    unsigned id;
-    OSMNODEREF *nodes;
-    OSMTAG *tags;
+    private:
+        class ObjectList
+        {
+            public:
+            ObjectList(IdObject *object, ObjectList *tail)
+            {
+                m_next = tail;
+                m_object = object;
+            }
 
-    // this is filled by way_resolve() by looking up
-    // all nodes
-    OSMNODE **resolvedNodes;
-    unsigned numResolvedNodes;
-} OSMWAY;
+            ~ObjectList()
+            {
+                if (m_next)
+                    delete m_next;
+                    
+                delete m_object;
+            }
+            
+            ObjectList *m_next;
+            IdObject *m_object;
+        };
+    public:
+        IdObjectStore(unsigned bitmaskSize);
+        ~IdObjectStore();
 
-// initilize a way in the pointed to memory
-void create_way(OSMWAY *way, unsigned id);
-void way_add_tag(OSMWAY *way, char const *key, char const *value);
-void way_add_noderef(OSMWAY *way, unsigned id);
+        ObjectList **m_locator;
+        IdObject *m_content;
+        int m_size;
+        unsigned m_mask;
 
-// frees tags, noderefs and resolvedNodes
-void way_reset(OSMWAY *way);
+        void AddObject(IdObject *object);
+        IdObject *GetObject(unsigned id);
+};
 
-typedef struct OSMWAYREF
+
+class IdObjectWithTags
+    : public IdObject
 {
-    unsigned id;
-    struct OSMWAYREF *next;
-} OSMWAYREF;
+    public:
+        IdObjectWithTags(unsigned id = 0, IdObjectWithTags *next = NULL)
+            : IdObject(id, next)
+        {
+        }
+        
+        ~IdObjectWithTags()
+        {
+            if (m_tags)
+            {
+                m_tags->DestroyList();
+            }
+        }
 
-OSMWAYREF *create_wayref(unsigned id, OSMWAYREF *tail);
-void destroy_wayrefs(OSMWAYREF *wayrefs);
+        void AddTag(char const *key, char const *value)
+        {
+            m_tags = new OsmTag(key, value, m_tags);
+        }
 
-typedef struct OSMRELATION
+        OsmTag *m_tags;
+};
+
+class OsmNode
+    : public IdObjectWithTags
 {
-    unsigned id;
-    OSMNODEREF *nodes;
-    OSMWAYREF *ways;
-    OSMTAG *tags;
+    public:
 
-    OSMNODE **resolvedNodes;
-    unsigned numResolvedNodes;
-    OSMWAY **resolvedWays;
-    unsigned numResolvedWays;
+    OsmNode(unsigned id, double lat, double lon, OsmNode *next = NULL)
+        : IdObjectWithTags(id, next)
+    {
+        m_lat = lat;
+        m_lon = lon;
+    }
     
-} OSMRELATION;
+    double m_lat;
+    double m_lon;
 
-void create_relation(OSMRELATION *r, unsigned id);
+};
 
-void relation_add_noderef(OSMRELATION *r, unsigned id);
-void relation_add_wayref(OSMRELATION *r, unsigned id);
-void relation_add_tag(OSMRELATION *r, char const *k, char const *v);
 
-void relation_reset(OSMRELATION *r);
-
-typedef enum
+class OsmWay
+    : public IdObjectWithTags
 {
-    PARSE_TOPLEVEL,
-    PARSE_NODE,
-    PARSE_WAY,
-    PARSE_RELATION
-} PARSINGSTATE;
+    public:
 
-typedef struct OSMDATA
+    OsmWay(unsigned id, OsmWay *next = NULL)
+        : IdObjectWithTags(id, next)
+    {
+        m_nodeRefs = NULL;
+        m_resolvedNodes = NULL;
+        m_numResolvedNodes = 0;
+    }
+
+    ~OsmWay()
+    {
+        if (m_nodeRefs)
+        {
+            m_nodeRefs->DestroyList();
+        }
+
+        if (m_resolvedNodes)
+        {
+            delete [] m_resolvedNodes;
+        }
+    }
+    
+
+    void AddNodeRef(unsigned id)
+    {
+        m_nodeRefs = new IdObject(id, m_nodeRefs);
+    }
+
+    IdObject *m_nodeRefs;
+
+    void Resolve(IdObjectStore *store);
+    // these are only valid after calling resolve
+    OsmNode **m_resolvedNodes;
+    unsigned m_numResolvedNodes;
+};
+
+
+class OsmRelation
+    : public OsmWay
 {
-    // since we probably want to sort the nodes/ways, and we're going to have a *lot* of nodes
-    // we don't want the overhead of a linked list, so these are plain arrays
-    // which means we'll have to do a little more bookkeeping memorywise
-    OSMNODE *nodes;
-    unsigned numNodes;
-    unsigned maxNumNodes;
+    public:
+    OsmRelation(unsigned id, OsmRelation *next = NULL)
+        : OsmWay(id, next)
+    {
+        m_wayRefs = NULL;
+        m_resolvedWays = NULL;
+        m_numResolvedWays = 0;
+    }
     
-    OSMWAY *ways;
-    unsigned numWays;
-    unsigned maxNumWays;
-    
-    OSMRELATION *relations;
-    unsigned numRelations;
-    unsigned maxNumRelations;
+    ~OsmRelation()
+    {
+        if (m_wayRefs)
+        {
+            m_wayRefs->DestroyList();
+        }
 
-    PARSINGSTATE parsingState;
+        if (m_resolvedWays)
+        {
+            delete [] m_resolvedWays;
+        }
+    }
+    
+    IdObject *m_wayRefs;
+    void AddWayRef(unsigned id)
+    {
+        m_wayRefs = new IdObject(id, m_wayRefs);
+    }
+    
+    void Resolve(IdObjectStore *nodeStore, IdObjectStore *wayStore);
+
+    OsmWay **m_resolvedWays;
+    unsigned m_numResolvedWays;
+    
+};
+
+
+class OsmData
+{
+    public:
+    OsmData();
+
+    IdObjectStore m_nodes;
+    IdObjectStore m_ways;
+    IdObjectStore m_relations;
+    
 
     // bounding box;
-    double minlat, maxlat, minlon, maxlon;
+    double m_minlat, m_maxlat, m_minlon, m_maxlon;
+
+    // parsing stuff
+    void StartNode(unsigned id, double lat, double lon);
+    void EndNode();
+    void StartWay(unsigned id);
+    void EndWay();
+    void StartRelation(unsigned id);
+    void EndRelation();
+
+    void AddNodeRef(unsigned id);
+    void AddWayRef(unsigned id);
+
+    void AddTag(char const *k, char const *v);
+
+    typedef enum
+    {
+        PARSE_TOPLEVEL,
+        PARSE_NODE,
+        PARSE_WAY,
+        PARSE_RELATION
+    } PARSINGSTATE;
+
+    PARSINGSTATE m_parsingState;
+
+    void Resolve();
     
-} OSMDATA;
+};
 
-OSMDATA *create_osmdata();
-void osmdata_add_node(OSMDATA *data, unsigned id, double lat, double lon);
-void osmdata_end_node(OSMDATA *data);
-void osmdata_add_way(OSMDATA *data, unsigned id);
-void osmdata_end_way(OSMDATA *data);
-void osmdata_add_relation(OSMDATA *data, unsigned id);
-void osmdata_end_relation(OSMDATA *data);
-
-void osmdata_add_noderef(OSMDATA *data, unsigned id);
-void osmdata_add_wayref(OSMDATA *data, unsigned id);
-void osmdata_add_tag(OSMDATA *data, char const *k, char const *v);
-
-// call this after parsinf to resolve all refs
-void osmdata_resolve(OSMDATA *data);
-
-void osmdata_destroy(OSMDATA *data);
 
 
 #endif

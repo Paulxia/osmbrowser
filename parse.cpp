@@ -28,7 +28,7 @@ XML_Char const *get_attribute(const XML_Char *name, const XML_Char **attrs)
 
 void XMLCALL start_element_handler(void *user_data, const XML_Char *name, const XML_Char **attrs)
 {
-    OSMDATA *o = (OSMDATA *)user_data;
+    OsmData *o = (OsmData *)user_data;
 
     if (!strcmp(name, "node"))
     {
@@ -41,7 +41,7 @@ void XMLCALL start_element_handler(void *user_data, const XML_Char *name, const 
 
         assert(latS && lonS && idS); // in case it didn't crash on the strto* functions
 
-        osmdata_add_node(o, id, lat, lon);
+        o->StartNode(id, lat, lon);
 
         
     }
@@ -50,7 +50,7 @@ void XMLCALL start_element_handler(void *user_data, const XML_Char *name, const 
         XML_Char const *idS = get_attribute("id", attrs);
         unsigned id = strtoul(idS, NULL, 0);
         assert(idS);
-        osmdata_add_way(o, id);
+        o->StartWay(id);
 
     }
     else if (!strcmp(name, "relation"))
@@ -59,8 +59,7 @@ void XMLCALL start_element_handler(void *user_data, const XML_Char *name, const 
         unsigned id = strtoul(idS, NULL, 0);
 
         assert(idS);
-        osmdata_add_relation(o, id);
-
+        o->StartRelation(id);
     }
     else if (!strcmp(name, "tag"))
     {
@@ -68,7 +67,7 @@ void XMLCALL start_element_handler(void *user_data, const XML_Char *name, const 
         XML_Char const *value = get_attribute("v", attrs);
         assert(key && value);
 
-        osmdata_add_tag(o, key, value);
+        o->AddTag(key, value);
     }
     else if (!strcmp(name, "nd"))
     {
@@ -76,7 +75,7 @@ void XMLCALL start_element_handler(void *user_data, const XML_Char *name, const 
         unsigned id = strtoul(idS, NULL, 0);
         assert(idS);
 
-        osmdata_add_noderef(o, id);
+        o->AddNodeRef(id);
     }
     else if (!strcmp(name, "member"))
     {
@@ -87,36 +86,36 @@ void XMLCALL start_element_handler(void *user_data, const XML_Char *name, const 
 
         if (!strcmp(type, "node"))
         {
-            osmdata_add_noderef(o, id);
+            o->AddNodeRef(id);
         }
         else if (!strcmp(type, "way"))
         {
-            osmdata_add_wayref(o, id);
+            o->AddWayRef(id);
         }
     }
 }
 
 void XMLCALL end_element_handler(void *user_data, const XML_Char *name)
 {
-    OSMDATA *o = (OSMDATA *)user_data;
+    OsmData *o = (OsmData *)user_data;
 
     if (!strcmp(name, "node"))
     {
-        osmdata_end_node(o);
+        o->EndNode();
     }
     else if (!strcmp(name, "way"))
     {
-        osmdata_end_way(o);
+        o->EndWay();
     }
     else if (!strcmp(name, "relation"))
     {
-        osmdata_end_relation(o);
+        o->EndRelation();
     }
 }
 
 
 
-OSMDATA *parse_osm(FILE *file)
+OsmData *parse_osm(FILE *file)
 {
     char buffer[1024];
     int len;
@@ -125,7 +124,7 @@ OSMDATA *parse_osm(FILE *file)
     // so if expat is configured wrong bail out
     assert(sizeof(XML_Char) == sizeof(char));
 
-    OSMDATA *ret = create_osmdata();
+    OsmData *ret = new OsmData;
 
     XML_Parser xml = XML_ParserCreate(NULL);
 
@@ -142,7 +141,7 @@ OSMDATA *parse_osm(FILE *file)
 
     XML_ParserFree(xml);
 
-    osmdata_resolve(ret);
+    ret->Resolve();
 
     return ret;
 }

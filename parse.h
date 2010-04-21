@@ -6,7 +6,7 @@
 
 
 
-OSMDATA *parse_osm(FILE *file);
+OsmData *parse_osm(FILE *file);
 
 
 #endif
