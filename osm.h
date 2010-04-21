@@ -1,10 +1,6 @@
 #ifndef __OSMDATA_H__
 #define __OSMDATA_H__
 
-#ifdef __cplusplus
- extern "C" {
-#endif
-
 // overview data layout
 // 
 //     OSMDATA
@@ -170,10 +166,6 @@ void osmdata_add_tag(OSMDATA *data, char const *k, char const *v);
 void osmdata_resolve(OSMDATA *data);
 
 void osmdata_destroy(OSMDATA *data);
-
-#ifdef __cplusplus
- }
-#endif
 
 
 #endif

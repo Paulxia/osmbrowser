@@ -4,16 +4,9 @@
 #include "osm.h"
 #include <stdio.h>
 
-#ifdef __cplusplus
- extern "C" {
-#endif
 
 
 OSMDATA *parse_osm(FILE *file);
-
-#ifdef __cplusplus
- }
-#endif
 
 
 #endif
