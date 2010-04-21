@@ -151,6 +151,25 @@ void OsmData::StartNode(unsigned id, double lat, double lon)
 
     OsmNode *node = new OsmNode(id, lat, lon);
 
+
+    if (!m_nodes.m_content)
+    {
+        m_minlat = m_maxlat = lat;
+        m_minlon = m_maxlon = lon;
+    }
+    else
+    {
+        if (lat < m_minlat)
+            m_minlat = lat;
+        else if (lat > m_maxlat)
+            m_maxlat = lat;
+
+        if (lon < m_minlon)
+            m_minlon = lon;
+        else if (lon > m_maxlon)
+            m_maxlon = lon;
+    }
+
     m_nodes.AddObject(node);
 }
 
