@@ -39,10 +39,20 @@ void OsmWay::Resolve(IdObjectStore *store)
     }
 
     IdObject *o = m_nodeRefs;
+    bool resolvedAll = true;
     for (unsigned i = 0; i < size; i++)
     {
         m_resolvedNodes[i] = (OsmNode *)store->GetObject(o->m_id);
         o = (IdObject *)o->m_next;
+
+        if (!m_resolvedNodes[i])
+            resolvedAll = false;
+    }
+
+    if (resolvedAll)
+    {
+        m_nodeRefs->DestroyList();
+       m_nodeRefs = NULL;
     }
 
 }
@@ -67,11 +77,23 @@ void OsmRelation::Resolve(IdObjectStore *nodeStore, IdObjectStore *wayStore)
         m_resolvedWays = new OsmWay *[size];
     }
 
-    IdObject *o = m_nodeRefs;
+    IdObject *o = m_wayRefs;
+    bool resolvedAll = true;
     for (unsigned i = 0; i < size; i++)
     {
         m_resolvedWays[i] = (OsmWay *)wayStore->GetObject(o->m_id);
         o = (IdObject *)o->m_next;
+
+        if (!m_resolvedWays[i])
+        {
+            resolvedAll = false;
+        }
+    }
+
+    if (resolvedAll)
+    {
+        m_wayRefs->DestroyList();
+        m_wayRefs = NULL;
     }
 
 }
@@ -198,6 +220,8 @@ void OsmData::StartWay(unsigned id)
 
 void OsmData::EndWay()
 {
+    static_cast<OsmWay *>(m_ways.m_content)->Resolve(&m_nodes);
+
     assert(m_parsingState == PARSE_WAY);
 
     m_parsingState = PARSE_TOPLEVEL;
@@ -217,6 +241,7 @@ void OsmData::StartRelation(unsigned id)
 
 void OsmData::EndRelation()
 {
+    static_cast<OsmRelation *>(m_relations.m_content)->Resolve(&m_nodes, &m_ways);
     assert(m_parsingState == PARSE_RELATION);
 
     m_parsingState = PARSE_TOPLEVEL;

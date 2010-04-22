@@ -355,7 +355,7 @@ void write_binary(OsmData *d, FILE *f)
         fputc('W', f);
         fwrite(&(w->m_id), sizeof(w->m_id), 1, f);
 
-        if (w->m_nodeRefs)
+        if (w->m_nodeRefs) // if the noderefs still exists, this means the way is not fully resolved, so use the refs
         {
             fwrite(&(w->m_nodeRefs->m_size), sizeof(w->m_nodeRefs->m_size), 1, f);
 
@@ -364,6 +364,16 @@ void write_binary(OsmData *d, FILE *f)
                 fwrite(&(i->m_id), sizeof(i->m_id), 1, f);
             }
             
+        }
+        else if (w->m_resolvedNodes) // the refs don't exists, so the way must be fully resolved
+        {
+            fwrite(&(w->m_numResolvedNodes), sizeof(w->m_numResolvedNodes), 1, f);
+
+            for (unsigned  i = 0; i < w->m_numResolvedNodes; i++)
+            {
+                unsigned id = w->m_resolvedNodes[i]->m_id;
+                fwrite(&(id), sizeof(id), 1, f);
+            }
         }
         else
         {
@@ -390,6 +400,16 @@ void write_binary(OsmData *d, FILE *f)
             }
             
         }
+        else if (r->m_resolvedNodes) // the refs don't exists, so the way must be fully resolved
+        {
+            fwrite(&(r->m_numResolvedNodes), sizeof(r->m_numResolvedNodes), 1, f);
+
+            for (unsigned  i = 0; i < r->m_numResolvedNodes; i++)
+            {
+                unsigned id = r->m_resolvedNodes[i]->m_id;
+                fwrite(&(id), sizeof(id), 1, f);
+            }
+        }
         else
         {
             fwrite(&zero, sizeof(zero), 1, f);
@@ -404,6 +424,16 @@ void write_binary(OsmData *d, FILE *f)
                 fwrite(&(i->m_id), sizeof(i->m_id), 1, f);
             }
             
+        }
+        else if (r->m_resolvedWays) // the refs don't exists, so the way must be fully resolved
+        {
+            fwrite(&(r->m_numResolvedWays), sizeof(r->m_numResolvedWays), 1, f);
+
+            for (unsigned  i = 0; i < r->m_numResolvedWays; i++)
+            {
+                unsigned id = r->m_resolvedWays[i]->m_id;
+                fwrite(&(id), sizeof(id), 1, f);
+            }
         }
         else
         {
