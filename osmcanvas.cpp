@@ -10,7 +10,20 @@ OsmCanvas::OsmCanvas(wxWindow *parent, wxString const &fileName)
     : Canvas(parent)
 {
 
-    FILE *infile = fopen(fileName.mb_str(wxConvUTF8), "r");
+    wxString binFile = fileName;
+    binFile.Append(".cache");
+
+    FILE *infile = fopen(binFile.mb_str(wxConvUTF8), "r");
+
+    if (infile)
+    {
+        printf("found preprocessed file %s, opening that instead.\n", binFile.mb_str(wxConvUTF8) );
+        m_data = parse_binary(infile);
+        fclose(infile);
+        return;
+    }
+
+    infile = fopen(fileName.mb_str(wxConvUTF8), "r");
 
     if (!infile)
     {
@@ -19,7 +32,24 @@ OsmCanvas::OsmCanvas(wxWindow *parent, wxString const &fileName)
         abort();
     }
 
-    m_data = parse_osm(infile);
+    if (fileName.EndsWith(".cache"))
+    {
+        m_data = parse_binary(infile);
+    }
+    else
+    {
+        m_data = parse_osm(infile);
+
+        FILE *outFile = fopen(binFile.mb_str(wxConvUTF8) , "wb");
+
+        if (outFile)
+        {
+        
+            printf("writing cache\n");
+            write_binary(m_data, outFile);
+            fclose(outFile);
+        }
+    }
 
     fclose(infile);
     
