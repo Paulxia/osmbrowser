@@ -72,6 +72,11 @@ void OsmCanvas::Render()
 
     for (OsmWay *w = static_cast<OsmWay *>(m_data->m_ways.m_content); w ; w = static_cast<OsmWay *>(w->m_next))
     {
+        if (!w->HasTag("natural","water"))
+        {
+            continue;
+        }
+    
         for (unsigned j = 0; j < w->m_numResolvedNodes - 1; j++)
         {
             OsmNode *node1 = w->m_resolvedNodes[j];
