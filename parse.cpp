@@ -30,6 +30,21 @@ void XMLCALL start_element_handler(void *user_data, const XML_Char *name, const 
 {
     OsmData *o = (OsmData *)user_data;
 
+    if (!(o->m_elementCount % 1000000))
+    {
+        printf("parsed %uM elements\n", o->m_elementCount/1000000);
+
+        double a,s;
+        int m;
+        o->m_nodes.GetStatistics(&a, &s, &m);
+        printf(" statistics: a %g s %g max %d | ", a, s, m);
+        o->m_ways.GetStatistics(&a, &s, &m);
+        printf("a %g s %g max %d | ", a, s, m);
+        o->m_relations.GetStatistics(&a, &s, &m);
+        printf("a %g s %g max %d \n", a, s, m);
+        
+    }
+
     if (!strcmp(name, "node"))
     {
         XML_Char const *latS = get_attribute("lat", attrs);
