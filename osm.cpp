@@ -297,7 +297,7 @@ void OsmData::Resolve()
         w->Resolve(&m_nodes);
     }
     
-    for (OsmRelation *r = static_cast<OsmRelation *>(m_ways.m_content); r; r = static_cast<OsmRelation *>(r->m_next))
+    for (OsmRelation *r = static_cast<OsmRelation *>(m_relations.m_content); r; r = static_cast<OsmRelation *>(r->m_next))
     {
         r->Resolve(&m_nodes, &m_ways);
     }
