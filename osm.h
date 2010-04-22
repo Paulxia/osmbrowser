@@ -42,6 +42,24 @@ class OsmTag
     public:
     OsmTag(char const *key, char const *value, OsmTag *next = NULL);
     ~OsmTag();
+
+    bool HasTag(char const *key, char const *value = NULL)
+    {
+        if (!strcmp(m_key, key))
+        {
+            if (!value || !strcmp(value,m_value))
+            {
+                return true;
+            }
+
+        }
+        if (!m_next)
+            return false;
+
+        return static_cast<OsmTag *>(m_next)->HasTag(key, value);
+
+    }
+    
     char *m_key;
     char *m_value;
 };
@@ -140,6 +158,11 @@ class IdObjectWithTags
         void AddTag(char const *key, char const *value)
         {
             m_tags = new OsmTag(key, value, m_tags);
+        }
+
+        bool HasTag(char const *key, char const *value = NULL)
+        {
+            return m_tags ? m_tags->HasTag(key, value) : false;
         }
 
         OsmTag *m_tags;
