@@ -2,6 +2,8 @@
 #define __OSMDATA_H__
 
 #include <stdlib.h>
+#include <math.h>
+#include <string.h>
 
 class ListObject
 {
