@@ -8,5 +8,8 @@
 
 OsmData *parse_osm(FILE *file);
 
+OsmData *parse_binary(FILE *file);
+
+void write_binary(OsmData *d, FILE *f);
 
 #endif
