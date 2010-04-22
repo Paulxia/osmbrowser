@@ -134,9 +134,13 @@ OsmData *parse_osm(FILE *file)
     XML_SetUserData(xml, ret);
     
 
+    unsigned count = 0;
     while (0 != (len = fread(buffer, 1, 1024, file)))
     {
         XML_Parse(xml, buffer, len, feof(file));
+        count++;
+        if (!(count % 10240))
+            printf("parsed %uMB\n", count / 1024);
     }
 
     XML_ParserFree(xml);

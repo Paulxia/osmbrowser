@@ -108,6 +108,8 @@ void IdObjectStore::AddObject(IdObject *o)
     if (!o)
         return;
 
+    o->m_size = m_content ? m_content->m_size + 1 : 1;
+
     o->m_next = m_content;
     m_content = o;
 
@@ -141,6 +143,7 @@ OsmData::OsmData()
 {
     m_minlat = m_maxlat = m_minlon = m_maxlon = 0;
     m_parsingState = PARSE_TOPLEVEL;
+    m_elementCount = 0;
 }
 
 void OsmData::StartNode(unsigned id, double lat, double lon)
@@ -171,6 +174,7 @@ void OsmData::StartNode(unsigned id, double lat, double lon)
     }
 
     m_nodes.AddObject(node);
+    m_elementCount++;
 }
 
 void OsmData::EndNode()
@@ -189,6 +193,7 @@ void OsmData::StartWay(unsigned id)
     OsmWay *way = new OsmWay(id);
 
     m_ways.AddObject(way);
+    m_elementCount++;
 }
 
 void OsmData::EndWay()
@@ -207,7 +212,7 @@ void OsmData::StartRelation(unsigned id)
     OsmRelation *rel = new OsmRelation(id);
 
     m_relations.AddObject(rel);
-
+    m_elementCount++;
 }
 
 void OsmData::EndRelation()

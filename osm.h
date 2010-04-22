@@ -71,6 +71,7 @@ class IdObjectStore
             {
                 m_next = tail;
                 m_object = object;
+                m_listSize = tail ? tail->m_listSize + 1 : 1;
             }
 
             ~ObjectList()
@@ -80,13 +81,33 @@ class IdObjectStore
                     
                 delete m_object;
             }
-            
+            unsigned m_listSize;
             ObjectList *m_next;
             IdObject *m_object;
         };
     public:
         IdObjectStore(unsigned bitmaskSize);
         ~IdObjectStore();
+
+        void GetStatistics(double *avgLen, double *standardDeviation, int *maxlen)
+        {
+            unsigned long long s1 = 0, s2 = 0;
+            *maxlen = 0;
+            int c;
+            for (int i = 0; i < m_size; i++)
+            {
+                c = m_locator[i] ? m_locator[i]->m_listSize : 0;
+                s1 += c;
+                s2 += c * c;
+                if (c > *maxlen)
+                {
+                    *maxlen = c;
+                }
+            }
+
+            *avgLen = static_cast<double>(s1) / m_size;
+            *standardDeviation = sqrt(static_cast<double>(s2 * m_size - s1 * s1))/ m_size;
+        }
 
         ObjectList **m_locator;
         IdObject *m_content;
@@ -259,7 +280,7 @@ class OsmData
     PARSINGSTATE m_parsingState;
 
     void Resolve();
-    
+    unsigned m_elementCount;
 };
 
 
