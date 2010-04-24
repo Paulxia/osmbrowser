@@ -16,6 +16,15 @@ class OsmCanvas
         DECLARE_EVENT_TABLE();
 
         void OnMouseWheel(wxMouseEvent &evt);
+        void OnLeftDown(wxMouseEvent &evt);
+        void OnLeftUp(wxMouseEvent &evt);
+        void OnMouseMove(wxMouseEvent &evt);
+
+        double m_scale;
+        double m_xOffset, m_yOffset;
+
+        int m_lastX, m_lastY;
+        bool m_dragging;
 };
 
 

@@ -19,7 +19,7 @@ class Canvas
 		{
 		};
 
-	private:
+	protected:
 		void OnPaint(wxPaintEvent &event);
 		void OnSize(wxSizeEvent &event);
                 // blits backbuffer to dc
