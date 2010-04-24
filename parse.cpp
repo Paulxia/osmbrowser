@@ -324,7 +324,9 @@ static void WriteTags(OsmTag *tags, FILE *f)
         return;
     }
 
-    fwrite(&(tags->m_size), sizeof(tags->m_size), 1, f);
+    unsigned size = tags->GetSize();
+
+    fwrite(&(size), sizeof(size), 1, f);
 
     for (OsmTag *t = tags; t; t = static_cast<OsmTag *>(t->m_next))
     {
@@ -357,7 +359,8 @@ void write_binary(OsmData *d, FILE *f)
 
         if (w->m_nodeRefs) // if the noderefs still exists, this means the way is not fully resolved, so use the refs
         {
-            fwrite(&(w->m_nodeRefs->m_size), sizeof(w->m_nodeRefs->m_size), 1, f);
+            unsigned size = w->m_nodeRefs->GetSize();
+            fwrite(&(size), sizeof(size), 1, f);
 
             for (IdObject *i = w->m_nodeRefs; i; i = static_cast<IdObject *>(i->m_next))
             {
@@ -392,7 +395,8 @@ void write_binary(OsmData *d, FILE *f)
 
         if (r->m_nodeRefs)
         {
-            fwrite(&(r->m_nodeRefs->m_size), sizeof(r->m_nodeRefs->m_size), 1, f);
+            unsigned size = r->m_nodeRefs->GetSize();
+            fwrite(&(size), sizeof(size), 1, f);
 
             for (IdObject *i = r->m_nodeRefs; i; i = static_cast<IdObject *>(i->m_next))
             {
@@ -417,7 +421,8 @@ void write_binary(OsmData *d, FILE *f)
 
         if (r->m_wayRefs)
         {
-            fwrite(&(r->m_wayRefs->m_size), sizeof(r->m_wayRefs->m_size), 1, f);
+            unsigned size = r->m_wayRefs->GetSize();
+            fwrite(&(size), sizeof(size), 1, f);
 
             for (IdObject *i = r->m_wayRefs; i; i = static_cast<IdObject *>(i->m_next))
             {

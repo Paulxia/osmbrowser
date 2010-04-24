@@ -130,7 +130,7 @@ void IdObjectStore::AddObject(IdObject *o)
     if (!o)
         return;
 
-    o->m_size = m_content ? m_content->m_size + 1 : 1;
+//    o->m_size = m_content ? m_content->m_size + 1 : 1;
 
     o->m_next = m_content;
     m_content = o;

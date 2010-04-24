@@ -12,7 +12,7 @@ class ListObject
       {
         m_next = next;
 
-        m_size = m_next ? m_next->m_size + 1 : 1;
+//        m_size = m_next ? m_next->m_size + 1 : 1;
       }
       
       virtual ~ListObject()
@@ -30,11 +30,15 @@ class ListObject
 
       unsigned GetSize()
       {
-        return m_size;
+        if (!m_next)
+            return 1;
+
+        return m_next->GetSize() + 1;
+        //return m_size;
       }
 
       ListObject *m_next;
-      unsigned m_size;
+//      unsigned m_size;
 
 };
 
