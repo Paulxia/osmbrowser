@@ -80,6 +80,12 @@ void OsmCanvas::Render()
     dc.SetPen(*wxBLACK_PEN);
     dc.Clear();
 
+    double xScale = cos(m_yOffset * M_PI / 180) * m_scale;
+
+    double sxMax = m_xOffset + w / xScale;
+    double syMax = m_yOffset + h / xScale;
+    
+
     for (OsmWay *w = static_cast<OsmWay *>(m_data->m_ways.m_content); w ; w = static_cast<OsmWay *>(w->m_next))
     {
         for (unsigned j = 0; j < w->m_numResolvedNodes - 1; j++)
@@ -88,15 +94,25 @@ void OsmCanvas::Render()
             OsmNode *node2 = w->m_resolvedNodes[j+1];
             if (node1 && node2)
             {
-                int x1 = (node1->m_lon - m_xOffset) * m_scale;
-                int y1 = (node1->m_lat - m_yOffset) * m_scale;
-                int x2 = (node2->m_lon - m_xOffset) * m_scale;
-                int y2 = (node2->m_lat - m_yOffset) * m_scale;
-                y1 = h - y1;
-                y2 = h - y2;
+                double lon1 = node1->m_lon;
+                double lon2 = node2->m_lon;
+                double lat1 = node1->m_lat;
+                double lat2 = node2->m_lat;
 
-//                printf("drawing %g %g %g %g s%g %d %d\n",node1->m_lon, node1->m_lat, m_xOffset, m_yOffset, m_scale, x1,y1);
-                dc.DrawLine(x1,y1, x2,y2);
+                if ( (lon1 > m_xOffset && lon1 < sxMax && lat1 > m_yOffset && lat1 < syMax)
+                     || (lon2 > m_xOffset && lon2 < sxMax && lat2 > m_yOffset && lat2 < syMax))
+                {
+                        int x1 = (lon1 - m_xOffset) * xScale;
+                        int y1 = (lat1 - m_yOffset) * m_scale;
+                        int x2 = (lon2 - m_xOffset) * xScale;
+                        int y2 = (lat2 - m_yOffset) * m_scale;
+                        y1 = h - y1;
+                        y2 = h - y2;
+        
+        //                printf("drawing %g %g %g %g s%g %d %d\n",node1->m_lon, node1->m_lat, m_xOffset, m_yOffset, m_scale, x1,y1);
+        
+                        dc.DrawLine(x1,y1, x2,y2);
+                }
             }
             
         }
@@ -111,10 +127,11 @@ OsmCanvas::~OsmCanvas()
 
 void OsmCanvas::OnMouseWheel(wxMouseEvent &evt)
 {
+    double scaleCorrection = cos(m_yOffset * M_PI / 180);
     double w = evt.GetWheelRotation() / 1200.0;
     int h = m_backBuffer.GetHeight();
 
-    double xm = evt.m_x / m_scale;
+    double xm = evt.m_x / (m_scale * scaleCorrection);
     double ym = (h - evt.m_y) / m_scale;
 
     m_xOffset += xm;
@@ -122,7 +139,7 @@ void OsmCanvas::OnMouseWheel(wxMouseEvent &evt)
 
     m_scale = m_scale * (1.0 + w);
 
-    xm = evt.m_x / m_scale;
+    xm = evt.m_x / (m_scale * scaleCorrection);
     ym = (h - evt.m_y) / m_scale;
     m_xOffset -= xm;
     m_yOffset -= ym;
@@ -134,6 +151,8 @@ void OsmCanvas::OnMouseWheel(wxMouseEvent &evt)
 
 void OsmCanvas::OnMouseMove(wxMouseEvent &evt)
 {
+    double scaleCorrection = cos(m_yOffset * M_PI / 180);
+
     if (m_dragging)
     {
         int idx = evt.m_x - m_lastX;
@@ -142,7 +161,7 @@ void OsmCanvas::OnMouseMove(wxMouseEvent &evt)
 
         m_lastX = evt.m_x;
         m_lastY = evt.m_y;
-        double dx = idx / m_scale;
+        double dx = idx / (m_scale * scaleCorrection);
         double dy = idy / m_scale;
 
         m_xOffset -= dx;
