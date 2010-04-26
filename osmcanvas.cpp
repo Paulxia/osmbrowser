@@ -93,17 +93,6 @@ void OsmCanvas::Render()
     bool poly = false;
     for (OsmWay *w = static_cast<OsmWay *>(m_data->m_ways.m_content); w ; w = static_cast<OsmWay *>(w->m_next))
     {
-        for (unsigned j = 0; j < w->m_numResolvedNodes - 1; j++)
-        {
-            OsmNode *node1 = w->m_resolvedNodes[j];
-            OsmNode *node2 = w->m_resolvedNodes[j+1];
-            if (node1 && node2)
-            {
-                double lon1 = node1->m_lon;
-                double lon2 = node2->m_lon;
-                double lat1 = node1->m_lat;
-                double lat2 = node2->m_lat;
-
         dc.SetPen(pen);
         dc.SetBrush(brush);
         if (!poly)
