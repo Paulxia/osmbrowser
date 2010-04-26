@@ -83,16 +83,54 @@ void OsmCanvas::Render()
 
     double sxMax = m_xOffset + w / xScale;
     double syMax = m_yOffset + h / xScale;
-    
 
     wxPen pen;
     wxBrush brush;
 
 
+    OsmTag boundary("boundary"), border("border"), water("natural", "water"), wood("natural", "wood"), park("leisure","park"), building("building"), highway("highway"), cycleway("highway", "cycleway");
 
     bool poly = false;
     for (OsmWay *w = static_cast<OsmWay *>(m_data->m_ways.m_content); w ; w = static_cast<OsmWay *>(w->m_next))
     {
+        if (w->HasTag(boundary) || w->HasTag(border))
+        {
+            continue;
+        }
+    
+        if (w->HasTag(water))
+        {
+            pen.SetColour(0,0,255);
+            brush.SetColour(0,0,255);
+            poly = true;
+        } else if (w->HasTag(wood) || w->HasTag(park))
+        {
+            pen.SetColour(100,255,100);
+            brush.SetColour(180, 255, 180);
+            poly = true;
+        }
+        else if (w->HasTag(building))
+        {
+            pen.SetColour(100,0,0);
+            brush.SetColour(100,0,0);
+            poly = true;
+        }
+        else if (w->HasTag(cycleway))
+        {
+            pen.SetColour(255,100,50);
+            poly = false;
+        }
+        else if (w->HasTag(highway))
+        {
+            pen.SetColour(0,0,0);
+            poly = false;
+        }
+        else
+        {
+            pen.SetColour(180,180,150);
+            poly = false;
+        }
+
         dc.SetPen(pen);
         dc.SetBrush(brush);
         if (!poly)

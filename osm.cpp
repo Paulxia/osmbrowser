@@ -3,20 +3,21 @@
 #include <stdlib.h>
 #include <string.h>
 
+TagStore *OsmTag::m_tagStore = 0;
 
 OsmTag::OsmTag(char const *k, char const *v, OsmTag *next)
     : ListObject(next)
 {
-    m_key = strdup(k);
-    m_value = strdup(v);
+    if (!m_tagStore)
+    {
+        m_tagStore= new TagStore;
+    }
 
-    assert(m_key && m_value);
+    m_index = m_tagStore->FindOrAdd(k, v);
 }
 
 OsmTag::~OsmTag()
 {
-    free(m_value);
-    free(m_key);
 }
 
 

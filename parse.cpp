@@ -330,8 +330,8 @@ static void WriteTags(OsmTag *tags, FILE *f)
 
     for (OsmTag *t = tags; t; t = static_cast<OsmTag *>(t->m_next))
     {
-        fwrite(t->m_key, sizeof(char), strlen(t->m_key) + 1, f);
-        fwrite(t->m_value, sizeof(char), strlen(t->m_value) + 1, f);
+        fwrite(t->GetKey(), sizeof(char), strlen(t->GetKey()) + 1, f);
+        fwrite(t->GetValue(), sizeof(char), strlen(t->GetValue()) + 1, f);
     }
     
 }
