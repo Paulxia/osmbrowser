@@ -60,8 +60,8 @@ OsmCanvas::OsmCanvas(wxWindow *parent, wxString const &fileName)
     }
     fclose(infile);
 
-    double xscale = 800.0 / (m_data->m_maxlon - m_data->m_minlon);
-    double yscale = 800.0 / (m_data->m_maxlon - m_data->m_minlon);
+    double xscale = 1200.0 / (m_data->m_maxlon - m_data->m_minlon);
+    double yscale = 1200.0 / (m_data->m_maxlon - m_data->m_minlon);
     m_scale = xscale < yscale ? xscale : yscale;
     m_xOffset = m_data->m_minlon;
     m_yOffset = m_data->m_minlat;
@@ -88,12 +88,13 @@ void OsmCanvas::Render()
     wxBrush brush;
 
 
-    OsmTag boundary("boundary"), border("border"), water("natural", "water"), wood("natural", "wood"), park("leisure","park"), building("building"), highway("highway"), cycleway("highway", "cycleway");
+    OsmTag boundary("boundary"), border("border"), water("natural", "water"), wood("natural", "wood"), park("leisure","park"), building("building"), highway("highway"), cycleway("highway", "cycleway"), coastline("natural", "coastline");
+    OsmTag natural("natural"), snelweg("highway", "motorway"), trein("railway", "rail"), polygon("type", "multipolygon");
 
     bool poly = false;
     for (OsmWay *w = static_cast<OsmWay *>(m_data->m_ways.m_content); w ; w = static_cast<OsmWay *>(w->m_next))
     {
-        if (w->HasTag(boundary) || w->HasTag(border))
+        if (!( w->HasTag(coastline) || (w->HasTag(boundary) && w->HasTag("admin_level", "2")) || w->HasTag(snelweg)  || w->HasTag(natural) || w->HasTag(trein) ))
         {
             continue;
         }
@@ -120,6 +121,16 @@ void OsmCanvas::Render()
             pen.SetColour(255,100,50);
             poly = false;
         }
+        else if (w->HasTag(snelweg))
+        {
+            pen.SetColour(200,0,0);
+            poly = false;
+        }
+        else if (w->HasTag(trein))
+        {
+            pen.SetColour(155,155,0);
+            poly = false;
+        }
         else if (w->HasTag(highway))
         {
             pen.SetColour(0,0,0);
@@ -128,8 +139,11 @@ void OsmCanvas::Render()
         else
         {
             pen.SetColour(180,180,150);
-            poly = false;
+            brush.SetColour(180,180,150);
+            poly = w->HasTag(polygon);
         }
+
+
 
         dc.SetPen(pen);
         dc.SetBrush(brush);
