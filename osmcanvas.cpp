@@ -77,7 +77,6 @@ void OsmCanvas::Render()
 
     wxMemoryDC dc;
     dc.SelectObject(m_backBuffer);
-    dc.SetPen(*wxBLACK_PEN);
     dc.Clear();
 
     double xScale = cos(m_yOffset * M_PI / 180) * m_scale;
@@ -86,6 +85,12 @@ void OsmCanvas::Render()
     double syMax = m_yOffset + h / xScale;
     
 
+    wxPen pen;
+    wxBrush brush;
+
+
+
+    bool poly = false;
     for (OsmWay *w = static_cast<OsmWay *>(m_data->m_ways.m_content); w ; w = static_cast<OsmWay *>(w->m_next))
     {
         for (unsigned j = 0; j < w->m_numResolvedNodes - 1; j++)
@@ -99,22 +104,62 @@ void OsmCanvas::Render()
                 double lat1 = node1->m_lat;
                 double lat2 = node2->m_lat;
 
-                if ( (lon1 > m_xOffset && lon1 < sxMax && lat1 > m_yOffset && lat1 < syMax)
-                     || (lon2 > m_xOffset && lon2 < sxMax && lat2 > m_yOffset && lat2 < syMax))
+        dc.SetPen(pen);
+        dc.SetBrush(brush);
+        if (!poly)
+        {
+            for (unsigned j = 0; j < w->m_numResolvedNodes - 1; j++)
+            {
+                OsmNode *node1 = w->m_resolvedNodes[j];
+                OsmNode *node2 = w->m_resolvedNodes[j+1];
+            
+                if (node1 && node2)
                 {
-                        int x1 = (lon1 - m_xOffset) * xScale;
-                        int y1 = (lat1 - m_yOffset) * m_scale;
-                        int x2 = (lon2 - m_xOffset) * xScale;
-                        int y2 = (lat2 - m_yOffset) * m_scale;
-                        y1 = h - y1;
-                        y2 = h - y2;
-        
-        //                printf("drawing %g %g %g %g s%g %d %d\n",node1->m_lon, node1->m_lat, m_xOffset, m_yOffset, m_scale, x1,y1);
-        
-                        dc.DrawLine(x1,y1, x2,y2);
+                    double lon1 = node1->m_lon;
+                    double lon2 = node2->m_lon;
+                    double lat1 = node1->m_lat;
+                    double lat2 = node2->m_lat;
+            
+            
+                    if ( (lon1 > m_xOffset && lon1 < sxMax && lat1 > m_yOffset && lat1 < syMax)
+                         || (lon2 > m_xOffset && lon2 < sxMax && lat2 > m_yOffset && lat2 < syMax))
+                    {
+                            int x1 = (lon1 - m_xOffset) * xScale;
+                            int y1 = (lat1 - m_yOffset) * m_scale;
+                            int x2 = (lon2 - m_xOffset) * xScale;
+                            int y2 = (lat2 - m_yOffset) * m_scale;
+                            y1 = h - y1;
+                            y2 = h - y2;
+            
+            //                printf("drawing %g %g %g %g s%g %d %d\n",node1->m_lon, node1->m_lat, m_xOffset, m_yOffset, m_scale, x1,y1);
+            
+                            dc.DrawLine(x1,y1, x2,y2);
+                    }
                 }
             }
+        }
+        else
+        {
+            StartPolygon();
+            for (unsigned j = 0; j < w->m_numResolvedNodes; j++)
+            {
+                OsmNode *node1 = w->m_resolvedNodes[j];
             
+                if (node1)
+                {
+                    double lon1 = node1->m_lon;
+                    double lat1 = node1->m_lat;
+            
+            
+                    int x1 = (lon1 - m_xOffset) * xScale;
+                    int y1 = (lat1 - m_yOffset) * m_scale;
+                    y1 = h - y1;
+            
+                    AddPoint(x1,y1);
+                }
+                
+            }
+            EndPolygon(&dc);
         }
     }
     
