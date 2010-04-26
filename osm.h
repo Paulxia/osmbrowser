@@ -8,6 +8,136 @@
 //#include <stdio.h>
 #include <wx/hashmap.h>
 
+
+class DRect
+{
+    public:
+        DRect()
+        {
+            m_x = m_y = m_h = 0;
+            m_w = -1;
+        }
+        
+        DRect(double minX, double minY, double maxX = -1, double maxY = 0)
+        {
+            assert(maxX > minX);
+            assert(maxY > minY);
+            m_x = minX;
+            m_y = minY;
+            m_w = maxX - minX;
+            m_h = maxY - minY;
+
+            
+        }
+
+        bool Empty()
+        {
+            return m_w < 0;
+        }
+
+        void Include(double x, double y)
+        {
+            if (m_w < 0)
+            {
+                m_x = x;
+                m_y = y;
+                m_w = m_h = 0;
+            }
+            else
+            {
+                if (x < m_x)
+                {
+                    m_w += m_x - x;
+                    m_x = x;
+                }
+                else if (x > m_x + m_w)
+                {
+                    m_w = x - m_x;
+                }
+
+                if (y < m_y)
+                {
+                    m_h += m_y - y;
+                    m_y = y;
+                }
+                else if (y > m_y + m_h)
+                {
+                    m_h = y - m_y;
+                }
+            }
+        }
+
+        double Right() const
+        {
+            return m_x + m_w;
+        }
+
+        void SetRight(double x)
+        {
+            m_w = x - m_x;
+        }
+
+        double Top() const
+        {
+            return m_y + m_h;
+        }
+
+        void SetTop(double y)
+        {
+            m_h = y - m_y;
+        }
+
+        void SetSize(double w, double h)
+        {
+            m_w = w;
+            m_h = h;
+        }
+
+        double m_x, m_y;
+        double m_w, m_h;
+
+        void Add(DRect const &other)
+        {
+            Include(other.m_x, other.m_y);
+            Include(other.Right(), other.Top());
+        }
+        
+        void InterSect(DRect const &other)
+        {
+            double r = Right();
+            double ro = other.Right();
+            double t = Top();
+            double to = other.Top();
+
+            if (ro < m_x || to < m_y || other.m_x > r || other.m_y > t)
+            {
+                m_x = m_y = m_h = 0;
+                m_w = -1;
+            }
+            else
+            {
+                m_x = m_x > other.m_x ? m_x : other.m_x;
+                m_y = m_y > other.m_y ? m_y : other.m_y;
+
+                SetRight(r < ro ? r : ro);
+                SetTop(t < to ? t : to);
+            }
+        }
+
+
+        bool Contains(double x, double y)
+        {
+            return (x >= m_x && x < m_x + m_w && y >= m_y && y < m_y + m_h);
+        }
+
+        bool OverLaps(DRect const &other)
+        {
+            return (Contains(other.m_x, other.m_y) || Contains(other.Right(), other.Top()));
+        }
+        
+};
+
+
 class ListObject
 {
     public:
@@ -567,7 +697,19 @@ class OsmWay
             delete [] m_resolvedNodes;
         }
     }
-    
+
+    DRect GetBB()
+    {
+        DRect ret;
+        for (unsigned i = 0; i < m_numResolvedNodes; i++)
+        {
+            if (m_resolvedNodes[i])
+            {
+                ret.Include(m_resolvedNodes[i]->m_lon, m_resolvedNodes[i]->m_lat);
+            }
+        }
+        return ret;
+    }
 
     void AddNodeRef(unsigned id)
     {
@@ -593,6 +735,20 @@ class OsmRelation
         m_wayRefs = NULL;
         m_resolvedWays = NULL;
         m_numResolvedWays = 0;
+    }
+
+
+    DRect GetBB()
+    {
+        DRect ret = OsmWay::GetBB();
+        for (unsigned i = 0; i < m_numResolvedWays; i++)
+        {
+            if (m_resolvedWays[i])
+            {
+                ret.Add(m_resolvedWays[i]->GetBB());
+            }
+        }
+        return ret;
     }
     
     ~OsmRelation()
