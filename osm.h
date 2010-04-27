@@ -20,14 +20,10 @@ class DRect
         
         DRect(double minX, double minY, double maxX = -1, double maxY = 0)
         {
-            assert(maxX > minX);
-            assert(maxY > minY);
             m_x = minX;
             m_y = minY;
             m_w = maxX - minX;
             m_h = maxY - minY;
-
-            
         }
 
         bool Empty()
@@ -104,6 +100,11 @@ class DRect
         
         void InterSect(DRect const &other)
         {
+            if (m_w < 0)
+            {
+                return;
+            }
+        
             double r = Right();
             double ro = other.Right();
             double t = Top();
@@ -127,11 +128,16 @@ class DRect
 
         bool Contains(double x, double y)
         {
+            if (m_w < 0)
+            {
+                return false;
+            }
             return (x >= m_x && x < m_x + m_w && y >= m_y && y < m_y + m_h);
         }
 
         bool OverLaps(DRect const &other)
         {
+            
             return (Contains(other.m_x, other.m_y) || Contains(other.Right(), other.Top()));
         }
         
