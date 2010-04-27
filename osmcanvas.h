@@ -53,6 +53,7 @@ class TileList
        OsmTile *m_tile;
 };
 
+class OsmCanvas;
 
 class TileRenderer
 {
@@ -100,56 +101,7 @@ class TileRenderer
             
         }
 
-        void RenderTiles(double lon, double lat, double scale, wxBitmap *onto)
-        {
-            double xScale = cos(lat * M_PI / 180) * scale;
-
-            double w = onto->GetWidth() / xScale;
-            double h = onto->GetHeight() / scale;
-
-            DRect bb(lon, lat);
-            bb.SetSize(w, h);
-
-            TileList *renderedTiles = NULL;
-
-            for (OsmTile *t = m_tiles; t; t = static_cast<OsmTile *>(t->m_next))
-            {
-                if (t->OverLaps(bb))
-                {
-                    for (TileWay *w = t->m_ways; w; w = static_cast<TileWay *>(w->m_next))
-                    {
-                        bool already = false;
-                        // loop over all tiles that contaoin this way
-                        for (TileList *a = w->m_tiles; a; a = static_cast<TileList *>(a->m_next))
-                        {
-                            // loop over all tiles already drawn
-                            for (TileList *o = renderedTiles; o ; static_cast<TileList *>(o->m_next))
-                            {
-                                 if (o->m_tile->m_id == a->m_tile->m_id)
-                                 {
-                                    already = true;
-                                    break;
-                                 }
-                            }
-
-                            if (already)
-                            {
-                                break;
-                            }
-                        }
-
-                        if (!already)
-                        {
-                            // render w->m_way using rendering rules
-                        }
-                        
-                    }
-
-                    renderedTiles = new TileList(t, renderedTiles);
-                }
-                
-            }
-        }
+        void RenderTiles(OsmCanvas *canvas, double lon, double lat, double w, double h);
 
     private:
         OsmTile *m_tiles;
@@ -164,7 +116,11 @@ class OsmCanvas
         OsmCanvas(wxWindow *parent, wxString const &fileName);
         void Render();
 
+        // with explicit colours
         void RenderWay(OsmWay *w, wxColour lineColour, bool polygon = false, wxColour fillColour = wxColour(255,255,55));
+
+        // with default colours
+        void RenderWay(OsmWay *w);
         ~OsmCanvas();
     private:
         OsmData *m_data;
@@ -219,6 +175,8 @@ class OsmCanvas
         wxPoint m_polygonPoints[MAXPOLYCOUNT];
         int m_polygonCount;
         bool m_polygonVisible;
+
+        TileRenderer *m_tileRenderer;
         
 };
 

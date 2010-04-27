@@ -13,6 +13,54 @@ BEGIN_EVENT_TABLE(OsmCanvas, Canvas)
 END_EVENT_TABLE()
 
 
+void TileRenderer::RenderTiles(OsmCanvas *canvas, double lon, double lat, double w, double h)
+{
+
+    DRect bb(lon, lat);
+    bb.SetSize(w, h);
+
+    TileList *renderedTiles = NULL;
+
+    for (OsmTile *t = m_tiles; t; t = static_cast<OsmTile *>(t->m_next))
+    {
+        if (t->OverLaps(bb))
+        {
+            for (TileWay *w = t->m_ways; w; w = static_cast<TileWay *>(w->m_next))
+            {
+                bool already = false;
+                // loop over all tiles that contaoin this way
+                for (TileList *a = w->m_tiles; a; a = static_cast<TileList *>(a->m_next))
+                {
+                    // loop over all tiles already drawn
+                    for (TileList *o = renderedTiles; o ; static_cast<TileList *>(o->m_next))
+                    {
+                         if (o->m_tile->m_id == a->m_tile->m_id)
+                         {
+                            already = true;
+                            break;
+                         }
+                    }
+
+                    if (already)
+                    {
+                        break;
+                    }
+                }
+
+                if (!already)
+                {
+                    canvas->RenderWay(w->m_way);
+                }
+                
+            }
+
+            renderedTiles = new TileList(t, renderedTiles);
+        }
+        
+    }
+}
+
+
 OsmCanvas::OsmCanvas(wxWindow *parent, wxString const &fileName)
     : Canvas(parent)
 {
@@ -67,8 +115,20 @@ OsmCanvas::OsmCanvas(wxWindow *parent, wxString const &fileName)
     m_yOffset = m_data->m_minlat;
 
     m_lastX = m_lastY = 0;
+
+    m_tileRenderer = new TileRenderer(m_data->m_minlon, m_data->m_minlat, m_data->m_maxlon, m_data->m_maxlat, .02, .02);
+
+    m_tileRenderer->AddWays(static_cast<OsmWay *>(m_data->m_ways.m_content));
     
 }
+
+
+// render using default colours. should plug in rule engine here
+void OsmCanvas::RenderWay(OsmWay *w)
+{
+    RenderWay(w, wxColour(0,0,0), false, wxColour(255,255,255));
+}
+
 
 void OsmCanvas::RenderWay(OsmWay *w, wxColour lineColour, bool poly, wxColour fillColour)
 {
@@ -152,77 +212,87 @@ void OsmCanvas::Render()
 {
     int w = m_backBuffer.GetWidth();
     int h = m_backBuffer.GetHeight();
-
-    wxMemoryDC dc;
-    dc.SelectObject(m_backBuffer);
-    dc.Clear();
-
     double xScale = cos(m_yOffset * M_PI / 180) * m_scale;
 
-    double sxMax = m_xOffset + w / xScale;
-    double syMax = m_yOffset + h / xScale;
-
-    wxColour lineC(0,0,0), fillC(255,255,255);
-
-    OsmTag boundary("boundary"), border("border"), water("natural", "water"), wood("natural", "wood"), park("leisure","park"), building("building"), highway("highway"), cycleway("highway", "cycleway"), coastline("natural", "coastline");
-    OsmTag natural("natural"), snelweg("highway", "motorway"), trein("railway", "rail"), polygon("type", "multipolygon");
-
-    bool poly = false;
-    for (OsmWay *w = static_cast<OsmWay *>(m_data->m_ways.m_content); w ; w = static_cast<OsmWay *>(w->m_next))
+    if (m_tileRenderer)
     {
-        if (!( w->HasTag(coastline) || (w->HasTag(boundary) && w->HasTag("admin_level", "2")) || w->HasTag(snelweg)  || w->HasTag(natural) || w->HasTag(trein) ))
-        {
-//            continue;
-        }
-    
-        if (w->HasTag(water))
-        {
-            lineC.Set(0,0,255);
-            fillC.Set(0,0,255);
-            poly = true;
-        } else if (w->HasTag(wood) || w->HasTag(park))
-        {
-            lineC.Set(100,255,100);
-            fillC.Set(180, 255, 180);
-            poly = true;
-        }
-        else if (w->HasTag(building))
-        {
-            lineC.Set(100,0,0);
-            fillC.Set(100,0,0);
-            poly = true;
-        }
-        else if (w->HasTag(cycleway))
-        {
-            lineC.Set(255,100,50);
-            poly = false;
-        }
-        else if (w->HasTag(snelweg))
-        {
-            lineC.Set(200,0,0);
-            poly = false;
-        }
-        else if (w->HasTag(trein))
-        {
-            lineC.Set(155,155,0);
-            poly = false;
-        }
-        else if (w->HasTag(highway))
-        {
-            lineC.Set(0,0,0);
-            poly = false;
-        }
-        else
-        {
-            lineC.Set(180,180,150);
-            fillC.Set(180,180,150);
-            poly = w->HasTag(polygon);
-        }
-
-        RenderWay(w, lineC, poly, fillC);
-
-
+        m_tileRenderer->RenderTiles(this, m_xOffset, m_yOffset, w / xScale, h / m_scale);
     }
+    else
+    {
+    
+    
+        wxMemoryDC dc;
+        dc.SelectObject(m_backBuffer);
+        dc.Clear();
+    
+
+        double sxMax = m_xOffset + w / xScale;
+        double syMax = m_yOffset + h / m_scale;
+    
+        wxColour lineC(0,0,0), fillC(255,255,255);
+    
+        OsmTag boundary("boundary"), border("border"), water("natural", "water"), wood("natural", "wood"), park("leisure","park"), building("building"), highway("highway"), cycleway("highway", "cycleway"), coastline("natural", "coastline");
+        OsmTag natural("natural"), snelweg("highway", "motorway"), trein("railway", "rail"), polygon("type", "multipolygon");
+    
+        bool poly = false;
+        for (OsmWay *w = static_cast<OsmWay *>(m_data->m_ways.m_content); w ; w = static_cast<OsmWay *>(w->m_next))
+        {
+            if (!( w->HasTag(coastline) || (w->HasTag(boundary) && w->HasTag("admin_level", "2")) || w->HasTag(snelweg)  || w->HasTag(natural) || w->HasTag(trein) ))
+            {
+    //            continue;
+            }
+        
+            if (w->HasTag(water))
+            {
+                lineC.Set(0,0,255);
+                fillC.Set(0,0,255);
+                poly = true;
+            } else if (w->HasTag(wood) || w->HasTag(park))
+            {
+                lineC.Set(100,255,100);
+                fillC.Set(180, 255, 180);
+                poly = true;
+            }
+            else if (w->HasTag(building))
+            {
+                lineC.Set(100,0,0);
+                fillC.Set(100,0,0);
+                poly = true;
+            }
+            else if (w->HasTag(cycleway))
+            {
+                lineC.Set(255,100,50);
+                poly = false;
+            }
+            else if (w->HasTag(snelweg))
+            {
+                lineC.Set(200,0,0);
+                poly = false;
+            }
+            else if (w->HasTag(trein))
+            {
+                lineC.Set(155,155,0);
+                poly = false;
+            }
+            else if (w->HasTag(highway))
+            {
+                lineC.Set(0,0,0);
+                poly = false;
+            }
+            else
+            {
+                lineC.Set(180,180,150);
+                fillC.Set(180,180,150);
+                poly = w->HasTag(polygon);
+            }
+    
+            RenderWay(w, lineC, poly, fillC);
+    
+    
+        }
+    }
+
 }
 
 OsmCanvas::~OsmCanvas()
