@@ -42,7 +42,7 @@ void TileRenderer::RenderTiles(OsmCanvas *canvas, double lon, double lat, double
         return;
     }
 
-    bool fast = visibleTiles->GetSize() > 10;
+    bool fast = visibleTiles->GetSize() > 16;
     
     for (TileList *tl = visibleTiles; tl; tl = static_cast<TileList *>(tl->m_next))
     {
@@ -151,7 +151,7 @@ OsmCanvas::OsmCanvas(wxWindow *parent, wxString const &fileName)
 
     m_lastX = m_lastY = 0;
 
-    m_tileRenderer = new TileRenderer(m_data->m_minlon, m_data->m_minlat, m_data->m_maxlon, m_data->m_maxlat, .04, .03);
+    m_tileRenderer = new TileRenderer(m_data->m_minlon, m_data->m_minlat, m_data->m_maxlon, m_data->m_maxlat, .05, .04);
 
     m_tileRenderer->AddWays(static_cast<OsmWay *>(m_data->m_ways.m_content));
 
@@ -159,6 +159,7 @@ OsmCanvas::OsmCanvas(wxWindow *parent, wxString const &fileName)
 //    m_fastTags = new OsmTag("boundary");
     m_fastTags = new OsmTag("highway", "motorway", m_fastTags);
     m_fastTags = new OsmTag("natural", "coastline", m_fastTags);
+    m_fastTags = new OsmTag("natural", "water", m_fastTags);
     m_fastTags = new OsmTag("railway", "rail", m_fastTags);
     
 }
