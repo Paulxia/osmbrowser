@@ -414,7 +414,7 @@ class TagStore
     char const *GetValue(TagIndex index)
     {
         assert(index.m_keyIndex >=0 && index.m_keyIndex < m_numKeys);
-        assert(index.m_valueIndex >= 1 && index.m_valueIndex < m_numValues[index.m_keyIndex]);
+        assert(index.m_valueIndex >= 1 && index.m_valueIndex - 1 < m_numValues[index.m_keyIndex]);
 
         return m_values[index.m_keyIndex][index.m_valueIndex - 1];
     }
