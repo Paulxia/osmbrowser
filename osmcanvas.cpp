@@ -48,8 +48,10 @@ void TileRenderer::RenderTiles(OsmCanvas *canvas, double lon, double lat, double
     {
         OsmTile *t = tl->m_tile;
 //        printf("render tile %u  (%g,%g)-(%g, %g) bb=(%g, %g)-(%g, %g)\n", t->m_id, t->m_x, t->m_y, t->m_x + t->m_w, t->m_y + t->m_h, lon, lat, lon+w, lat+h);
+//        canvas->DrawTileOutline(t, 200,200,200);
         if (t->OverLaps(bb))
         {
+//            canvas->DrawTileOutline(t, 200,0,0);
 //            printf("    is visible\n");
 //            printf("rendering tile %u\n", t->m_id);
             for (TileWay *w = t->m_ways; w; w = static_cast<TileWay *>(w->m_next))
@@ -161,6 +163,67 @@ OsmCanvas::OsmCanvas(wxWindow *parent, wxString const &fileName)
     m_fastTags = new OsmTag("natural", "coastline", m_fastTags);
     m_fastTags = new OsmTag("natural", "water", m_fastTags);
     m_fastTags = new OsmTag("railway", "rail", m_fastTags);
+    
+}
+
+
+void OsmCanvas::Rect(wxString const &text, double lon1, double lat1, double lon2, double lat2, int border, int r, int g, int b)
+{
+    int width = m_backBuffer.GetWidth();
+    int height = m_backBuffer.GetHeight();
+    wxMemoryDC dc;
+    dc.SelectObject(m_backBuffer);
+    double xScale = cos(m_yOffset * M_PI / 180) * m_scale;
+
+    double sxMax = m_xOffset + width / xScale;
+    double syMax = m_yOffset + height / xScale;
+
+    wxPen pen;
+
+    pen.SetColour(r,g,b);
+
+    dc.SetPen(pen);
+    dc.SetBrush(*wxTRANSPARENT_BRUSH);
+
+    int x1 = (lon1 - m_xOffset) * xScale;
+    int y1 = (lat1 - m_yOffset) * m_scale;
+
+    int x2 = (lon2 - m_xOffset) * xScale;
+    int y2 = (lat2 - m_yOffset) * m_scale;
+
+    y1 = height - y1;
+    y2 = height - y2;
+
+    int xd = x1 < x2 ? x1 : x2;
+    int yd = y1 < y2 ? y1 : y2;
+
+    int wd = x2 - x1;
+    int hd = y1 - y2;
+
+    if (wd < 0)
+        wd = -wd;
+
+    if (hd < 0)
+        hd = -hd;
+    
+    
+
+    dc.DrawRectangle(xd+border, yd-border, wd - 2*border, hd - 2*border);
+
+    dc.DrawText(text, xd + wd /2, yd + hd /2);
+
+}
+
+void OsmCanvas::DrawTileOutline(OsmTile *t, int r, int g, int b)
+{
+
+
+    wxString id;
+    
+    id.Printf(wxT("tile: %u"), t->m_id);
+
+    Rect(id, t->m_x, t->m_y, t->m_x + t->m_w, t->m_y + t->m_h, 3, r,g,b);
+
     
 }
 
