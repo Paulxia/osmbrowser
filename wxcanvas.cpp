@@ -46,9 +46,13 @@ void Canvas::OnSize(wxSizeEvent &WXUNUSED(event))
 void Canvas::OnPaint(wxPaintEvent &WXUNUSED(event))
 {
 //    int i,j;
-        Render();
         wxPaintDC dc(this);
         dc.Clear();
+
+        if (!IsShownOnScreen())
+            return;
+
+        Render();
 
         Draw(&dc);
         

@@ -10,12 +10,9 @@ class TileWay
     : public ListObject
 {
     public:
-        TileWay(OsmWay *way, TileList *allTiles, TileWay *next)
-            : ListObject(next)
-        {
-            m_way = way;
-            m_tiles = allTiles;
-        }
+        TileWay(OsmWay *way, TileList *allTiles, TileWay *next);
+
+        ~TileWay();
         
         OsmWay *m_way; // the way to render
         TileList *m_tiles; // all tiles containing this way, to prevent multiple redraws
@@ -30,10 +27,17 @@ class OsmTile
             : IdObject(id, next), DRect(minLon, minLat, maxLon, maxLat)
         {
             m_ways = NULL;
+//            printf("created tile %u %g,%g  %g-%g\n", id, minLon, minLat, maxLon, maxLat);
+        }
+
+        ~OsmTile()
+        {
+            m_ways->DestroyList();
         }
 
         void AddWay(OsmWay *way, TileList *allTiles)
         {
+//            printf("tile %u add way %u\n", m_id, way->m_id);
             m_ways = new TileWay(way, allTiles, m_ways);
         }
 
@@ -49,8 +53,25 @@ class TileList
         : ListObject(m_next)
        {
            m_tile = t;
+           m_refCount = 0;
        }
+
+       void Ref()
+       {
+            m_refCount++;
+       }
+
+       void UnRef()
+       {
+            m_refCount--;
+            if (m_refCount <=0)
+            {
+                DestroyList();
+            }
+       }
+       
        OsmTile *m_tile;
+       int m_refCount;
 };
 
 class OsmCanvas;
@@ -63,22 +84,51 @@ class TileRenderer
             m_tiles = NULL;
             unsigned id = 0;
             // build a list of empty tiles;
-            for (double i = minLon; i < maxLon; i += dLon)
+
+            m_xNum = static_cast<int>((maxLon - minLon) / dLon) + 1;
+            m_yNum = static_cast<int>((maxLon - minLon) / dLon) + 1;
+            m_minLon = minLon;
+            m_w = maxLon - minLon;
+            m_minLat = minLat;
+            m_h = maxLat - minLat;
+            m_dLon = dLon;
+            m_dLat = dLat;
+            
+            m_tileArray = new OsmTile **[m_xNum];
+            for (unsigned x = 0; x < m_xNum; x++)
             {
-                for (double j = minLat; j < maxLat; j += dLat)
+                m_tileArray[x] = new OsmTile *[m_yNum];
+                for (unsigned y = 0; y < m_yNum; y++)
                 {
-                    m_tiles = new OsmTile(id++, i, j, i+ dLon, j + dLat, m_tiles);
+                    m_tiles = new OsmTile(id++, m_minLon + x * dLon , m_minLat + y * dLat, m_minLon + (x + 1) * dLon, m_minLat + (y+1) * dLat, m_tiles);
+                    m_tileArray[x][y] = m_tiles;
                 }
             }
+            printf("created %u tiles\n", id);
+         }
+
+        ~TileRenderer()
+        {
+            m_tiles->DestroyList();
+            for (unsigned x = 0; x < m_xNum; x++)
+            {
+                delete [] m_tileArray[x];
+            }
+
+            delete [] m_tileArray;
         }
-
-
 
         void AddWays(OsmWay *ways)
         {
+            unsigned count = 0;
             for (OsmWay *w = ways; w ; w = static_cast<OsmWay *>(w->m_next))
             {
+                count++;
                 AddWay(w);
+                if (!(count % 10000))
+                {
+                    printf("sorted %uK ways\n", count / 1000);
+                }
             }
         }
 
@@ -86,18 +136,54 @@ class TileRenderer
         {
             DRect bb = way->GetBB();
             
-            TileList *allTiles = NULL;
-            for (OsmTile *t = m_tiles; t; t = static_cast<OsmTile *>(t->m_next))
-            {
-                if (t->OverLaps(bb))
-                {
-                    allTiles = new TileList(t, allTiles);
-                }
-            }
+            TileList *allTiles = GetTiles(bb);
+            assert(allTiles);
             for (TileList *l = allTiles; l; l = static_cast<TileList *>(l->m_next))
             {
                 l->m_tile->AddWay(way, allTiles);
             }
+            allTiles->UnRef();
+            
+        }
+
+        TileList *GetTiles(DRect box)
+        {
+            return GetTiles(box.m_x, box.m_y, box.m_x + box.m_w, box.m_y + box.m_h);
+        }
+
+        // you should UnRef the list when done, which will destroy it if not used anymore
+        TileList *GetTiles(double minLon, double minLat, double maxLon, double maxLat)
+        {
+            int xMin = static_cast<int>((minLon - m_minLon) / m_dLon);
+            int xMax = static_cast<int>((maxLon - m_minLon) / m_dLon);
+            int yMin = static_cast<int>((minLat - m_minLat) / m_dLat);
+            int yMax = static_cast<int>((maxLat - m_minLat) / m_dLat);
+
+            if (xMin < 0) xMin = 0;
+            if (xMin > static_cast<int>(m_xNum - 1)) xMin = static_cast<int>(m_xNum - 1);
+            if (yMin < 0) yMin = 0;
+            if (yMin > static_cast<int>(m_yNum - 1)) yMin = static_cast<int>(m_yNum - 1);
+
+            if (xMax < 0) xMax = 0;
+            if (xMax > static_cast<int>(m_xNum - 1)) xMax = static_cast<int>(m_xNum - 1);
+            if (yMax < 0) yMax = 0;
+            if (yMax > static_cast<int>(m_yNum - 1)) yMax = static_cast<int>(m_yNum - 1);
+
+            TileList *ret = NULL;
+
+            for (int x = xMin; x <= xMax; x++)
+            {
+                for (int y = yMin; y <= yMax; y++)
+                {
+                    ret = new TileList(m_tileArray[x][y], ret);
+                }
+            }
+
+            if (ret)
+                ret->Ref();
+
+            return ret;
+
             
         }
 
@@ -105,7 +191,9 @@ class TileRenderer
 
     private:
         OsmTile *m_tiles;
-
+        OsmTile ***m_tileArray;
+        unsigned m_xNum, m_yNum;
+        double m_minLon, m_minLat, m_w, m_h, m_dLon, m_dLat;
         
 };
 
@@ -120,7 +208,7 @@ class OsmCanvas
         void RenderWay(OsmWay *w, wxColour lineColour, bool polygon = false, wxColour fillColour = wxColour(255,255,55));
 
         // with default colours
-        void RenderWay(OsmWay *w);
+        void RenderWay(OsmWay *w, bool fast);
         ~OsmCanvas();
     private:
         OsmData *m_data;
@@ -177,6 +265,8 @@ class OsmCanvas
         bool m_polygonVisible;
 
         TileRenderer *m_tileRenderer;
+
+        OsmTag *m_fastTags;
         
 };
 

@@ -13,6 +13,20 @@ BEGIN_EVENT_TABLE(OsmCanvas, Canvas)
 END_EVENT_TABLE()
 
 
+TileWay::TileWay(OsmWay *way, TileList *allTiles, TileWay *next)
+    : ListObject(next)
+{
+    m_way = way;
+    m_tiles = allTiles;
+    m_tiles->Ref();
+}
+
+TileWay::~TileWay()
+{
+    m_tiles->UnRef();
+}
+
+
 void TileRenderer::RenderTiles(OsmCanvas *canvas, double lon, double lat, double w, double h)
 {
 
@@ -21,18 +35,32 @@ void TileRenderer::RenderTiles(OsmCanvas *canvas, double lon, double lat, double
 
     TileList *renderedTiles = NULL;
 
-    for (OsmTile *t = m_tiles; t; t = static_cast<OsmTile *>(t->m_next))
+    TileList *visibleTiles = GetTiles(bb);
+
+    if (!visibleTiles)
     {
+        return;
+    }
+
+    bool fast = visibleTiles->GetSize() > 10;
+    
+    for (TileList *tl = visibleTiles; tl; tl = static_cast<TileList *>(tl->m_next))
+    {
+        OsmTile *t = tl->m_tile;
+//        printf("render tile %u  (%g,%g)-(%g, %g) bb=(%g, %g)-(%g, %g)\n", t->m_id, t->m_x, t->m_y, t->m_x + t->m_w, t->m_y + t->m_h, lon, lat, lon+w, lat+h);
         if (t->OverLaps(bb))
         {
+//            printf("    is visible\n");
+//            printf("rendering tile %u\n", t->m_id);
             for (TileWay *w = t->m_ways; w; w = static_cast<TileWay *>(w->m_next))
             {
+//                printf("    render way %u\n",   w->m_way->m_id);
                 bool already = false;
                 // loop over all tiles that contaoin this way
                 for (TileList *a = w->m_tiles; a; a = static_cast<TileList *>(a->m_next))
                 {
                     // loop over all tiles already drawn
-                    for (TileList *o = renderedTiles; o ; static_cast<TileList *>(o->m_next))
+                    for (TileList *o = renderedTiles; o ; o = static_cast<TileList *>(o->m_next))
                     {
                          if (o->m_tile->m_id == a->m_tile->m_id)
                          {
@@ -43,21 +71,28 @@ void TileRenderer::RenderTiles(OsmCanvas *canvas, double lon, double lat, double
 
                     if (already)
                     {
+//                        printf("    already drawn %u\n",   w->m_way->m_id);
                         break;
                     }
                 }
 
                 if (!already)
                 {
-                    canvas->RenderWay(w->m_way);
+                    canvas->RenderWay(w->m_way, fast);
                 }
                 
             }
-
             renderedTiles = new TileList(t, renderedTiles);
+
         }
         
     }
+
+    if (visibleTiles)
+        visibleTiles->DestroyList();
+
+    if (renderedTiles)
+        renderedTiles->DestroyList();
 }
 
 
@@ -116,16 +151,38 @@ OsmCanvas::OsmCanvas(wxWindow *parent, wxString const &fileName)
 
     m_lastX = m_lastY = 0;
 
-    m_tileRenderer = new TileRenderer(m_data->m_minlon, m_data->m_minlat, m_data->m_maxlon, m_data->m_maxlat, .02, .02);
+    m_tileRenderer = new TileRenderer(m_data->m_minlon, m_data->m_minlat, m_data->m_maxlon, m_data->m_maxlat, .04, .03);
 
     m_tileRenderer->AddWays(static_cast<OsmWay *>(m_data->m_ways.m_content));
+
+    m_fastTags = NULL;
+//    m_fastTags = new OsmTag("boundary");
+    m_fastTags = new OsmTag("highway", "motorway", m_fastTags);
+    m_fastTags = new OsmTag("natural", "coastline", m_fastTags);
+    m_fastTags = new OsmTag("railway", "rail", m_fastTags);
     
 }
 
 
 // render using default colours. should plug in rule engine here
-void OsmCanvas::RenderWay(OsmWay *w)
+void OsmCanvas::RenderWay(OsmWay *w, bool fast)
 {
+
+    if (fast)
+    {
+        bool draw = false;
+        for (OsmTag *t = m_fastTags; t; t = static_cast<OsmTag *>(t->m_next))
+        {
+            if (w->HasTag(*t))
+                draw = true;
+        }
+
+        if (!draw)
+        {
+            return;
+        }
+    }
+    
     RenderWay(w, wxColour(0,0,0), false, wxColour(255,255,255));
 }
 
@@ -213,6 +270,9 @@ void OsmCanvas::Render()
     int w = m_backBuffer.GetWidth();
     int h = m_backBuffer.GetHeight();
     double xScale = cos(m_yOffset * M_PI / 180) * m_scale;
+    wxMemoryDC dc;
+    dc.SelectObject(m_backBuffer);
+    dc.Clear();
 
     if (m_tileRenderer)
     {
@@ -220,13 +280,6 @@ void OsmCanvas::Render()
     }
     else
     {
-    
-    
-        wxMemoryDC dc;
-        dc.SelectObject(m_backBuffer);
-        dc.Clear();
-    
-
         double sxMax = m_xOffset + w / xScale;
         double syMax = m_yOffset + h / m_scale;
     
