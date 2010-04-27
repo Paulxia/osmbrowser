@@ -73,6 +73,14 @@ class TileRenderer
 
 
 
+        void AddWays(OsmWay *ways)
+        {
+            for (OsmWay *w = ways; w ; w = static_cast<OsmWay *>(w->m_next))
+            {
+                AddWay(w);
+            }
+        }
+
         void AddWay(OsmWay *way)
         {
             DRect bb = way->GetBB();
