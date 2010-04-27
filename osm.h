@@ -26,9 +26,15 @@ class DRect
             m_h = maxY - minY;
         }
 
-        bool Empty()
+        bool IsEmpty()
         {
             return m_w < 0;
+        }
+
+        void MakeEmpty()
+        {
+            m_x = m_y = m_h = 0;
+            m_w = -1;
         }
 
         void Include(double x, double y)
@@ -92,17 +98,26 @@ class DRect
         double m_x, m_y;
         double m_w, m_h;
 
-        void Add(DRect const &other)
+        DRect Add(DRect const &other)
         {
-            Include(other.m_x, other.m_y);
-            Include(other.Right(), other.Top());
+            DRect ret = *this;
+            if (other.m_w < 0)
+            {
+                return ret;
+            }
+            
+            ret.Include(other.m_x, other.m_y);
+            ret.Include(other.Right(), other.Top());
+            return ret;
         }
         
-        void InterSect(DRect const &other)
+        DRect InterSect(DRect const &other)
         {
-            if (m_w < 0)
+            DRect ret = *this;
+            if (m_w < 0 || other.m_w < 0)
             {
-                return;
+                ret.MakeEmpty();
+                return ret;;
             }
         
             double r = Right();
@@ -110,19 +125,19 @@ class DRect
             double t = Top();
             double to = other.Top();
 
-            if (ro < m_x || to < m_y || other.m_x > r || other.m_y > t)
+            if (ro < ret.m_x || to < ret.m_y || other.m_x > r || other.m_y > t)
             {
-                m_x = m_y = m_h = 0;
-                m_w = -1;
+                ret.MakeEmpty();
             }
             else
             {
-                m_x = m_x > other.m_x ? m_x : other.m_x;
-                m_y = m_y > other.m_y ? m_y : other.m_y;
+                ret.m_x = ret.m_x > other.m_x ? ret.m_x : other.m_x;
+                ret.m_y = ret.m_y > other.m_y ? ret.m_y : other.m_y;
 
-                SetRight(r < ro ? r : ro);
-                SetTop(t < to ? t : to);
+                ret.SetRight(r < ro ? r : ro);
+                ret.SetTop(t < to ? t : to);
             }
+            return ret;
         }
 
 
@@ -138,7 +153,7 @@ class DRect
         bool OverLaps(DRect const &other)
         {
             
-            return (Contains(other.m_x, other.m_y) || Contains(other.Right(), other.Top()));
+            return !(InterSect(other).IsEmpty());
         }
         
 };
