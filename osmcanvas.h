@@ -86,11 +86,11 @@ class TileRenderer
             // build a list of empty tiles;
 
             m_xNum = static_cast<int>((maxLon - minLon) / dLon) + 1;
-            m_yNum = static_cast<int>((maxLon - minLon) / dLon) + 1;
+            m_yNum = static_cast<int>((maxLat - minLat) / dLat) + 1;
             m_minLon = minLon;
-            m_w = maxLon - minLon;
+            m_w = m_xNum * dLon;
             m_minLat = minLat;
-            m_h = maxLat - minLat;
+            m_h = m_yNum *dLat;
             m_dLon = dLon;
             m_dLat = dLat;
             
