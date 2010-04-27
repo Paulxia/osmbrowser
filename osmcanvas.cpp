@@ -70,6 +70,84 @@ OsmCanvas::OsmCanvas(wxWindow *parent, wxString const &fileName)
     
 }
 
+void OsmCanvas::RenderWay(OsmWay *w, wxColour lineColour, bool poly, wxColour fillColour)
+{
+    int width = m_backBuffer.GetWidth();
+    int height = m_backBuffer.GetHeight();
+    wxMemoryDC dc;
+    dc.SelectObject(m_backBuffer);
+    double xScale = cos(m_yOffset * M_PI / 180) * m_scale;
+
+    double sxMax = m_xOffset + width / xScale;
+    double syMax = m_yOffset + height / xScale;
+
+    wxPen pen;
+    wxBrush brush;
+
+    pen.SetColour(lineColour);
+    brush.SetColour(fillColour);
+
+    dc.SetPen(pen);
+    dc.SetBrush(brush);
+    if (!poly)
+    {
+        for (unsigned j = 0; j < w->m_numResolvedNodes - 1; j++)
+        {
+            OsmNode *node1 = w->m_resolvedNodes[j];
+            OsmNode *node2 = w->m_resolvedNodes[j+1];
+        
+            if (node1 && node2)
+            {
+                double lon1 = node1->m_lon;
+                double lon2 = node2->m_lon;
+                double lat1 = node1->m_lat;
+                double lat2 = node2->m_lat;
+        
+        
+                if ( (lon1 > m_xOffset && lon1 < sxMax && lat1 > m_yOffset && lat1 < syMax)
+                     || (lon2 > m_xOffset && lon2 < sxMax && lat2 > m_yOffset && lat2 < syMax))
+                {
+                        int x1 = (lon1 - m_xOffset) * xScale;
+                        int y1 = (lat1 - m_yOffset) * m_scale;
+                        int x2 = (lon2 - m_xOffset) * xScale;
+                        int y2 = (lat2 - m_yOffset) * m_scale;
+                        y1 = height - y1;
+                        y2 = height - y2;
+        
+        //                printf("drawing %g %g %g %g s%g %d %d\n",node1->m_lon, node1->m_lat, m_xOffset, m_yOffset, m_scale, x1,y1);
+        
+                        dc.DrawLine(x1,y1, x2,y2);
+                }
+            }
+        }
+    }
+    else
+    {
+        StartPolygon();
+        for (unsigned j = 0; j < w->m_numResolvedNodes; j++)
+        {
+            OsmNode *node1 = w->m_resolvedNodes[j];
+        
+            if (node1)
+            {
+                double lon1 = node1->m_lon;
+                double lat1 = node1->m_lat;
+        
+        
+                int x1 = (lon1 - m_xOffset) * xScale;
+                int y1 = (lat1 - m_yOffset) * m_scale;
+                y1 = height - y1;
+        
+                AddPoint(x1,y1);
+            }
+            
+        }
+        EndPolygon(&dc);
+    }
+}
+
+
+
 void OsmCanvas::Render()
 {
     int w = m_backBuffer.GetWidth();
@@ -84,9 +162,7 @@ void OsmCanvas::Render()
     double sxMax = m_xOffset + w / xScale;
     double syMax = m_yOffset + h / xScale;
 
-    wxPen pen;
-    wxBrush brush;
-
+    wxColour lineC(0,0,0), fillC(255,255,255);
 
     OsmTag boundary("boundary"), border("border"), water("natural", "water"), wood("natural", "wood"), park("leisure","park"), building("building"), highway("highway"), cycleway("highway", "cycleway"), coastline("natural", "coastline");
     OsmTag natural("natural"), snelweg("highway", "motorway"), trein("railway", "rail"), polygon("type", "multipolygon");
@@ -96,114 +172,57 @@ void OsmCanvas::Render()
     {
         if (!( w->HasTag(coastline) || (w->HasTag(boundary) && w->HasTag("admin_level", "2")) || w->HasTag(snelweg)  || w->HasTag(natural) || w->HasTag(trein) ))
         {
-            continue;
+//            continue;
         }
     
         if (w->HasTag(water))
         {
-            pen.SetColour(0,0,255);
-            brush.SetColour(0,0,255);
+            lineC.Set(0,0,255);
+            fillC.Set(0,0,255);
             poly = true;
         } else if (w->HasTag(wood) || w->HasTag(park))
         {
-            pen.SetColour(100,255,100);
-            brush.SetColour(180, 255, 180);
+            lineC.Set(100,255,100);
+            fillC.Set(180, 255, 180);
             poly = true;
         }
         else if (w->HasTag(building))
         {
-            pen.SetColour(100,0,0);
-            brush.SetColour(100,0,0);
+            lineC.Set(100,0,0);
+            fillC.Set(100,0,0);
             poly = true;
         }
         else if (w->HasTag(cycleway))
         {
-            pen.SetColour(255,100,50);
+            lineC.Set(255,100,50);
             poly = false;
         }
         else if (w->HasTag(snelweg))
         {
-            pen.SetColour(200,0,0);
+            lineC.Set(200,0,0);
             poly = false;
         }
         else if (w->HasTag(trein))
         {
-            pen.SetColour(155,155,0);
+            lineC.Set(155,155,0);
             poly = false;
         }
         else if (w->HasTag(highway))
         {
-            pen.SetColour(0,0,0);
+            lineC.Set(0,0,0);
             poly = false;
         }
         else
         {
-            pen.SetColour(180,180,150);
-            brush.SetColour(180,180,150);
+            lineC.Set(180,180,150);
+            fillC.Set(180,180,150);
             poly = w->HasTag(polygon);
         }
 
+        RenderWay(w, lineC, poly, fillC);
 
 
-        dc.SetPen(pen);
-        dc.SetBrush(brush);
-        if (!poly)
-        {
-            for (unsigned j = 0; j < w->m_numResolvedNodes - 1; j++)
-            {
-                OsmNode *node1 = w->m_resolvedNodes[j];
-                OsmNode *node2 = w->m_resolvedNodes[j+1];
-            
-                if (node1 && node2)
-                {
-                    double lon1 = node1->m_lon;
-                    double lon2 = node2->m_lon;
-                    double lat1 = node1->m_lat;
-                    double lat2 = node2->m_lat;
-            
-            
-                    if ( (lon1 > m_xOffset && lon1 < sxMax && lat1 > m_yOffset && lat1 < syMax)
-                         || (lon2 > m_xOffset && lon2 < sxMax && lat2 > m_yOffset && lat2 < syMax))
-                    {
-                            int x1 = (lon1 - m_xOffset) * xScale;
-                            int y1 = (lat1 - m_yOffset) * m_scale;
-                            int x2 = (lon2 - m_xOffset) * xScale;
-                            int y2 = (lat2 - m_yOffset) * m_scale;
-                            y1 = h - y1;
-                            y2 = h - y2;
-            
-            //                printf("drawing %g %g %g %g s%g %d %d\n",node1->m_lon, node1->m_lat, m_xOffset, m_yOffset, m_scale, x1,y1);
-            
-                            dc.DrawLine(x1,y1, x2,y2);
-                    }
-                }
-            }
-        }
-        else
-        {
-            StartPolygon();
-            for (unsigned j = 0; j < w->m_numResolvedNodes; j++)
-            {
-                OsmNode *node1 = w->m_resolvedNodes[j];
-            
-                if (node1)
-                {
-                    double lon1 = node1->m_lon;
-                    double lat1 = node1->m_lat;
-            
-            
-                    int x1 = (lon1 - m_xOffset) * xScale;
-                    int y1 = (lat1 - m_yOffset) * m_scale;
-                    y1 = h - y1;
-            
-                    AddPoint(x1,y1);
-                }
-                
-            }
-            EndPolygon(&dc);
-        }
     }
-    
 }
 
 OsmCanvas::~OsmCanvas()

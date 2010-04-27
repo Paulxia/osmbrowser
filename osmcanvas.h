@@ -155,6 +155,8 @@ class OsmCanvas
     public:
         OsmCanvas(wxWindow *parent, wxString const &fileName);
         void Render();
+
+        void RenderWay(OsmWay *w, wxColour lineColour, bool polygon = false, wxColour fillColour = wxColour(255,255,55));
         ~OsmCanvas();
     private:
         OsmData *m_data;
