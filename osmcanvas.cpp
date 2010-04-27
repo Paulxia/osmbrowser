@@ -338,6 +338,8 @@ void OsmCanvas::Render()
     dc.SelectObject(m_backBuffer);
     dc.Clear();
 
+    Rect(wxEmptyString, m_data->m_minlon, m_data->m_minlat, m_data->m_maxlon, m_data->m_maxlat, 0, 0,255,0);
+
     if (m_tileRenderer)
     {
         m_tileRenderer->RenderTiles(this, m_xOffset, m_yOffset, w / xScale, h / m_scale);
