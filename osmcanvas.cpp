@@ -18,7 +18,8 @@ TileWay::TileWay(OsmWay *way, TileList *allTiles, TileWay *next)
 {
     m_way = way;
     m_tiles = allTiles;
-    m_tiles->Ref();
+    if (m_tiles)
+        m_tiles->Ref();
 }
 
 TileWay::~TileWay()

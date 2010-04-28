@@ -140,7 +140,7 @@ class TileRenderer
             assert(allTiles);
             for (TileList *l = allTiles; l; l = static_cast<TileList *>(l->m_next))
             {
-                l->m_tile->AddWay(way, allTiles);
+                l->m_tile->AddWay(way, allTiles->m_next ? allTiles : NULL);
             }
             allTiles->UnRef();
             
