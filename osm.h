@@ -262,6 +262,35 @@ class TagStore
         
     }
 
+    unsigned GetNumKeys()
+    {
+        return m_numKeys;
+    }
+    
+    char const *GetKey(unsigned keyIndex)
+    {
+        assert(keyIndex >=0);
+        assert(keyIndex < m_numKeys);
+        return m_keys[keyIndex];
+    }
+
+    unsigned GetNumValues(unsigned keyIndex)
+    {
+        assert(keyIndex >=0);
+        assert(keyIndex  < m_numKeys);
+        
+        return m_numValues[keyIndex];
+    }
+
+    char const *GetValue(unsigned keyIndex, unsigned valueIndex)
+    {
+        assert(keyIndex >=0);
+        assert(keyIndex  < m_numKeys);
+        assert(valueIndex >=0);
+        assert(valueIndex < m_numValues[keyIndex]);
+
+        return m_values[keyIndex][valueIndex];
+    }
 
     void GrowKeys(unsigned amount)
     {
@@ -532,7 +561,17 @@ class OsmTag
 {
     public:
     OsmTag(char const *key, char const *value = NULL, OsmTag *next = NULL);
+    OsmTag(bool noCreate, char const *key, char const *value = NULL, OsmTag *next = NULL);
+    OsmTag(OsmTag const &other);
     ~OsmTag();
+
+
+    static bool KeyExists(char const *key);
+
+    bool Valid()
+    {
+        return m_index.Valid();
+    }
 
     TagIndex Index() { return m_index; }
 

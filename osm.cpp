@@ -45,6 +45,18 @@ OsmTag::~OsmTag()
 {
 }
 
+bool OsmTag::KeyExists(char const *key)
+{
+    if (!m_tagStore)
+    {
+        m_tagStore= new TagStore;
+    }
+
+    TagIndex t = m_tagStore->Find(key, NULL);
+
+    return t.Valid();
+}
+
 
 void OsmWay::Resolve(IdObjectStore *store)
 {

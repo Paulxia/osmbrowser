@@ -27,10 +27,8 @@ TileWay::~TileWay()
     m_tiles->UnRef();
 }
 
-
 void TileRenderer::RenderTiles(OsmCanvas *canvas, double lon, double lat, double w, double h)
 {
-
     DRect bb(lon, lat);
     bb.SetSize(w, h);
 
