@@ -214,6 +214,12 @@ class OsmCanvas
         void Rect(wxString const &text, double lon1, double lat1, double lon2, double lat2, int border, int r, int g, int b);
         void DrawTileOutline(OsmTile *t, int r, int g, int b);
         ~OsmCanvas();
+
+        void Redraw()
+        {
+            Render();
+            Draw();
+        }
     private:
         OsmData *m_data;
         DECLARE_EVENT_TABLE();
