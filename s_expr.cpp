@@ -1,8 +1,8 @@
-#include "logic.h"
+#include "s_expr.h"
 
 
 
-ExpressionParser::OPERATOR ExpressionParser::MatchOperator(char const *s, int *pos)
+ExpressionParser::E_OPERATOR ExpressionParser::MatchOperator(char const *s, int *pos)
 {
 	char const *operators[] =
 	{
@@ -14,12 +14,14 @@ ExpressionParser::OPERATOR ExpressionParser::MatchOperator(char const *s, int *p
 	{
 		if (!strncasecmp(operators[i], s + *pos, strlen(operators[i])))
 		{
-			*pos += strlen(operators[i]);
-			return static_cast<ExpressionParser::OPERATOR>(i);
+			int len = strlen(operators[i]);
+			SetColor(*pos, *pos + len, EC_OPERATOR);
+			*pos += len;
+			return static_cast<ExpressionParser::E_OPERATOR>(i);
 		}
 	}
 
-	return static_cast<ExpressionParser::OPERATOR>(count);
+	return static_cast<ExpressionParser::E_OPERATOR>(count);
 }
 
 
@@ -66,6 +68,8 @@ char *ExpressionParser::ParseString(char const *f, int *pos, char *logError, uns
 
 	p++;
 
+	SetColor(*pos, p, EC_STRING);
+
 	*pos = p;
     
 	return buffers[curBuffer];
@@ -97,7 +101,7 @@ LogicalExpression *ExpressionParser::ParseSingle(char const *f, int *pos, char *
 	int p = *pos;
 	LogicalExpression *ret = NULL;
 	LogicalExpression *c = NULL;
-	OPERATOR op = INVALID;
+	E_OPERATOR op = INVALID;
 
 	while (f[p] && isspace(f[p]))
 		p++;
@@ -115,10 +119,13 @@ LogicalExpression *ExpressionParser::ParseSingle(char const *f, int *pos, char *
 		goto error;
 	}
 
+	SetColor(p, p+1, EC_BRACKET);
+
 	p++;
 
 
 	op = MatchOperator(f, &p);
+
 	switch(op)
 	{
 		case NOT: // not
@@ -200,6 +207,8 @@ LogicalExpression *ExpressionParser::ParseSingle(char const *f, int *pos, char *
 		return NULL;
 	}
 
+	SetColor(p, p+1, EC_BRACKET);
+
 	p++;
 	*pos = p;
 	// clear the errorlog
@@ -214,6 +223,8 @@ LogicalExpression *ExpressionParser::ParseSingle(char const *f, int *pos, char *
 	}
 	
 	*errorPos = p;
+
+	SetColor(p, p+1, EC_ERROR);
 	return NULL;
 	
 

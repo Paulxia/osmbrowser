@@ -1,5 +1,5 @@
-#ifndef __LOGIC_H__
-#define __LOGIC_H__
+#ifndef __S_EXPRESSION_H__
+#define __S_EXPRESSION_H__
 
 #include <ctype.h>
 /*
@@ -130,7 +130,7 @@ class ExpressionParser
 {
 	public:
 
-		enum OPERATOR
+		enum E_OPERATOR
 		{
 			NOT,
 			AND,
@@ -140,7 +140,7 @@ class ExpressionParser
 		};
 		
 	
-		OPERATOR MatchOperator(char const *s, int *pos);
+		E_OPERATOR MatchOperator(char const *s, int *pos);
 		
 		char *ParseString(char const *f, int *pos, char *logError, unsigned maxLogErrorSize, unsigned *errorPos);
 		
@@ -153,6 +153,20 @@ class ExpressionParser
 			int pos = 0;
 			return ParseSingle(from, &pos, logError, maxLogErrorSize, errorPos);
 		}
+
+		enum E_COLORS
+		{
+			EC_BRACKET,
+			EC_OPERATOR,
+			EC_STRING,
+			EC_ERROR
+		};
+
+		virtual void SetColor(int from, int to, E_COLORS color)
+		{
+		}
+
+        
 };
 
 
