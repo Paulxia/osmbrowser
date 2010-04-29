@@ -16,6 +16,31 @@ OsmTag::OsmTag(char const *k, char const *v, OsmTag *next)
     m_index = m_tagStore->FindOrAdd(k, v);
 }
 
+OsmTag::OsmTag(bool noCreate, char const *k, char const *v, OsmTag *next)
+    : ListObject(next)
+{
+    if (!m_tagStore)
+    {
+        m_tagStore= new TagStore;
+    }
+
+    if (noCreate)
+    {
+        m_index = m_tagStore->Find(k, v);
+    }
+    else
+    {
+        m_index = m_tagStore->FindOrAdd(k, v);
+    }
+}
+
+OsmTag::OsmTag(OsmTag const &other)
+    : ListObject(other.m_next)
+{
+    m_index = other.m_index;
+}
+
+
 OsmTag::~OsmTag()
 {
 }
