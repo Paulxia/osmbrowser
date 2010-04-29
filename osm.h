@@ -354,7 +354,7 @@ class TagStore
         for (unsigned i = 0; i < amount; i++)
             newValues[i + m_maxNumValues[key]] = NULL;
             
-        delete m_values[key];
+        delete [] m_values[key];
 
         m_values[key] = newValues;
         m_maxNumValues[key] += amount;
