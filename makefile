@@ -7,7 +7,7 @@
 #      - make clean will delete the object files and the executable
 #      - make veryclean will delete all generated files (also core files and *~ and *.bkp)
 
-CPP_OBJECTS_BARE= wxmain wxcanvas osmcanvas osm parse logic
+CPP_OBJECTS_BARE= wxmain wxcanvas osmcanvas osm parse s_expr logicwindow
 
 C_OBJECTS_BARE =
 

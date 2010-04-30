@@ -31,8 +31,9 @@
 #endif
 
 #include "wx/cmdline.h"
+#include <wx/splitter.h>
 #include "osmcanvas.h"
-
+#include "logicwindow.h"
 // ----------------------------------------------------------------------------
 // private classes
 // ----------------------------------------------------------------------------
@@ -62,7 +63,7 @@ public:
     void OnQuit(wxCommandEvent& event);
     void OnAbout(wxCommandEvent& event);
 
-    Canvas *m_canvas;
+    OsmCanvas *m_canvas;
 private:
     // any class wishing to process wxWidgets events must use this macro
     DECLARE_EVENT_TABLE()

@@ -1,5 +1,6 @@
 #include "osmcanvas.h"
 #include "parse.h"
+#include "logicwindow.h"
 
 BEGIN_EVENT_TABLE(OsmCanvas, Canvas)
         EVT_MOUSEWHEEL(OsmCanvas::OnMouseWheel)
@@ -100,7 +101,7 @@ void TileRenderer::RenderTiles(OsmCanvas *canvas, double lon, double lat, double
 OsmCanvas::OsmCanvas(wxWindow *parent, wxString const &fileName)
     : Canvas(parent)
 {
-
+    m_drawRuleControl = NULL;
     m_dragging = false;
     wxString binFile = fileName;
     binFile.Append(wxT(".cache"));
@@ -245,8 +246,11 @@ void OsmCanvas::RenderWay(OsmWay *w, bool fast)
             return;
         }
     }
-    
-    RenderWay(w, wxColour(0,0,0), false, wxColour(255,255,255));
+
+    if ((!m_drawRuleControl) || m_drawRuleControl->Evaluate(w))
+    {
+        RenderWay(w, wxColour(0,0,0), false, wxColour(255,255,255));
+    }
 }
 
 
@@ -486,5 +490,11 @@ void OsmCanvas::OnLeftUp(wxMouseEvent &evt)
         ReleaseMouse();
     m_dragging = false;
 
+}
+
+
+void OsmCanvas::SetDrawRuleControl(RuleControl *r)
+{
+    m_drawRuleControl = r;
 }
 

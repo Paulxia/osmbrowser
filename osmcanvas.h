@@ -5,6 +5,7 @@
 #include "osm.h"
 
 class TileList;
+class RuleControl;
 
 class TileWay
     : public ListObject
@@ -206,6 +207,8 @@ class OsmCanvas
         OsmCanvas(wxWindow *parent, wxString const &fileName);
         void Render();
 
+        void SetDrawRuleControl(RuleControl *r);
+
         // with explicit colours
         void RenderWay(OsmWay *w, wxColour lineColour, bool polygon = false, wxColour fillColour = wxColour(255,255,55));
 
@@ -277,7 +280,8 @@ class OsmCanvas
         TileRenderer *m_tileRenderer;
 
         OsmTag *m_fastTags;
-        
+
+        RuleControl *m_drawRuleControl;
 };
 
 
