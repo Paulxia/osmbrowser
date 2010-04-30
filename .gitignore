@@ -1,4 +1,12 @@
 *~
 dep/*
 obj/*
-
+addr.txt
+amenity.txt
+tags.txt
+*.cache
+old/
+descriptions.txt
+log
+names.txt
+wxosmparse
