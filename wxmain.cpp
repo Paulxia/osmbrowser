@@ -168,7 +168,23 @@ MyFrame::MyFrame(const wxString& title, wxString const &fileName)
     SetMenuBar(menuBar);
 #endif // wxUSE_MENUS
 
-    m_canvas = new OsmCanvas(this, fileName);
+	wxSplitterWindow *splitter = new wxSplitterWindow(this, -1, wxDefaultPosition, wxDefaultSize, wxSP_3D);
+
+	wxSizer *leftSizer = new wxBoxSizer(wxHORIZONTAL);
+
+	wxPanel *leftPanel = new wxPanel(splitter);
+	leftPanel->SetSizer(leftSizer);
+	
+	m_canvas = new OsmCanvas(splitter, fileName);
+
+	splitter->SplitVertically(leftPanel, m_canvas, 200);
+
+    RuleControl *rc = new RuleControl(leftPanel, m_canvas);
+
+    leftSizer->Add(rc, 1, wxEXPAND);
+
+    m_canvas->SetDrawRuleControl(rc);
+    
 
 #if wxUSE_STATUSBAR
     // create a status bar just for fun (by default with 1 pane only)
