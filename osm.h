@@ -168,6 +168,33 @@ class ListObject
 
 //        m_size = m_next ? m_next->m_size + 1 : 1;
       }
+
+      ListObject *AppendList(ListObject *other)
+      {
+        ListObject *l = this;
+        while (l->m_next)
+        {
+            l = l->m_next;
+        }
+        l->m_next = other;
+
+        return this;
+      }
+
+      static ListObject *Concat(ListObject *first, ListObject *second)
+      {
+        if (!first)
+        {
+            return second;
+        }
+
+        if (!second)
+        {
+            return first;
+        }
+
+        return first->AppendList(second);
+      }
       
       virtual ~ListObject()
       {
