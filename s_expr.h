@@ -33,19 +33,7 @@ class LogicalExpression
 
 		void AddChildren(LogicalExpression *c)
 		{
-			if (!m_children)
-			{
-				m_children = c;
-			}
-			else
-			{
-				ListObject *l = m_children;
-				while (l->m_next)
-				{
-					l = l->m_next;
-				}
-				l->m_next = c;
-			}
+			m_children = static_cast<LogicalExpression *>(ListObject::Concat(m_children, c));
 		}
 
 		LogicalExpression *m_children;

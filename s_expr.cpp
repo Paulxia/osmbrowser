@@ -87,9 +87,27 @@ LogicalExpression *ExpressionParser::ParseMultiple(char const *f, int *pos, char
 
 	LogicalExpression *next;
 
-	while ((next = ParseSingle(f, pos, logError, maxLogErrorSize, errorPos)))
+	while (true)
 	{
-		ret->AddChildren(next);
+		while (isspace(f[*pos]))
+		{
+			(*pos)++;
+		}
+		
+		if (f[*pos] != '(')
+		{
+			break;
+		}
+
+		next = ParseSingle(f, pos, logError, maxLogErrorSize, errorPos);
+
+		if (!next)
+		{
+			ret->DestroyList();
+			return NULL;
+		}
+		
+		ret = static_cast<LogicalExpression *>(ListObject::Concat(ret, next));
 	}
 
 	return ret;
