@@ -30,8 +30,9 @@
     #include "wx/wx.h"
 #endif
 
-#include "wx/cmdline.h"
+#include <wx/cmdline.h>
 #include <wx/splitter.h>
+#include <wx/config.h>
 #include "osmcanvas.h"
 #include "rulecontrol.h"
 // ----------------------------------------------------------------------------
@@ -120,6 +121,11 @@ bool MyApp::OnInit()
     // few common command-line options but it could be do more in the future
     if ( !wxApp::OnInit() )
         return false;
+
+
+	wxConfig *cfg = new wxConfig(wxT("wxOsmFilter"));
+
+	wxConfig::Set(cfg);
 
     if (argc !=2)
     {
