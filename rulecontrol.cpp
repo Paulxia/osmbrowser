@@ -1,4 +1,4 @@
-#include "logicwindow.h"
+#include "rulecontrol.h"
 
 
 

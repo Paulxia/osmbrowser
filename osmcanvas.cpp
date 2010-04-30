@@ -1,6 +1,6 @@
 #include "osmcanvas.h"
 #include "parse.h"
-#include "logicwindow.h"
+#include "rulecontrol.h"
 
 BEGIN_EVENT_TABLE(OsmCanvas, Canvas)
         EVT_MOUSEWHEEL(OsmCanvas::OnMouseWheel)

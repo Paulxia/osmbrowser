@@ -33,7 +33,7 @@
 #include "wx/cmdline.h"
 #include <wx/splitter.h>
 #include "osmcanvas.h"
-#include "logicwindow.h"
+#include "rulecontrol.h"
 // ----------------------------------------------------------------------------
 // private classes
 // ----------------------------------------------------------------------------

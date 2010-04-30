@@ -1,5 +1,5 @@
-#ifndef __LOGICWINDOW_H__
-#define __LOGICWINDOW_H__
+#ifndef __RULECONTROL_H__
+#define __RULECONTROL_H__
 
 #include <wx/textctrl.h>
 #include "s_expr.h"
