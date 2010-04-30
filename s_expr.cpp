@@ -188,7 +188,7 @@ LogicalExpression *ExpressionParser::ParseSingle(char const *f, int *pos, char *
 			c = ParseSingle(f, &p, logError, maxLogErrorSize, errorPos);
 			if (!c)
 			{
-				snprintf(logError, maxLogErrorSize, "expect subexpression");
+//				snprintf(logError, maxLogErrorSize, "expect subexpression");
 				goto error;
 			}
 		break;
@@ -198,10 +198,9 @@ LogicalExpression *ExpressionParser::ParseSingle(char const *f, int *pos, char *
 			c = ParseMultiple(f, &p, logError, maxLogErrorSize, errorPos);
 			if (!c)
 			{
-				snprintf(logError, maxLogErrorSize, "expect subexpression(s)");
+//				snprintf(logError, maxLogErrorSize, "expect subexpression(s)");
 				goto error;
 			}
-			
 		break;
 		case TAG:
 		break;
