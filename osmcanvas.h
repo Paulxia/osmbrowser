@@ -1,6 +1,8 @@
 #ifndef __OSMCANVAS_H__
 #define __OSMCANVAS_H__
 
+#include <wx/timer.h>
+#include <wx/app.h>
 #include "wxcanvas.h"
 #include "osm.h"
 
@@ -95,6 +97,7 @@ class TileRenderer
             m_h = m_yNum *dLat;
             m_dLon = dLon;
             m_dLat = dLat;
+            m_renderedTiles = m_visibleTiles = NULL;
             
             m_tileArray = new OsmTile **[m_xNum];
             for (unsigned x = 0; x < m_xNum; x++)
@@ -106,7 +109,6 @@ class TileRenderer
                     m_tileArray[x][y] = m_tiles;
                 }
             }
-            printf("created %u tiles\n", id);
          }
 
         ~TileRenderer()
@@ -191,13 +193,16 @@ class TileRenderer
             
         }
 
-        void RenderTiles(OsmCanvas *canvas, double lon, double lat, double w, double h);
+        bool RenderTiles(wxApp *app, OsmCanvas *canvas, double lon, double lat, double w, double h, bool restart);
 
     private:
         OsmTile *m_tiles;
         OsmTile ***m_tileArray;
         unsigned m_xNum, m_yNum;
         double m_minLon, m_minLat, m_w, m_h, m_dLon, m_dLat;
+
+        TileList *m_visibleTiles, *m_renderedTiles, *m_curTile;
+        
         
 };
 
@@ -205,7 +210,7 @@ class OsmCanvas
     : public Canvas
 {
     public:
-        OsmCanvas(wxWindow *parent, wxString const &fileName);
+        OsmCanvas(wxApp *app, wxWindow *parent, wxString const &fileName);
         void Render();
 
         void SetDrawRuleControl(RuleControl *r);
@@ -222,8 +227,8 @@ class OsmCanvas
 
         void Redraw()
         {
+            m_restart = true;
             Render();
-            Draw();
         }
     private:
         OsmData *m_data;
@@ -233,6 +238,19 @@ class OsmCanvas
         void OnLeftDown(wxMouseEvent &evt);
         void OnLeftUp(wxMouseEvent &evt);
         void OnMouseMove(wxMouseEvent &evt);
+        void OnTimer(wxTimerEvent &evt)
+        {
+            m_timer.Stop();
+            if (!m_done)
+            {
+                Render();
+            }
+
+            if (m_done)
+                Draw(NULL);
+
+            m_timer.Start(100);
+        }
 
         double m_scale;
         double m_xOffset, m_yOffset;
@@ -285,6 +303,11 @@ class OsmCanvas
 
         RuleControl *m_drawRuleControl;
         ColorRules  *m_colorRules;
+
+        wxApp *m_app;
+        bool m_done;
+        bool m_restart;
+        wxTimer m_timer;
 };
 
 

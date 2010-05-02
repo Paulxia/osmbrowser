@@ -58,7 +58,7 @@ class MyFrame : public wxFrame
 {
 public:
     // ctor(s)
-    MyFrame(const wxString& title, wxString const &fileName);
+    MyFrame(wxApp *app, const wxString& title, wxString const &fileName);
 
     // event handlers (these functions should _not_ be virtual)
     void OnQuit(wxCommandEvent& event);
@@ -134,7 +134,7 @@ bool MyApp::OnInit()
     }
 
     // create the main application window
-    MyFrame *frame = new MyFrame(_T("Minimal wxWidgets App"), argv[1]);
+    MyFrame *frame = new MyFrame(this, _T("Minimal wxWidgets App"), argv[1]);
 
     // and show it (the frames, unlike simple controls, are not shown when
     // created initially)
@@ -151,7 +151,7 @@ bool MyApp::OnInit()
 // ----------------------------------------------------------------------------
 
 // frame constructor
-MyFrame::MyFrame(const wxString& title, wxString const &fileName)
+MyFrame::MyFrame(wxApp *app, const wxString& title, wxString const &fileName)
        : wxFrame(NULL, wxID_ANY, title, wxDefaultPosition, wxSize(1024,768))
 {
 
@@ -181,7 +181,7 @@ MyFrame::MyFrame(const wxString& title, wxString const &fileName)
 	wxPanel *leftPanel = new wxPanel(splitter);
 	leftPanel->SetSizer(leftSizer);
 	
-	m_canvas = new OsmCanvas(splitter, fileName);
+	m_canvas = new OsmCanvas(app, splitter, fileName);
 
 	splitter->SplitVertically(leftPanel, m_canvas, 200);
 

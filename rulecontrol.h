@@ -111,7 +111,7 @@ class AddButton
 {
 	public:
 		AddButton(wxWindow *parent, ColorRules *rules)
-			: wxButton(parent, -1, "Add Rule")
+			: wxButton(parent, -1, wxT("Add Rule"))
 		{
 			m_rules = rules;
 		}

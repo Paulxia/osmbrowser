@@ -11,6 +11,7 @@ BEGIN_EVENT_TABLE(OsmCanvas, Canvas)
 //        EVT_MIDDLE_UP(OsmCanvas::OnMiddleUp)
 //        EVT_RIGHT_UP(OsmCanvas::OnRightUp)
         EVT_MOTION(OsmCanvas::OnMouseMove)
+        EVT_TIMER(-1, OsmCanvas::OnTimer)
 END_EVENT_TABLE()
 
 
@@ -28,41 +29,47 @@ TileWay::~TileWay()
     m_tiles->UnRef();
 }
 
-void TileRenderer::RenderTiles(OsmCanvas *canvas, double lon, double lat, double w, double h)
+bool TileRenderer::RenderTiles(wxApp *app, OsmCanvas *canvas, double lon, double lat, double w, double h, bool restart)
 {
+    bool mustCancel = false;
+
     DRect bb(lon, lat);
     bb.SetSize(w, h);
 
-    TileList *renderedTiles = NULL;
-
-    TileList *visibleTiles = GetTiles(bb);
-
-    if (!visibleTiles)
+    if (restart || !m_visibleTiles)
     {
-        return;
+        if (m_visibleTiles)
+            m_visibleTiles->DestroyList();
+
+        if (m_renderedTiles)
+            m_renderedTiles->DestroyList();
+
+        m_renderedTiles = NULL;
+        m_visibleTiles = GetTiles(bb);
+
+        m_curTile = m_visibleTiles;
     }
 
-    bool fast = visibleTiles->GetSize() > 16;
-    
-    for (TileList *tl = visibleTiles; tl; tl = static_cast<TileList *>(tl->m_next))
+    if (!m_visibleTiles)
     {
-        OsmTile *t = tl->m_tile;
-//        printf("render tile %u  (%g,%g)-(%g, %g) bb=(%g, %g)-(%g, %g)\n", t->m_id, t->m_x, t->m_y, t->m_x + t->m_w, t->m_y + t->m_h, lon, lat, lon+w, lat+h);
-//        canvas->DrawTileOutline(t, 200,200,200);
+        return false;
+    }
+
+    bool fast = m_visibleTiles->GetSize() > 16;
+    
+    while (m_curTile && !mustCancel)
+    {
+        OsmTile *t = m_curTile->m_tile;
         if (t->OverLaps(bb))
         {
-//            canvas->DrawTileOutline(t, 200,0,0);
-//            printf("    is visible\n");
-//            printf("rendering tile %u\n", t->m_id);
-            for (TileWay *w = t->m_ways; w; w = static_cast<TileWay *>(w->m_next))
+            for (TileWay *w = t->m_ways; w && !mustCancel; w = static_cast<TileWay *>(w->m_next))
             {
-//                printf("    render way %u\n",   w->m_way->m_id);
                 bool already = false;
                 // loop over all tiles that contaoin this way
                 for (TileList *a = w->m_tiles; a; a = static_cast<TileList *>(a->m_next))
                 {
                     // loop over all tiles already drawn
-                    for (TileList *o = renderedTiles; o ; o = static_cast<TileList *>(o->m_next))
+                    for (TileList *o = m_renderedTiles; o ; o = static_cast<TileList *>(o->m_next))
                     {
                          if (o->m_tile->m_id == a->m_tile->m_id)
                          {
@@ -73,7 +80,6 @@ void TileRenderer::RenderTiles(OsmCanvas *canvas, double lon, double lat, double
 
                     if (already)
                     {
-//                        printf("    already drawn %u\n",   w->m_way->m_id);
                         break;
                     }
                 }
@@ -82,25 +88,25 @@ void TileRenderer::RenderTiles(OsmCanvas *canvas, double lon, double lat, double
                 {
                     canvas->RenderWay(w->m_way, fast);
                 }
-                
             }
-            renderedTiles = new TileList(t, renderedTiles);
-
         }
         
+        mustCancel = app->Pending();
+        m_renderedTiles = new TileList(t, m_renderedTiles);
+        m_curTile = static_cast<TileList *>(m_curTile->m_next);
     }
 
-    if (visibleTiles)
-        visibleTiles->DestroyList();
-
-    if (renderedTiles)
-        renderedTiles->DestroyList();
+    return !mustCancel;
 }
 
 
-OsmCanvas::OsmCanvas(wxWindow *parent, wxString const &fileName)
+OsmCanvas::OsmCanvas(wxApp * app, wxWindow *parent, wxString const &fileName)
     : Canvas(parent)
 {
+    m_timer.SetOwner(this);
+    m_done = false;
+    m_restart = true;
+    m_app = app;
     m_drawRuleControl = NULL;
     m_colorRules = NULL;
     m_dragging = false;
@@ -162,9 +168,10 @@ OsmCanvas::OsmCanvas(wxWindow *parent, wxString const &fileName)
 //    m_fastTags = new OsmTag("boundary");
     m_fastTags = new OsmTag("highway", "motorway", m_fastTags);
     m_fastTags = new OsmTag("natural", "coastline", m_fastTags);
-    m_fastTags = new OsmTag("natural", "water", m_fastTags);
+//    m_fastTags = new OsmTag("natural", "water", m_fastTags);
     m_fastTags = new OsmTag("railway", "rail", m_fastTags);
-    
+
+    m_timer.Start(100);
 }
 
 
@@ -352,89 +359,30 @@ void OsmCanvas::RenderWay(OsmWay *w, wxColour lineColour, bool poly, wxColour fi
 void OsmCanvas::Render()
 {
     if (!(m_backBuffer.IsOk()))
+    {
+        m_restart = true;
+        return;
+    }
+    if (!m_restart && m_done)
         return;
 
     int w = m_backBuffer.GetWidth();
     int h = m_backBuffer.GetHeight();
     double xScale = cos(m_yOffset * M_PI / 180) * m_scale;
-    wxMemoryDC dc;
-    dc.SelectObject(m_backBuffer);
-    dc.Clear();
 
+    if (m_restart)
+    {
+        wxMemoryDC dc;
+        dc.SelectObject(m_backBuffer);
+        dc.Clear();
+    }
     Rect(wxEmptyString, m_data->m_minlon, m_data->m_minlat, m_data->m_maxlon, m_data->m_maxlat, 0, 0,255,0);
 
-    if (m_tileRenderer)
-    {
-        m_tileRenderer->RenderTiles(this, m_xOffset, m_yOffset, w / xScale, h / m_scale);
-    }
-    else
-    {
-        double sxMax = m_xOffset + w / xScale;
-        double syMax = m_yOffset + h / m_scale;
-    
-        wxColour lineC(0,0,0), fillC(255,255,255);
-    
-        OsmTag boundary("boundary"), border("border"), water("natural", "water"), wood("natural", "wood"), park("leisure","park"), building("building"), highway("highway"), cycleway("highway", "cycleway"), coastline("natural", "coastline");
-        OsmTag natural("natural"), snelweg("highway", "motorway"), trein("railway", "rail"), polygon("type", "multipolygon");
-    
-        bool poly = false;
-        for (OsmWay *w = static_cast<OsmWay *>(m_data->m_ways.m_content); w ; w = static_cast<OsmWay *>(w->m_next))
-        {
-            if (!( w->HasTag(coastline) || (w->HasTag(boundary) && w->HasTag("admin_level", "2")) || w->HasTag(snelweg)  || w->HasTag(natural) || w->HasTag(trein) ))
-            {
-    //            continue;
-            }
-        
-            if (w->HasTag(water))
-            {
-                lineC.Set(0,0,255);
-                fillC.Set(0,0,255);
-                poly = true;
-            } else if (w->HasTag(wood) || w->HasTag(park))
-            {
-                lineC.Set(100,255,100);
-                fillC.Set(180, 255, 180);
-                poly = true;
-            }
-            else if (w->HasTag(building))
-            {
-                lineC.Set(100,0,0);
-                fillC.Set(100,0,0);
-                poly = true;
-            }
-            else if (w->HasTag(cycleway))
-            {
-                lineC.Set(255,100,50);
-                poly = false;
-            }
-            else if (w->HasTag(snelweg))
-            {
-                lineC.Set(200,0,0);
-                poly = false;
-            }
-            else if (w->HasTag(trein))
-            {
-                lineC.Set(155,155,0);
-                poly = false;
-            }
-            else if (w->HasTag(highway))
-            {
-                lineC.Set(0,0,0);
-                poly = false;
-            }
-            else
-            {
-                lineC.Set(180,180,150);
-                fillC.Set(180,180,150);
-                poly = w->HasTag(polygon);
-            }
-    
-            RenderWay(w, lineC, poly, fillC);
-    
-    
-        }
-    }
+    m_done = m_tileRenderer->RenderTiles(m_app, this, m_xOffset, m_yOffset, w / xScale, h / m_scale, m_restart);
+    m_restart = false;
 
+    Draw(NULL);
+    return;
 }
 
 OsmCanvas::~OsmCanvas()
@@ -461,9 +409,7 @@ void OsmCanvas::OnMouseWheel(wxMouseEvent &evt)
     m_xOffset -= xm;
     m_yOffset -= ym;
 
-
-    Render();
-    Draw();
+    Redraw();
 }
 
 void OsmCanvas::OnMouseMove(wxMouseEvent &evt)
@@ -484,9 +430,7 @@ void OsmCanvas::OnMouseMove(wxMouseEvent &evt)
         m_xOffset -= dx;
         m_yOffset += dy;
 
-
-        Render();
-        Draw();
+        Redraw();
         
     }
 }
