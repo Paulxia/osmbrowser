@@ -102,6 +102,7 @@ OsmCanvas::OsmCanvas(wxWindow *parent, wxString const &fileName)
     : Canvas(parent)
 {
     m_drawRuleControl = NULL;
+    m_colorRules = NULL;
     m_dragging = false;
     wxString binFile = fileName;
     binFile.Append(wxT(".cache"));
@@ -249,7 +250,23 @@ void OsmCanvas::RenderWay(OsmWay *w, bool fast)
 
     if ((!m_drawRuleControl) || m_drawRuleControl->Evaluate(w))
     {
-        RenderWay(w, wxColour(0,0,0), false, wxColour(255,255,255));
+        wxColour c = wxColour(150,150,150);
+        bool poly = false;
+        if (m_colorRules)
+        {
+            for (int i = 0; i < m_colorRules->m_num; i++)
+            {
+                if (m_colorRules->m_rules[i]->Evaluate(w))
+                {
+                    c = m_colorRules->m_pickers[i]->GetColour();
+                    poly = m_colorRules->m_checkBoxes[i]->IsChecked();
+
+                    break; // stop after first match
+                }
+            }
+        }
+        
+        RenderWay(w, c, poly, c);
     }
 }
 
@@ -334,6 +351,9 @@ void OsmCanvas::RenderWay(OsmWay *w, wxColour lineColour, bool poly, wxColour fi
 
 void OsmCanvas::Render()
 {
+    if (!(m_backBuffer.IsOk()))
+        return;
+
     int w = m_backBuffer.GetWidth();
     int h = m_backBuffer.GetHeight();
     double xScale = cos(m_yOffset * M_PI / 180) * m_scale;
@@ -498,3 +518,8 @@ void OsmCanvas::SetDrawRuleControl(RuleControl *r)
     m_drawRuleControl = r;
 }
 
+
+void OsmCanvas::SetColorRules(ColorRules *r)
+{
+    m_colorRules = r;
+}

@@ -176,7 +176,7 @@ MyFrame::MyFrame(const wxString& title, wxString const &fileName)
 
 	wxSplitterWindow *splitter = new wxSplitterWindow(this, -1, wxDefaultPosition, wxDefaultSize, wxSP_3D);
 
-	wxSizer *leftSizer = new wxBoxSizer(wxHORIZONTAL);
+	wxSizer *leftSizer = new wxBoxSizer(wxVERTICAL);
 
 	wxPanel *leftPanel = new wxPanel(splitter);
 	leftPanel->SetSizer(leftSizer);
@@ -185,12 +185,16 @@ MyFrame::MyFrame(const wxString& title, wxString const &fileName)
 
 	splitter->SplitVertically(leftPanel, m_canvas, 200);
 
-    RuleControl *rc = new RuleControl(leftPanel, m_canvas);
+	RuleControl *rc = new RuleControl(leftPanel, m_canvas);
 
-    leftSizer->Add(rc, 1, wxEXPAND);
+	leftSizer->Add(rc, 0, wxEXPAND);
 
-    m_canvas->SetDrawRuleControl(rc);
-    
+	ColorRules *rules = new ColorRules(leftPanel, leftSizer, m_canvas);
+
+	leftSizer->Add(new AddButton(leftPanel, rules), 0, wxEXPAND);
+
+	m_canvas->SetDrawRuleControl(rc);
+	m_canvas->SetColorRules(rules);
 
 #if wxUSE_STATUSBAR
     // create a status bar just for fun (by default with 1 pane only)

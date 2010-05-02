@@ -6,9 +6,21 @@ BEGIN_EVENT_TABLE(RuleControl, wxTextCtrl)
 	EVT_TEXT(-1, RuleControl::OnText)
 END_EVENT_TABLE()
 
+BEGIN_EVENT_TABLE(ColorPicker, wxColourPickerCtrl)
+	EVT_COLOURPICKER_CHANGED(-1, ColorPicker::OnChanged)
+END_EVENT_TABLE()
+
+BEGIN_EVENT_TABLE(PolyCheckBox, wxCheckBox)
+	EVT_CHECKBOX(-1, PolyCheckBox::OnChanged)
+END_EVENT_TABLE()
+
+BEGIN_EVENT_TABLE(AddButton, wxButton)
+	EVT_BUTTON(-1, AddButton::OnClick)
+END_EVENT_TABLE()
+
 
 RuleControl::RuleControl(wxWindow *parent, OsmCanvas *canvas)
-	: wxTextCtrl(parent, -1, wxEmptyString, wxDefaultPosition, wxSize(200,200), wxTE_MULTILINE | wxTE_PROCESS_TAB | wxTE_RICH)
+	: wxTextCtrl(parent, -1, wxEmptyString, wxDefaultPosition, wxSize(200,30), wxTE_MULTILINE | wxTE_PROCESS_TAB | wxTE_RICH)
 {
 	m_expr = 0;
 	m_canvas = canvas;
@@ -77,3 +89,24 @@ bool RuleControl::Evaluate(IdObjectWithTags *o)
 		return m_expr->GetValue(o);
 }
 
+
+
+void ColorRules::Add()
+{
+	wxStaticBoxSizer *s = new wxStaticBoxSizer(wxVERTICAL, m_parent);
+
+	m_sizer->Add(s, 0, wxEXPAND);
+
+	m_pickers[m_num] = new ColorPicker(m_parent, m_canvas);
+	m_checkBoxes[m_num] = new PolyCheckBox(m_parent, m_canvas);
+	m_rules[m_num] = new RuleControl(m_parent, m_canvas);
+
+	s->Add(m_pickers[m_num]);
+	s->Add(m_checkBoxes[m_num]);
+	s->Add(m_rules[m_num]);
+
+	s->Layout();
+
+	m_num++;
+	m_parent->Layout();
+}

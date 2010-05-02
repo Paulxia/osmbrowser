@@ -17,6 +17,8 @@ Canvas::~Canvas()
 
 void Canvas::Draw(wxDC *onto)
 {
+        if (!(m_backBuffer.IsOk()))
+            return;
 
         bool mustDeleteDC = false;
 
