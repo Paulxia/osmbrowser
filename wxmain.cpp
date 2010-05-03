@@ -32,6 +32,7 @@
 
 #include <wx/cmdline.h>
 #include <wx/splitter.h>
+#include <wx/stattext.h>
 #include <wx/config.h>
 #include "osmcanvas.h"
 #include "rulecontrol.h"
@@ -185,7 +186,11 @@ MyFrame::MyFrame(wxApp *app, const wxString& title, wxString const &fileName)
 
 	splitter->SplitVertically(leftPanel, m_canvas, 200);
 
-	RuleControl *rc = new RuleControl(leftPanel, m_canvas);
+	wxStaticText *text = new wxStaticText(leftPanel, -1 , wxT("Drawing Rule:"));
+
+	leftSizer->Add(text, 0, wxEXPAND);
+
+	RuleControl *rc = new RuleControl(leftPanel, m_canvas, wxSize(200,200));
 
 	leftSizer->Add(rc, 0, wxEXPAND);
 
