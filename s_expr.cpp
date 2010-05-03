@@ -2,12 +2,18 @@
 
 
 
-ExpressionParser::E_OPERATOR ExpressionParser::MatchOperator(char const *s, int *pos)
+ExpressionParser::E_OPERATOR ExpressionParser::MatchOperator(char const *s, int *pos, bool *disabled)
 {
 	char const *operators[] =
 	{
 		"not", "and", "or", "tag"
 	};
+
+	if (s[*pos] == '-')
+	{
+		*disabled = true;
+		(*pos)++;
+	}
 
 	int count = sizeof(operators)/sizeof(char *);
 	for (int i = 0; i < count ; i++)
@@ -116,6 +122,7 @@ LogicalExpression *ExpressionParser::ParseMultiple(char const *f, int *pos, char
 
 LogicalExpression *ExpressionParser::ParseSingle(char const *f, int *pos, char *logError, unsigned maxLogErrorSize, unsigned *errorPos)
 {
+	bool disabled = false;
 	int p = *pos;
 	LogicalExpression *ret = NULL;
 	LogicalExpression *c = NULL;
@@ -142,7 +149,7 @@ LogicalExpression *ExpressionParser::ParseSingle(char const *f, int *pos, char *
 	p++;
 
 
-	op = MatchOperator(f, &p);
+	op = MatchOperator(f, &p, &disabled);
 
 	switch(op)
 	{
@@ -231,6 +238,7 @@ LogicalExpression *ExpressionParser::ParseSingle(char const *f, int *pos, char *
 	// clear the errorlog
 	*logError = 0;
 
+	ret->m_disabled = disabled;
 	return ret;
 	error:
 

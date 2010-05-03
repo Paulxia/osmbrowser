@@ -23,6 +23,7 @@ class LogicalExpression
 		LogicalExpression()
 			: ListObject(NULL)
 		{
+			m_disabled = false;
 			m_children = NULL;
 		}
 		virtual ~LogicalExpression()
@@ -35,7 +36,7 @@ class LogicalExpression
 		{
 			m_children = static_cast<LogicalExpression *>(ListObject::Concat(m_children, c));
 		}
-
+		bool m_disabled;
 		LogicalExpression *m_children;
 		virtual bool GetValue(IdObjectWithTags *o) = 0;
 };
@@ -59,7 +60,7 @@ class And
 		{
 			for (LogicalExpression *l = m_children; l; l = static_cast<LogicalExpression *>(l->m_next))
 			{
-				if (!l->GetValue(o))
+				if (!l->GetValue(o) && !l->m_disabled)
 					return false;
 			}
 
@@ -76,7 +77,7 @@ class Or
 		{
 			for (LogicalExpression *l = m_children; l; l = static_cast<LogicalExpression *>(l->m_next))
 			{
-				if (l->GetValue(o))
+				if (l->GetValue(o) && !l->m_disabled)
 					return true;
 			}
 
@@ -124,11 +125,12 @@ class ExpressionParser
 			AND,
 			OR,
 			TAG,
+			OFF,
 			INVALID
 		};
 		
 	
-		E_OPERATOR MatchOperator(char const *s, int *pos);
+		E_OPERATOR MatchOperator(char const *s, int *pos, bool *disabled);
 		
 		char *ParseString(char const *f, int *pos, char *logError, unsigned maxLogErrorSize, unsigned *errorPos);
 		
