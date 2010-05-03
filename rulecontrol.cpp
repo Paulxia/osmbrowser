@@ -19,8 +19,8 @@ BEGIN_EVENT_TABLE(AddButton, wxButton)
 END_EVENT_TABLE()
 
 
-RuleControl::RuleControl(wxWindow *parent, OsmCanvas *canvas)
-	: wxTextCtrl(parent, -1, wxEmptyString, wxDefaultPosition, wxSize(200,30), wxTE_MULTILINE | wxTE_PROCESS_TAB | wxTE_RICH)
+RuleControl::RuleControl(wxWindow *parent, OsmCanvas *canvas, wxSize const &size)
+	: wxTextCtrl(parent, -1, wxEmptyString, wxDefaultPosition, size == wxDefaultSize ? wxSize(200,40) : size, wxTE_MULTILINE | wxTE_PROCESS_TAB | wxTE_RICH)
 {
 	m_expr = 0;
 	m_canvas = canvas;

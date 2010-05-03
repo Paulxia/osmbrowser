@@ -41,7 +41,7 @@ void Canvas::OnSize(wxSizeEvent &WXUNUSED(event))
 {
         wxSize s = GetClientSize();
         m_backBuffer.Create(s.x, s.y);
-        Render();
+        Render(true);
         Draw(NULL);
 }
 

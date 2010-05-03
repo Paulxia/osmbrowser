@@ -219,7 +219,7 @@ class OsmCanvas
 {
     public:
         OsmCanvas(wxApp *app, wxWindow *parent, wxString const &fileName);
-        void Render();
+        void Render(bool force = false);
 
         void SetDrawRuleControl(RuleControl *r);
         void SetColorRules(ColorRules *r);

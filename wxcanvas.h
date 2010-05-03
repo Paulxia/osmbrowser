@@ -15,7 +15,7 @@ class Canvas
 		wxBitmap m_backBuffer;
 		// will be called whenever the backbuffer is destroyed
 		// override to redraw backbuffer
-		virtual void Render()
+		virtual void Render(bool force = false)
 		{
 		};
 

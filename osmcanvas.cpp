@@ -356,16 +356,25 @@ void OsmCanvas::RenderWay(OsmWay *w, wxColour lineColour, bool poly, wxColour fi
 
 
 
-void OsmCanvas::Render()
+void OsmCanvas::Render(bool force)
 {
+
+    if (force)
+    {
+        m_restart = true;
+    }
+    
     if (!(m_backBuffer.IsOk()))
     {
+        printf("render backbuffer bnot ok\n");
         m_restart = true;
         return;
     }
     if (!m_restart && m_done)
+    {
+        printf("nothing to do\n");
         return;
-
+    }
     int w = m_backBuffer.GetWidth();
     int h = m_backBuffer.GetHeight();
     double xScale = cos(m_yOffset * M_PI / 180) * m_scale;

@@ -13,7 +13,7 @@ class RuleControl
 	: public wxTextCtrl, public ExpressionParser
 {
 	public:
-		RuleControl(wxWindow *parent, OsmCanvas *canvas);
+		RuleControl(wxWindow *parent, OsmCanvas *canvas, wxSize const &size = wxDefaultSize);
 
 		virtual ~RuleControl();
 
