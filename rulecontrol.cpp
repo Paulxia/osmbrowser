@@ -109,10 +109,8 @@ void ColorRules::Add()
 
 	s->Add(m_pickers[m_num]);
 	s->Add(m_checkBoxes[m_num]);
-	s->Add(m_rules[m_num]);
+	s->Add(m_rules[m_num], 0,wxEXPAND);
 
-	s->Layout();
-
+	m_parent->FitInside();
 	m_num++;
-	m_parent->Layout();
 }

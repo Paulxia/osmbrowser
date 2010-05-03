@@ -179,12 +179,14 @@ MyFrame::MyFrame(wxApp *app, const wxString& title, wxString const &fileName)
 
 	wxSizer *leftSizer = new wxBoxSizer(wxVERTICAL);
 
-	wxPanel *leftPanel = new wxPanel(splitter);
+	wxScrolledWindow *leftPanel = new wxScrolledWindow(splitter);
 	leftPanel->SetSizer(leftSizer);
-	
+
+        leftPanel->SetScrollRate(0, 10);
+        
 	m_canvas = new OsmCanvas(app, splitter, fileName);
 
-	splitter->SplitVertically(leftPanel, m_canvas, 200);
+	splitter->SplitVertically(leftPanel, m_canvas, 250);
 
 	wxStaticText *text = new wxStaticText(leftPanel, -1 , wxT("Drawing Rule:"));
 
