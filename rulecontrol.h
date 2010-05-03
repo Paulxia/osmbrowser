@@ -5,12 +5,13 @@
 #include <wx/clrpicker.h>
 #include <wx/checkbox.h>
 #include <wx/button.h>
+#include <wx/richtext/richtextctrl.h>
 
 #include "s_expr.h"
 #include "osmcanvas.h"
 
 class RuleControl
-	: public wxTextCtrl, public ExpressionParser
+	: public wxRichTextCtrl, public ExpressionParser
 {
 	public:
 		RuleControl(wxWindow *parent, OsmCanvas *canvas, wxSize const &size = wxDefaultSize);

@@ -118,6 +118,10 @@ class Tag
 class ExpressionParser
 {
 	public:
+		ExpressionParser()
+		{
+			m_mustColorDisabled = 0;
+		}
 
 		enum E_OPERATOR
 		{
@@ -144,17 +148,38 @@ class ExpressionParser
 			return ParseSingle(from, &pos, logError, maxLogErrorSize, errorPos);
 		}
 
+		void EatSpace(char const *s, int *pos);
+
+
 		enum E_COLORS
 		{
+			EC_SPACE,
 			EC_BRACKET,
 			EC_OPERATOR,
 			EC_STRING,
-			EC_ERROR
+			EC_ERROR,
+			EC_DISABLED
 		};
 
 		virtual void SetColor(int from, int to, E_COLORS color)
 		{
 		}
+
+	private:
+		void SetColorD(int from, int to, E_COLORS color)
+		{
+			if (m_mustColorDisabled && color != EC_ERROR)
+			{
+				SetColor(from, to, EC_DISABLED);
+			}
+			else
+			{
+				SetColor(from, to, color);
+			}
+			
+		}
+
+		int m_mustColorDisabled;
 
         
 };

@@ -13,6 +13,7 @@ ExpressionParser::E_OPERATOR ExpressionParser::MatchOperator(char const *s, int 
 	{
 		*disabled = true;
 		(*pos)++;
+		m_mustColorDisabled++;
 	}
 
 	int count = sizeof(operators)/sizeof(char *);
@@ -21,7 +22,7 @@ ExpressionParser::E_OPERATOR ExpressionParser::MatchOperator(char const *s, int 
 		if (!strncasecmp(operators[i], s + *pos, strlen(operators[i])))
 		{
 			int len = strlen(operators[i]);
-			SetColor(*pos, *pos + len, EC_OPERATOR);
+			SetColorD(*pos, *pos + len, EC_OPERATOR);
 			*pos += len;
 			return static_cast<ExpressionParser::E_OPERATOR>(i);
 		}
@@ -39,10 +40,9 @@ char *ExpressionParser::ParseString(char const *f, int *pos, char *logError, uns
 	curBuffer++;
 	curBuffer %= 2;
 
-	int p = *pos;
+	EatSpace(f, pos);
 
-	while (f[p] &&	isspace(f[p]))
-		p++;
+	int p = *pos;
 
 	if (f[p] != '"' && f[p] != '\'')
 	{
@@ -74,9 +74,11 @@ char *ExpressionParser::ParseString(char const *f, int *pos, char *logError, uns
 
 	p++;
 
-	SetColor(*pos, p, EC_STRING);
+	SetColorD(*pos, p, EC_STRING);
 
 	*pos = p;
+
+	EatSpace(f,pos);
     
 	return buffers[curBuffer];
 }
@@ -95,11 +97,8 @@ LogicalExpression *ExpressionParser::ParseMultiple(char const *f, int *pos, char
 
 	while (true)
 	{
-		while (isspace(f[*pos]))
-		{
-			(*pos)++;
-		}
-		
+		EatSpace(f, pos);
+
 		if (f[*pos] != '(')
 		{
 			break;
@@ -119,17 +118,31 @@ LogicalExpression *ExpressionParser::ParseMultiple(char const *f, int *pos, char
 	return ret;
 }
 
+void ExpressionParser::EatSpace(char const *s, int *pos)
+{
+	int p = *pos;
+
+	while (s[p] && isspace(s[p]))
+	{
+		p++;
+	}
+
+	SetColorD(*pos, p, EC_SPACE);
+
+	*pos = p;
+}
+
 
 LogicalExpression *ExpressionParser::ParseSingle(char const *f, int *pos, char *logError, unsigned maxLogErrorSize, unsigned *errorPos)
 {
 	bool disabled = false;
-	int p = *pos;
 	LogicalExpression *ret = NULL;
 	LogicalExpression *c = NULL;
 	E_OPERATOR op = INVALID;
 
-	while (f[p] && isspace(f[p]))
-		p++;
+	EatSpace(f, pos);
+
+	int p = *pos;
 
 	if (!(f[p]))
 	{
@@ -144,7 +157,7 @@ LogicalExpression *ExpressionParser::ParseSingle(char const *f, int *pos, char *
 		goto error;
 	}
 
-	SetColor(p, p+1, EC_BRACKET);
+	SetColorD(p, p+1, EC_BRACKET);
 
 	p++;
 
@@ -221,17 +234,16 @@ LogicalExpression *ExpressionParser::ParseSingle(char const *f, int *pos, char *
 		ret->AddChildren(c);
 	}
 
-	while (f[p] && isspace(f[p]))
-		p++;
+	EatSpace(f, &p);
 
 	if (f[p] != ')')
 	{
 		snprintf(logError, maxLogErrorSize, "expected ')'");
 		*errorPos = p;
-		return NULL;
+		goto error;
 	}
 
-	SetColor(p, p+1, EC_BRACKET);
+	SetColorD(p, p+1, EC_BRACKET);
 
 	p++;
 	*pos = p;
@@ -239,8 +251,19 @@ LogicalExpression *ExpressionParser::ParseSingle(char const *f, int *pos, char *
 	*logError = 0;
 
 	ret->m_disabled = disabled;
+
+	if (disabled)
+	{
+		m_mustColorDisabled--;
+	}
+
 	return ret;
 	error:
+
+	if (disabled)
+	{
+		m_mustColorDisabled--;
+	}
 
 	if (ret)
 	{
@@ -249,7 +272,7 @@ LogicalExpression *ExpressionParser::ParseSingle(char const *f, int *pos, char *
 	
 	*errorPos = p;
 
-	SetColor(p, p+1, EC_ERROR);
+	SetColorD(p, strlen(f), EC_ERROR);
 	return NULL;
 	
 

@@ -2,7 +2,7 @@
 
 
 
-BEGIN_EVENT_TABLE(RuleControl, wxTextCtrl)
+BEGIN_EVENT_TABLE(RuleControl, wxRichTextCtrl)
 	EVT_TEXT(-1, RuleControl::OnText)
 END_EVENT_TABLE()
 
@@ -20,7 +20,7 @@ END_EVENT_TABLE()
 
 
 RuleControl::RuleControl(wxWindow *parent, OsmCanvas *canvas, wxSize const &size)
-	: wxTextCtrl(parent, -1, wxEmptyString, wxDefaultPosition, size == wxDefaultSize ? wxSize(200,40) : size, wxTE_MULTILINE | wxTE_PROCESS_TAB | wxTE_RICH)
+	: wxRichTextCtrl(parent, -1, wxEmptyString, wxDefaultPosition, size == wxDefaultSize ? wxSize(200,40) : size)
 {
 	m_expr = 0;
 	m_canvas = canvas;
@@ -57,8 +57,8 @@ void RuleControl::OnText(wxCommandEvent &evt)
 
 void RuleControl::SetColor(int from, int to, E_COLORS color)
 {
-	static wxColour bg(255,255,200);
-	static wxTextAttr bracket(wxColour(0,100,0), bg), op(wxColour(50,50,100), bg), str(wxColour(100,100,0), bg), err(wxColour(100,0,0), wxColour(255,200,200));
+	static wxColour bg(155,255,155);
+	static wxTextAttr bracket(wxColour(0,200,0), bg), op(wxColour(50,50,250), bg), str(wxColour(150,150,0), bg), err(wxColour(100,0,0), wxColour(255,150,150)), disabled(wxColour(200,200,200),bg);
 
 	wxTextAttr style;
 
@@ -77,8 +77,14 @@ void RuleControl::SetColor(int from, int to, E_COLORS color)
 		case EC_ERROR:
 			style = err;
 			break;
+		case EC_DISABLED:
+			style = disabled;
+			break;
+		case EC_SPACE:
+			style = bracket;
+			break;
 	};
-	SetStyle(from, to -1, style);
+	SetStyle(from, to, style);
 }
 
 bool RuleControl::Evaluate(IdObjectWithTags *o)
