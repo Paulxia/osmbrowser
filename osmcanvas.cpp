@@ -55,7 +55,7 @@ bool TileRenderer::RenderTiles(wxApp *app, OsmCanvas *canvas, double lon, double
         return false;
     }
 
-    bool fast = m_visibleTiles->GetSize() > 16;
+    bool fast = false;//m_visibleTiles->GetSize() > 16;
     
     while (m_curTile && !mustCancel)
     {
