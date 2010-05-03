@@ -11,7 +11,7 @@
 #include "osmcanvas.h"
 
 class RuleControl
-	: public wxRichTextCtrl, public ExpressionParser
+	: public wxTextCtrl, public ExpressionParser
 {
 	public:
 		RuleControl(wxWindow *parent, OsmCanvas *canvas, wxSize const &size = wxDefaultSize);

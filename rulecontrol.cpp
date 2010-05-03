@@ -2,7 +2,7 @@
 
 
 
-BEGIN_EVENT_TABLE(RuleControl, wxRichTextCtrl)
+BEGIN_EVENT_TABLE(RuleControl, wxTextCtrl)
 	EVT_TEXT(-1, RuleControl::OnText)
 END_EVENT_TABLE()
 
@@ -20,7 +20,7 @@ END_EVENT_TABLE()
 
 
 RuleControl::RuleControl(wxWindow *parent, OsmCanvas *canvas, wxSize const &size)
-	: wxRichTextCtrl(parent, -1, wxEmptyString, wxDefaultPosition, size == wxDefaultSize ? wxSize(200,40) : size)
+	: wxTextCtrl(parent, -1, wxEmptyString, wxDefaultPosition, size == wxDefaultSize ? wxSize(200,40) : size, wxTE_MULTILINE | wxTE_RICH | wxTE_PROCESS_TAB)
 {
 	m_expr = 0;
 	m_canvas = canvas;
