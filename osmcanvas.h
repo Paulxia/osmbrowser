@@ -177,14 +177,22 @@ class TileRenderer
             TileList *ret = NULL;
 
 //            printf("(%d,%d)-(%d, %d) (%d tiles)\n", xMin, yMin, xMax, yMax, (xMax - xMin)*(yMax - yMin));
+            int xMiddle = (xMax + xMin)/2;
+            int yMiddle = (yMax + yMin)/2;
+
             for (int x = xMin; x < xMax; x++)
             {
                 for (int y = yMin; y < yMax; y++)
                 {
-                    ret = new TileList(m_tileArray[x][y], ret);
+                    if (x != xMiddle || y != yMiddle)
+                    {
+                        ret = new TileList(m_tileArray[x][y], ret);
+                    }
                 }
             }
 
+            ret = new TileList(m_tileArray[xMiddle][yMiddle], ret);
+            
             if (ret)
                 ret->Ref();
 
