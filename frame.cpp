@@ -9,9 +9,9 @@
 
 #include "rulecontrol.h"
 
-BEGIN_EVENT_TABLE(MyFrame, wxFrame)
-    EVT_MENU(Minimal_Quit,  MyFrame::OnQuit)
-    EVT_MENU(Minimal_About, MyFrame::OnAbout)
+BEGIN_EVENT_TABLE(MainFrame, wxFrame)
+    EVT_MENU(Minimal_Quit,  MainFrame::OnQuit)
+    EVT_MENU(Minimal_About, MainFrame::OnAbout)
 END_EVENT_TABLE()
 
 
@@ -20,7 +20,7 @@ END_EVENT_TABLE()
 // ----------------------------------------------------------------------------
 
 // frame constructor
-MyFrame::MyFrame(wxApp *app, const wxString& title, wxString const &fileName)
+MainFrame::MainFrame(wxApp *app, const wxString& title, wxString const &fileName)
        : wxFrame(NULL, wxID_ANY, title, wxDefaultPosition, wxSize(1024,768))
 {
 
@@ -81,13 +81,13 @@ MyFrame::MyFrame(wxApp *app, const wxString& title, wxString const &fileName)
 
 // event handlers
 
-void MyFrame::OnQuit(wxCommandEvent& WXUNUSED(event))
+void MainFrame::OnQuit(wxCommandEvent& WXUNUSED(event))
 {
     // true is to force the frame to close
     Close(true);
 }
 
-void MyFrame::OnAbout(wxCommandEvent& WXUNUSED(event))
+void MainFrame::OnAbout(wxCommandEvent& WXUNUSED(event))
 {
     wxMessageBox(wxString::Format(
                     _T("Welcome to %s!\n")

@@ -46,7 +46,7 @@ bool MyApp::OnInit()
     }
 
     // create the main application window
-    MyFrame *frame = new MyFrame(this, _T("Minimal wxWidgets App"), argv[1]);
+    MainFrame *frame = new MainFrame(this, _T("Minimal wxWidgets App"), argv[1]);
 
     // and show it (the frames, unlike simple controls, are not shown when
     // created initially)

@@ -8,11 +8,11 @@
 #include "osmcanvas.h"
 
 // Define a new frame type: this is going to be our main frame
-class MyFrame : public wxFrame
+class MainFrame : public wxFrame
 {
 public:
     // ctor(s)
-    MyFrame(wxApp *app, const wxString& title, wxString const &fileName);
+    MainFrame(wxApp *app, const wxString& title, wxString const &fileName);
 
     // event handlers (these functions should _not_ be virtual)
     void OnQuit(wxCommandEvent& event);
