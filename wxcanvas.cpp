@@ -4,10 +4,10 @@
 
 
 Canvas::Canvas(wxWindow *parent)
-        : wxWindow(parent, -1)
+	: wxWindow(parent, -1)
 {
-        wxSize s = GetClientSize();
-        m_backBuffer.Create(s.x, s.y);
+	wxSize s = GetClientSize();
+	m_backBuffer.Create(s.x, s.y);
 }
 
 
@@ -17,50 +17,50 @@ Canvas::~Canvas()
 
 void Canvas::Draw(wxDC *onto)
 {
-        if (!(m_backBuffer.IsOk()))
-            return;
+	if (!(m_backBuffer.IsOk()))
+		return;
 
-        bool mustDeleteDC = false;
+	bool mustDeleteDC = false;
 
-        if (!onto)
-        {
-                onto = new wxClientDC(this);
-                mustDeleteDC =true;
-        }
+	if (!onto)
+	{
+		onto = new wxClientDC(this);
+		mustDeleteDC =true;
+	}
 
-        onto->DrawBitmap(wxBitmap(m_backBuffer),0,0,false);
-        if (mustDeleteDC)
-        {
-                delete onto;
-        }
+	onto->DrawBitmap(wxBitmap(m_backBuffer),0,0,false);
+	if (mustDeleteDC)
+	{
+		delete onto;
+	}
 
 }
 
 
 void Canvas::OnSize(wxSizeEvent &WXUNUSED(event))
 {
-        wxSize s = GetClientSize();
-        m_backBuffer.Create(s.x, s.y);
-        Render(true);
-        Draw(NULL);
+	wxSize s = GetClientSize();
+	m_backBuffer.Create(s.x, s.y);
+	Render(true);
+	Draw(NULL);
 }
 
 void Canvas::OnPaint(wxPaintEvent &WXUNUSED(event))
 {
 //    int i,j;
-        wxPaintDC dc(this);
-        dc.Clear();
+	wxPaintDC dc(this);
+	dc.Clear();
 
-        if (!IsShownOnScreen())
-            return;
+	if (!IsShownOnScreen())
+	    return;
 
-        Render();
+	Render();
 
-        Draw(&dc);
-        
+	Draw(&dc);
+	
 }
 
 BEGIN_EVENT_TABLE(Canvas, wxWindow)
-        EVT_PAINT(Canvas::OnPaint)
-        EVT_SIZE(Canvas::OnSize)
+	EVT_PAINT(Canvas::OnPaint)
+	EVT_SIZE(Canvas::OnSize)
 END_EVENT_TABLE()

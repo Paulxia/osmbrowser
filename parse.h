@@ -4,8 +4,6 @@
 #include "osm.h"
 #include <stdio.h>
 
-
-
 OsmData *parse_osm(FILE *file);
 
 OsmData *parse_binary(FILE *file);
