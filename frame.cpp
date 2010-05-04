@@ -51,7 +51,7 @@ MainFrame::MainFrame(wxApp *app, const wxString& title, wxString const &fileName
 	wxScrolledWindow *leftPanel = new wxScrolledWindow(splitter);
 	leftPanel->SetSizer(leftSizer);
 
-        leftPanel->SetScrollRate(0, 10);
+	leftPanel->SetScrollRate(0, 10);
         
 	m_canvas = new OsmCanvas(app, splitter, fileName);
 
