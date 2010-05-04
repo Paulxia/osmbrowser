@@ -12,6 +12,7 @@
 BEGIN_EVENT_TABLE(MainFrame, wxFrame)
     EVT_MENU(Minimal_Quit,  MainFrame::OnQuit)
     EVT_MENU(Minimal_About, MainFrame::OnAbout)
+    EVT_CLOSE(MainFrame::OnClose)
 END_EVENT_TABLE()
 
 
