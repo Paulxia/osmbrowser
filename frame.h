@@ -6,6 +6,7 @@
 #include <wx/app.h>
 
 #include "osmcanvas.h"
+class RuleControl;
 
 // Define a new frame type: this is going to be our main frame
 class MainFrame : public wxFrame
@@ -17,8 +18,15 @@ public:
     // event handlers (these functions should _not_ be virtual)
     void OnQuit(wxCommandEvent& event);
     void OnAbout(wxCommandEvent& event);
+	void OnClose(wxCloseEvent &close);
 
     OsmCanvas *m_canvas;
+	RuleControl *m_drawRule;
+	ColorRules *m_colorRules;
+
+	void Save(wxString const &name);
+	void Load(wxString const &name);
+
 private:
     // any class wishing to process wxWidgets events must use this macro
     DECLARE_EVENT_TABLE()

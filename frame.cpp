@@ -60,17 +60,19 @@ MainFrame::MainFrame(wxApp *app, const wxString& title, wxString const &fileName
 
 	leftSizer->Add(text, 0, wxEXPAND);
 
-	RuleControl *rc = new RuleControl(leftPanel, m_canvas, wxSize(200,200));
+	m_drawRule = new RuleControl(leftPanel, m_canvas, wxSize(200,200));
 
-	leftSizer->Add(rc, 0, wxEXPAND);
+	leftSizer->Add(m_drawRule, 0, wxEXPAND);
 
-	ColorRules *rules = new ColorRules(leftPanel, leftSizer, m_canvas);
+	m_colorRules = new ColorRules(leftPanel, leftSizer, m_canvas);
 
-	leftSizer->Add(new AddButton(leftPanel, rules), 0, wxEXPAND);
+	leftSizer->Add(new AddButton(leftPanel, m_colorRules), 0, wxEXPAND);
 
-	m_canvas->SetDrawRuleControl(rc);
-	m_canvas->SetColorRules(rules);
+	m_canvas->SetDrawRuleControl(m_drawRule);
+	m_canvas->SetColorRules(m_colorRules);
 
+
+	Load(wxT("lastused"));
 #if wxUSE_STATUSBAR
     // create a status bar just for fun (by default with 1 pane only)
     CreateStatusBar(2);
@@ -80,6 +82,15 @@ MainFrame::MainFrame(wxApp *app, const wxString& title, wxString const &fileName
 
 
 // event handlers
+
+void MainFrame::OnClose(wxCloseEvent & WXUNUSED(evt))
+{
+	printf("close\n");
+	Save(wxT("lastused"));
+	Destroy();
+
+}
+
 
 void MainFrame::OnQuit(wxCommandEvent& WXUNUSED(event))
 {
@@ -100,6 +111,22 @@ void MainFrame::OnAbout(wxCommandEvent& WXUNUSED(event))
                  _T("About wxWidgets minimal sample"),
                  wxOK | wxICON_INFORMATION,
                  this);
+}
+
+
+
+void MainFrame::Save(wxString const &name)
+{
+	m_drawRule->Save(wxString(wxT("rules/")) + name + wxT("/"));
+	m_colorRules->Save(name);
+}
+
+
+void MainFrame::Load(wxString const &name)
+{
+	m_drawRule->Load(wxString(wxT("rules/")) + name + wxT("/"));
+	m_colorRules->Load(name);
+	m_canvas->Redraw();
 }
 
 

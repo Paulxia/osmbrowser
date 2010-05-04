@@ -20,6 +20,9 @@ class RuleControl
 
 		bool Evaluate(IdObjectWithTags *o);
 
+		void Save(wxString const &group);
+		void Load(wxString const &group);
+
 	private:
 		DECLARE_EVENT_TABLE();
 
@@ -41,6 +44,9 @@ class ColorPicker
 		   m_canvas = canvas;
 		}
 
+		void Save(wxString const &group);
+		void Load(wxString const &group);
+
 		DECLARE_EVENT_TABLE();
 
 	private:
@@ -61,6 +67,9 @@ class PolyCheckBox
 		{
 			m_canvas = canvas;
 		}
+
+		void Save(wxString const &group);
+		void Load(wxString const &group);
 
 
 		DECLARE_EVENT_TABLE();
@@ -93,6 +102,18 @@ class ColorRules
 		}
 
 		void Add();
+		void Remove (int number);
+		void Clear()
+		{
+			while (m_num)
+			{
+				Remove(m_num - 1);
+			}
+		}
+		
+
+		void Save(wxString const &name);
+		void Load(wxString const &name);
 //	private:
 		ColorPicker **m_pickers;
 		RuleControl **m_rules;
