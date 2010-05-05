@@ -18,6 +18,12 @@ BEGIN_EVENT_TABLE(AddButton, wxButton)
 	EVT_BUTTON(-1, AddButton::OnClick)
 END_EVENT_TABLE()
 
+BEGIN_EVENT_TABLE(RulesComboBox, wxComboBox)
+	EVT_TEXT_ENTER(-1, RulesComboBox::OnEnter)
+	EVT_COMBOBOX(-1, RulesComboBox::OnSelected)
+END_EVENT_TABLE()
+
+
 
 RuleControl::RuleControl(wxWindow *parent, OsmCanvas *canvas, wxSize const &size)
 	: wxTextCtrl(parent, -1, wxEmptyString, wxDefaultPosition, size == wxDefaultSize ? wxSize(200,40) : size, wxTE_MULTILINE | wxTE_RICH | wxTE_PROCESS_TAB)

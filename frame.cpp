@@ -72,6 +72,9 @@ MainFrame::MainFrame(wxApp *app, const wxString& title, wxString const &fileName
 	m_canvas->SetDrawRuleControl(m_drawRule);
 	m_canvas->SetColorRules(m_colorRules);
 
+	RulesComboBox *rulesComboBox = new RulesComboBox(leftPanel, m_drawRule, m_colorRules);
+
+	leftSizer->Insert(0, rulesComboBox, 0, wxEXPAND);
 
 	Load(wxT("lastused"));
 #if wxUSE_STATUSBAR

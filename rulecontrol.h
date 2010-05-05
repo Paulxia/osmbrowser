@@ -6,6 +6,8 @@
 #include <wx/checkbox.h>
 #include <wx/button.h>
 #include <wx/richtext/richtextctrl.h>
+#include <wx/combobox.h>
+#include <wx/config.h>
 
 #include "s_expr.h"
 #include "osmcanvas.h"
@@ -147,6 +149,67 @@ class AddButton
 	ColorRules *m_rules;
 };
 
+
+class RulesComboBox
+	: public wxComboBox
+{
+	public:
+		RulesComboBox(wxWindow *parent, RuleControl *drawRule, ColorRules *colorRules)
+			: wxComboBox(parent, -1, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0, NULL, wxTE_PROCESS_ENTER | wxCB_SORT)
+		{
+			m_drawRule = drawRule;
+			m_colorRules = colorRules;
+
+			Fill();
+		}
+
+		void Fill()
+		{
+			Clear();
+			
+			wxConfigBase *config = wxConfigBase::Get();
+
+			config->SetPath(wxT("/rules"));
+
+			wxString group;
+			long index = 0;
+			for (bool cont = config->GetFirstGroup(group, index); cont; cont = config->GetNextGroup(group, index))
+			{
+				Append(group);
+			}
+
+			config->SetPath(wxT("/"));
+
+		}
+
+
+	private:
+
+		void OnEnter(wxCommandEvent &evt)
+		{
+			if (GetValue().Length())
+			{
+				m_drawRule->Save(GetValue());
+				m_colorRules->Save(GetValue());
+			}
+
+			Fill();
+		}
+
+		void OnSelected(wxCommandEvent &evt)
+		{
+			if (GetValue().Length())
+			{
+				m_drawRule->Load(GetValue());
+				m_colorRules->Load(GetValue());
+			}
+		}
+
+		RuleControl *m_drawRule;
+		ColorRules *m_colorRules;
+
+		DECLARE_EVENT_TABLE();
+};
 
 #endif
 
