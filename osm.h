@@ -7,7 +7,7 @@
 #include <assert.h>
 //#include <stdio.h>
 #include <wx/hashmap.h>
-
+#include <wx/arrstr.h>
 
 class DRect
 {
@@ -270,6 +270,74 @@ class TagIndex
 };
 
 WX_DECLARE_STRING_HASH_MAP( unsigned , StringToIndexMapper );
+
+class StringStore
+{
+	public:
+
+		unsigned GetInvalid()
+		{
+			return 0xFFFFFFFF;
+		}
+
+		unsigned Find(char const *s, bool add = true)
+		{
+			wxString st(s, wxConvUTF8);
+			return Find(st, add);
+		}
+
+		unsigned Find(wxString const &s, bool add = true)
+		{
+			unsigned id = FindNoAdd(s);
+
+			if (!add)
+			{
+				return id;
+			}
+
+			if (id == 0xFFFFFFFF)
+			{
+				return Add(s);
+			}
+
+			return id;
+		}
+
+		wxString const &Get(unsigned id)
+		{
+			if (id < m_strings.GetCount())
+				return m_strings[id];
+
+			return empty;
+		}
+
+
+	private:
+		unsigned FindNoAdd(wxString const &s)
+		{
+			StringToIndexMapper::iterator f = m_mapper.find(s);
+
+			if (f == m_mapper.end())
+				return 0xFFFFFFFF;
+
+			return f->second;
+
+		}
+
+		unsigned Add(wxString const &s)
+		{
+			unsigned id = m_strings.Add(s);
+			m_mapper.insert(StringToIndexMapper::value_type(m_strings[id] , id));
+
+			return id;
+		}
+
+		StringToIndexMapper m_mapper;
+		wxArrayString m_strings;
+
+		wxString empty;
+};
+
 
 
 class TagStore
