@@ -11,6 +11,7 @@
 
 #include "s_expr.h"
 #include "osmcanvas.h"
+#include "frame.h"
 
 class RuleControl
 	: public wxTextCtrl, public ExpressionParser
@@ -146,7 +147,7 @@ class AddButton
 		}
 		DECLARE_EVENT_TABLE()
 
-	ColorRules *m_rules;
+		ColorRules *m_rules;
 };
 
 
@@ -154,11 +155,10 @@ class RulesComboBox
 	: public wxComboBox
 {
 	public:
-		RulesComboBox(wxWindow *parent, RuleControl *drawRule, ColorRules *colorRules)
+		RulesComboBox(wxWindow *parent, MainFrame *frame)
 			: wxComboBox(parent, -1, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0, NULL, wxTE_PROCESS_ENTER | wxCB_SORT)
 		{
-			m_drawRule = drawRule;
-			m_colorRules = colorRules;
+			m_mainFrame = frame;
 
 			Fill();
 		}
@@ -189,8 +189,7 @@ class RulesComboBox
 		{
 			if (GetValue().Length())
 			{
-				m_drawRule->Save(GetValue());
-				m_colorRules->Save(GetValue());
+				m_mainFrame->Save(GetValue());
 			}
 
 			Fill();
@@ -200,13 +199,11 @@ class RulesComboBox
 		{
 			if (GetValue().Length())
 			{
-				m_drawRule->Load(GetValue());
-				m_colorRules->Load(GetValue());
+				m_mainFrame->Load(GetValue());
 			}
 		}
 
-		RuleControl *m_drawRule;
-		ColorRules *m_colorRules;
+		MainFrame *m_mainFrame;
 
 		DECLARE_EVENT_TABLE();
 };
