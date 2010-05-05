@@ -1,0 +1,9 @@
+- loading/saving rulesets
+- layers
+- identification (select elements and display info)
+- create rule to hide/show/color selection
+- draw relations & nodes with tags
+- draw name tags on map?
+- allow saving current selection to osm
+- also read attributes? (otherwise we lose info on saving)
+- on pan draw only new parts
