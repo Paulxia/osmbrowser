@@ -366,13 +366,17 @@ void OsmCanvas::Render(bool force)
 	
 	if (!(m_backBuffer.IsOk()))
 	{
-		printf("render backbuffer bnot ok\n");
 		m_restart = true;
 		return;
 	}
+
+	if (!IsShownOnScreen())
+	{
+		return;
+	}
+	
 	if (!m_restart && m_done)
 	{
-		printf("nothing to do\n");
 		return;
 	}
 	int w = m_backBuffer.GetWidth();
