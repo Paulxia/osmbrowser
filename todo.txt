@@ -7,3 +7,5 @@
 - allow saving current selection to osm
 - also read attributes? (otherwise we lose info on saving)
 - on pan draw only new parts
+- draw wide roads
+- render with agg/opengl/cairo instead of ugly wx gfx
