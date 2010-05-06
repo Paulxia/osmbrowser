@@ -455,7 +455,7 @@ class OsmCanvas
 		void OnTimer(wxTimerEvent &evt)
 		{
 			m_timer.Stop();
-			if (!m_done)
+			if (m_restart || !m_done)
 			{
 				Render();
 			}
