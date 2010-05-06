@@ -10,6 +10,178 @@ class TileList;
 class RuleControl;
 class ColorRules;
 
+class Renderer
+{
+	public:
+		enum TYPE
+		{
+			R_POLYGON,
+			R_LINE
+		};
+		virtual void Begin(Renderer::TYPE type) = 0;
+		virtual void AddPoint(double x, double y) = 0;
+		virtual void End() = 0;
+		virtual void DrawTextCentered(char const *text, double x, double y, double angle) = 0;
+
+		virtual void SetLineColor(int r, int g, int b) = 0;
+		virtual void SetFillColor(int r, int g, int b) = 0;
+
+};
+
+class RendererSimple
+{
+	public:
+		RendererSimple()
+		{
+			m_maxPoints = 1024;
+			m_points = new RendererSimple::Point[m_maxPoints];
+			m_numPoints = 0;
+		}
+
+		~RendererSimple()
+		{
+			delete [] m_points;
+		}
+
+		void Begin(Renderer::TYPE type)
+		{
+			m_type = type;
+		}
+
+		void AddPoint(double x, double y)
+		{
+			if (m_numPoints >= m_maxPoints)
+			{
+				Grow();
+			}
+
+			m_points[m_numPoints].x = x;
+			m_points[m_numPoints].y = y;
+			m_numPoints++;
+		}
+
+		void End()
+		{
+			switch(m_type)
+			{
+				case Renderer::R_LINE:
+				DrawLine();
+				break;
+				case Renderer::R_POLYGON:
+				DrawPolygon();
+				break;
+			};
+		}
+
+	protected:
+		virtual void DrawPolygon() = 0;
+		virtual void DrawLine() = 0;
+	private:
+		struct Point
+		{
+			double x, y;
+		};
+
+		void Grow()
+		{
+			m_maxPoints *=2;
+			RendererSimple::Point *n = new  RendererSimple::Point[m_maxPoints];
+			for (unsigned i = 0; i < m_numPoints; i++)
+			{
+				n[i] = m_points[i];
+			}
+
+			delete [] m_points;
+			m_points = n;
+		}
+	protected:
+		Renderer::TYPE m_type;
+		RendererSimple::Point *m_points;
+		unsigned m_maxPoints;
+		unsigned m_numPoints;
+		
+};
+
+class RendererWxBitmap
+	: public RendererSimple
+{
+	public:
+		RendererWxBitmap()
+		{
+			m_wxPoints = NULL;
+			m_numWxPoints  = 0;
+			m_h = 0;
+		}
+
+		~RendererWxBitmap()
+		{
+			delete [] m_wxPoints;
+			//m_dc.SelectObject(NULL);
+		}
+
+		void DrawTextCentered(char const *s, double x, double y, double angle)
+		{
+			// not implemented yet
+		}
+
+		void SetLineColor(int r, int g, int b)
+		{
+			wxPen pen(wxColour(r,g,b));
+			m_dc.SetPen(pen);
+		}
+
+		void SetFillColor(int r, int g, int b)
+		{
+			wxBrush brush(wxColour(r,g,b));
+			m_dc.SetBrush(brush);
+		}
+
+		void Setup(wxBitmap *bitmap, DRect const &viewport)
+		{
+			m_offX = viewport.m_x;
+			m_offY = viewport.m_y;
+			m_h = bitmap->GetHeight();
+
+			m_scaleX = bitmap->GetWidth() / viewport.m_w;
+			m_scaleY = bitmap->GetHeight() / viewport.m_h;
+			m_dc.SelectObject(*bitmap);
+		}
+	private:
+		double m_offX, m_offY, m_scaleX, m_scaleY;
+		int m_h;
+		wxMemoryDC m_dc;
+		wxPoint *m_wxPoints;
+		unsigned m_numWxPoints;
+	protected:
+		void ScalePoints()
+		{
+			if (m_numWxPoints < m_maxPoints)
+			{
+				delete [] m_wxPoints;
+				m_wxPoints = new wxPoint[m_maxPoints];
+				m_numWxPoints = m_maxPoints;
+			}
+
+			for (unsigned i = 0; i < m_numPoints; i++)
+			{
+				m_wxPoints[i].x = static_cast<int>((m_points[i].x - m_offX) * m_scaleX);
+				m_wxPoints[i].y = m_h - static_cast<int>((m_points[i].y - m_offY) * m_scaleY);
+			}
+		}
+		
+		void DrawPolygon()
+		{
+			ScalePoints();
+			m_dc.DrawPolygon(m_numPoints, m_wxPoints);
+		}
+
+		void DrawLine()
+		{
+			ScalePoints();
+			m_dc.DrawLines(m_numPoints, m_wxPoints);
+		}
+};
+
 class TileWay
 	: public ListObject
 {
