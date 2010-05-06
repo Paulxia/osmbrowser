@@ -340,7 +340,6 @@ class OsmCanvas
 		void SetupRenderer();
 		RendererWxBitmap m_renderer;
 
-		int m_renderW, m_renderH;
 };
 
 

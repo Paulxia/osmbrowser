@@ -126,7 +126,6 @@ OsmCanvas::OsmCanvas(wxApp * app, wxWindow *parent, wxString const &fileName)
 	m_dragging = false;
 	m_locked = true;
 	wxString binFile = fileName;
-	m_renderW = m_renderH = -1;
 
 	binFile.Append(wxT(".cache"));
 
@@ -259,77 +258,45 @@ void OsmCanvas::RenderWay(OsmWay *w, bool fast, int curLayer)
 
 void OsmCanvas::RenderWay(OsmWay *w, wxColour lineColour, bool poly, wxColour fillColour)
 {
-	int width = m_backBuffer.GetWidth();
-	int height = m_backBuffer.GetHeight();
-	wxMemoryDC dc;
-	dc.SelectObject(m_backBuffer);
-	double xScale = cos(m_yOffset * M_PI / 180) * m_scale;
 
-	double sxMax = m_xOffset + width / xScale;
-	double syMax = m_yOffset + height / xScale;
 
-	wxPen pen;
-	wxBrush brush;
+	m_renderer.SetLineColor(lineColour.Red(), lineColour.Green(), lineColour.Blue());
+	m_renderer.SetFillColor(fillColour.Red(), fillColour.Green(), fillColour.Blue());
 
-	pen.SetColour(lineColour);
-	brush.SetColour(fillColour);
-
-	dc.SetPen(pen);
-	dc.SetBrush(brush);
 	if (!poly)
 	{
-		for (unsigned j = 0; j < w->m_numResolvedNodes - 1; j++)
+		m_renderer.Begin(Renderer::R_LINE);
+		for (unsigned j = 0; j < w->m_numResolvedNodes; j++)
 		{
-			OsmNode *node1 = w->m_resolvedNodes[j];
-			OsmNode *node2 = w->m_resolvedNodes[j+1];
+			OsmNode *node = w->m_resolvedNodes[j];
 		
-			if (node1 && node2)
+			if (node)
 			{
-				double lon1 = node1->m_lon;
-				double lon2 = node2->m_lon;
-				double lat1 = node1->m_lat;
-				double lat2 = node2->m_lat;
-		
-		
-				if ( (lon1 > m_xOffset && lon1 < sxMax && lat1 > m_yOffset && lat1 < syMax)
-					 || (lon2 > m_xOffset && lon2 < sxMax && lat2 > m_yOffset && lat2 < syMax))
-				{
-						int x1 = (lon1 - m_xOffset) * xScale;
-						int y1 = (lat1 - m_yOffset) * m_scale;
-						int x2 = (lon2 - m_xOffset) * xScale;
-						int y2 = (lat2 - m_yOffset) * m_scale;
-						y1 = height - y1;
-						y2 = height - y2;
-		
-		//                printf("drawing %g %g %g %g s%g %d %d\n",node1->m_lon, node1->m_lat, m_xOffset, m_yOffset, m_scale, x1,y1);
-		
-						dc.DrawLine(x1,y1, x2,y2);
-				}
+				m_renderer.AddPoint(node->m_lon, node->m_lat);
 			}
+			else
+			{
+				m_renderer.End();
+				m_renderer.Begin(Renderer::R_LINE);
+			}
+		
 		}
+		m_renderer.End();
 	}
 	else
 	{
-		StartPolygon();
+		m_renderer.Begin(Renderer::R_POLYGON);
 		for (unsigned j = 0; j < w->m_numResolvedNodes; j++)
 		{
-			OsmNode *node1 = w->m_resolvedNodes[j];
+			OsmNode *node = w->m_resolvedNodes[j];
 		
-			if (node1)
+			if (node)
 			{
-				double lon1 = node1->m_lon;
-				double lat1 = node1->m_lat;
-		
-		
-				int x1 = (lon1 - m_xOffset) * xScale;
-				int y1 = (lat1 - m_yOffset) * m_scale;
-				y1 = height - y1;
-		
-				AddPoint(x1,y1);
+				m_renderer.AddPoint(node->m_lon, node->m_lat);
 			}
 			
 		}
-		EndPolygon(&dc);
+		m_renderer.End();
 	}
 }
 
@@ -361,18 +328,13 @@ void OsmCanvas::Render(bool force)
 	int w = m_backBuffer.GetWidth();
 	int h = m_backBuffer.GetHeight();
 
-	if (w != m_renderW || h != m_renderH)
-	{
-		SetupRenderer();
-	}
+	SetupRenderer();
 	
 	double xScale = cos(m_yOffset * M_PI / 180) * m_scale;
 
 	if (m_restart)
 	{
-		wxMemoryDC dc;
-		dc.SelectObject(m_backBuffer);
-		dc.Clear();
+		m_renderer.Clear();
 	}
 	Rect(wxEmptyString, m_data->m_minlon, m_data->m_minlat, m_data->m_maxlon, m_data->m_maxlat, 0, 0,255,0);
 
@@ -472,10 +434,10 @@ void OsmCanvas::SetupRenderer()
 {
 	double scaleCorrection = cos(m_yOffset * M_PI / 180);
 
-	m_renderW = m_backBuffer.GetWidth();
-	m_renderH = m_backBuffer.GetHeight();
-	double sw = m_renderW / (scaleCorrection * m_scale);
-	double sh = m_renderH / m_scale;
+	int renderW = m_backBuffer.GetWidth();
+	int renderH = m_backBuffer.GetHeight();
+	double sw = renderW / (scaleCorrection * m_scale);
+	double sh = renderH / m_scale;
 
 	m_renderer.Setup(&m_backBuffer, DRect(m_xOffset, m_yOffset, sw, sh));
 }

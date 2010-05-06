@@ -36,6 +36,7 @@ class Renderer
 		virtual void SetLineColor(int r, int g, int b, int a = 0) = 0;
 		virtual void SetFillColor(int r, int g, int b, int a = 0) = 0;
 
+		virtual void Clear() = 0;
 };
 
 class RendererSimple
@@ -148,6 +149,11 @@ class RendererWxBitmap
 		void SetFillColor(int r, int g, int b, int a = 0)
 		{
 			m_brush.SetColour(wxColour(r,g,b));
+		}
+
+		void Clear()
+		{
+			m_dc.Clear();
 		}
 
 		void Setup(wxBitmap *bitmap, DRect const &viewport);
