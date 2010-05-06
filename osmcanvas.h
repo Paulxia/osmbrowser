@@ -229,6 +229,10 @@ class OsmCanvas
 
 		// with default colours
 		void RenderWay(OsmWay *w, bool fast, int curlayer);
+		void Rect(wxString const &text, DRect const &re, int border, int r, int g, int b)
+		{
+			Rect(text, re.m_x, re.m_y, re.m_x + re.m_w, re.m_y + re.m_h, border, r, g, b);
+		}
 		void Rect(wxString const &text, double lon1, double lat1, double lon2, double lat2, int border, int r, int g, int b);
 		void DrawTileOutline(OsmTile *t, int r, int g, int b);
 		~OsmCanvas();
