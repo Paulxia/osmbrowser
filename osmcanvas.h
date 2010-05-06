@@ -23,6 +23,22 @@ class Renderer
 		virtual void End() = 0;
 		virtual void DrawTextCentered(char const *text, double x, double y, double angle) = 0;
 
+		void Rect(DRect const &re, double border, int r, int g, int b)
+		{
+			Rect(re.m_x, re.m_y, re.m_w, re.m_h, border, r, g, b);
+		}
+
+		void Rect(double x, double y, double w, double h, double border, int r, int g, int b)
+		{
+			Begin(R_LINE);
+			AddPoint(x - border, y - border);
+			AddPoint(x + w + 2 * border, y - border);
+			AddPoint(x + w + 2 * border, y + 2 * border);
+			AddPoint(x - border, y + 2 * border);
+			AddPoint(x - border, y - border);
+			End();
+		}
+
 		virtual void SetLineColor(int r, int g, int b) = 0;
 		virtual void SetFillColor(int r, int g, int b) = 0;
 
