@@ -33,8 +33,7 @@ bool TileSorter::RenderTiles(wxApp *app, OsmCanvas *canvas, double lon, double l
 {
 	bool mustCancel = false;
 
-	DRect bb(lon, lat);
-	bb.SetSize(w, h);
+	DRect bb(lon, lat, w, h);
 
 //	canvas->Rect(wxEmptyString, bb, 0, 255,0,0);
 
