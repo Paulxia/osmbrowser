@@ -228,7 +228,7 @@ class OsmCanvas
 		void RenderWay(OsmWay *w, wxColour lineColour, bool polygon = false, wxColour fillColour = wxColour(255,255,55));
 
 		// with default colours
-		void RenderWay(OsmWay *w, bool fast);
+		void RenderWay(OsmWay *w, bool fast, int curlayer);
 		void Rect(wxString const &text, double lon1, double lat1, double lon2, double lat2, int border, int r, int g, int b);
 		void DrawTileOutline(OsmTile *t, int r, int g, int b);
 		~OsmCanvas();
