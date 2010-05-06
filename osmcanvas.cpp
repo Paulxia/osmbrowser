@@ -29,7 +29,7 @@ TileWay::~TileWay()
 	m_tiles->UnRef();
 }
 
-bool TileRenderer::RenderTiles(wxApp *app, OsmCanvas *canvas, double lon, double lat, double w, double h, bool restart)
+bool TileSorter::RenderTiles(wxApp *app, OsmCanvas *canvas, double lon, double lat, double w, double h, bool restart)
 {
 	bool mustCancel = false;
 
@@ -190,9 +190,9 @@ OsmCanvas::OsmCanvas(wxApp * app, wxWindow *parent, wxString const &fileName)
 
 	m_lastX = m_lastY = 0;
 
-	m_tileRenderer = new TileRenderer(m_data->m_minlon, m_data->m_minlat, m_data->m_maxlon, m_data->m_maxlat, .05, .04);
+	m_tileSorter = new TileSorter(m_data->m_minlon, m_data->m_minlat, m_data->m_maxlon, m_data->m_maxlat, .05, .04);
 
-	m_tileRenderer->AddWays(static_cast<OsmWay *>(m_data->m_ways.m_content));
+	m_tileSorter->AddWays(static_cast<OsmWay *>(m_data->m_ways.m_content));
 
 	m_fastTags = NULL;
 //    m_fastTags = new OsmTag("boundary");
@@ -251,20 +251,6 @@ void OsmCanvas::Rect(wxString const &text, double lon1, double lat1, double lon2
 	dc.DrawText(text, xd + wd /2, yd + hd /2);
 
 }
-
-void OsmCanvas::DrawTileOutline(OsmTile *t, int r, int g, int b)
-{
-
-
-	wxString id;
-	
-	id.Printf(wxT("tile: %u"), t->m_id);
-
-	Rect(id, t->m_x, t->m_y, t->m_x + t->m_w, t->m_y + t->m_h, 3, r,g,b);
-
-	
-}
-
 
 // render using default colours. should plug in rule engine here
 void OsmCanvas::RenderWay(OsmWay *w, bool fast, int curLayer)
@@ -424,7 +410,7 @@ void OsmCanvas::Render(bool force)
 	}
 	Rect(wxEmptyString, m_data->m_minlon, m_data->m_minlat, m_data->m_maxlon, m_data->m_maxlat, 0, 0,255,0);
 
-	m_done = m_tileRenderer->RenderTiles(m_app, this, m_xOffset, m_yOffset, w / xScale, h / m_scale, m_restart);
+	m_done = m_tileSorter->RenderTiles(m_app, this, m_xOffset, m_yOffset, w / xScale, h / m_scale, m_restart);
 	m_restart = false;
 
 	Draw(NULL);

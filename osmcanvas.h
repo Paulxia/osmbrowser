@@ -80,10 +80,10 @@ class TileList
 
 class OsmCanvas;
 
-class TileRenderer
+class TileSorter
 {
 	public:
-		TileRenderer(double minLon,double minLat, double maxLon, double maxLat, double dLon, double dLat)
+		TileSorter(double minLon,double minLat, double maxLon, double maxLat, double dLon, double dLat)
 		{
 			m_tiles = NULL;
 			unsigned id = 0;
@@ -111,7 +111,7 @@ class TileRenderer
 			}
 		 }
 
-		~TileRenderer()
+		~TileSorter()
 		{
 			m_tiles->DestroyList();
 			for (unsigned x = 0; x < m_xNum; x++)
@@ -234,7 +234,7 @@ class OsmCanvas
 			Rect(text, re.m_x, re.m_y, re.m_x + re.m_w, re.m_y + re.m_h, border, r, g, b);
 		}
 		void Rect(wxString const &text, double lon1, double lat1, double lon2, double lat2, int border, int r, int g, int b);
-		void DrawTileOutline(OsmTile *t, int r, int g, int b);
+
 		~OsmCanvas();
 
 		void Lock()
@@ -323,12 +323,12 @@ class OsmCanvas
 		int m_polygonCount;
 		bool m_polygonVisible;
 
-		TileRenderer *m_tileRenderer;
+		TileSorter *m_tileSorter;
 
 		OsmTag *m_fastTags;
 
 		RuleControl *m_drawRuleControl;
-		ColorRules	*m_colorRules;
+		ColorRules *m_colorRules;
 
 		wxApp *m_app;
 		bool m_done;
