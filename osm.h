@@ -18,7 +18,7 @@ class DRect
 			m_w = -1;
 		}
 		
-		DRect(double minX, double minY, int w = -1, double h = 0)
+		DRect(double minX, double minY, double w = -1, double h = 0)
 		{
 			m_x = minX;
 			m_y = minY;
