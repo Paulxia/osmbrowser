@@ -233,6 +233,20 @@ class OsmCanvas
 		void DrawTileOutline(OsmTile *t, int r, int g, int b);
 		~OsmCanvas();
 
+		void Lock()
+		{
+			m_locked = true;
+		}
+
+		void Unlock(bool refresh = true)
+		{
+			m_locked = false;
+			if (refresh)
+			{
+				Redraw();
+			}
+		}
+
 		void Redraw()
 		{
 			m_restart = true;
@@ -315,6 +329,7 @@ class OsmCanvas
 		wxApp *m_app;
 		bool m_done;
 		bool m_restart;
+		bool m_locked;
 		wxTimer m_timer;
 };
 

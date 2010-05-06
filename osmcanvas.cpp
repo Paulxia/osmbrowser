@@ -400,7 +400,7 @@ void OsmCanvas::Render(bool force)
 		return;
 	}
 
-	if (!IsShownOnScreen())
+	if (!IsShownOnScreen() || m_locked)
 	{
 		return;
 	}
