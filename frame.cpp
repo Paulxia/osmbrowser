@@ -69,8 +69,7 @@ MainFrame::MainFrame(wxApp *app, const wxString& title, wxString const &fileName
 
 	leftSizer->Add(new AddButton(leftPanel, m_colorRules), 0, wxEXPAND);
 
-	m_canvas->SetDrawRuleControl(m_drawRule);
-	m_canvas->SetColorRules(m_colorRules);
+	m_canvas->SetRuleControls(m_drawRule, m_colorRules);
 
 	RulesComboBox *rulesComboBox = new RulesComboBox(leftPanel, this);
 

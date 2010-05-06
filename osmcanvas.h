@@ -85,12 +85,14 @@ class OsmCanvas;
 class TileSorter
 {
 	public:
-		TileSorter(double minLon,double minLat, double maxLon, double maxLat, double dLon, double dLat)
+		TileSorter(Renderer *renderer, double minLon,double minLat, double maxLon, double maxLat, double dLon, double dLat)
 		{
+			m_renderer = renderer;
 			m_tiles = NULL;
-			unsigned id = 0;
-			// build a list of empty tiles;
 
+			m_drawRule = NULL;
+			m_colorRules = NULL;
+			
 			m_xNum = static_cast<int>((maxLon - minLon) / dLon) + 1;
 			m_yNum = static_cast<int>((maxLat - minLat) / dLat) + 1;
 			m_minLon = minLon;
@@ -101,6 +103,8 @@ class TileSorter
 			m_dLat = dLat;
 			m_renderedTiles = m_visibleTiles = NULL;
 			
+			unsigned id = 0;
+			// build a list of empty tiles;
 			m_tileArray = new OsmTile **[m_xNum];
 			for (unsigned x = 0; x < m_xNum; x++)
 			{
@@ -205,7 +209,36 @@ class TileSorter
 
 		bool RenderTiles(wxApp *app, OsmCanvas *canvas, double lon, double lat, double w, double h, bool restart);
 
+
+		void SetDrawRuleControl(RuleControl *r)
+		{
+			m_drawRule = r;
+		}
+		
+		void SetColorRules(ColorRules *r)
+		{
+			m_colorRules = r;
+		}
+
+		// with explicit colours
+		void RenderWay(OsmWay *w, wxColour lineColour, bool polygon = false, wxColour fillColour = wxColour(255,255,55));
+
+		// with default colours
+		void RenderWay(OsmWay *w, int curlayer);
+		void Rect(wxString const &text, DRect const &re, int border, int r, int g, int b)
+		{
+			Rect(text, re.m_x, re.m_y, re.m_x + re.m_w, re.m_y + re.m_h, border, r, g, b);
+		}
+		
+		void Rect(wxString const &text, double lon1, double lat1, double lon2, double lat2, double border, int r, int g, int b);
+
+		void SetRuleControls(RuleControl *drawRule, ColorRules *colorRules)
+		{
+		
+		}
+
 	private:
+
 		OsmTile *m_tiles;
 		OsmTile ***m_tileArray;
 		unsigned m_xNum, m_yNum;
@@ -213,7 +246,11 @@ class TileSorter
 
 		TileList *m_visibleTiles, *m_renderedTiles, *m_curTile;
 		int m_curLayer;
-		
+
+		Renderer *m_renderer;
+
+		RuleControl *m_drawRule;
+		ColorRules *m_colorRules;
 };
 
 class OsmCanvas
@@ -222,20 +259,6 @@ class OsmCanvas
 	public:
 		OsmCanvas(wxApp *app, wxWindow *parent, wxString const &fileName);
 		void Render(bool force = false);
-
-		void SetDrawRuleControl(RuleControl *r);
-		void SetColorRules(ColorRules *r);
-
-		// with explicit colours
-		void RenderWay(OsmWay *w, wxColour lineColour, bool polygon = false, wxColour fillColour = wxColour(255,255,55));
-
-		// with default colours
-		void RenderWay(OsmWay *w, bool fast, int curlayer);
-		void Rect(wxString const &text, DRect const &re, int border, int r, int g, int b)
-		{
-			Rect(text, re.m_x, re.m_y, re.m_x + re.m_w, re.m_y + re.m_h, border, r, g, b);
-		}
-		void Rect(wxString const &text, double lon1, double lat1, double lon2, double lat2, int border, int r, int g, int b);
 
 		~OsmCanvas();
 
@@ -256,6 +279,12 @@ class OsmCanvas
 		void Redraw()
 		{
 			m_restart = true;
+		}
+
+		void SetRuleControls(RuleControl *rules, ColorRules *colors)
+		{
+			m_tileSorter->SetDrawRuleControl(rules);
+			m_tileSorter->SetColorRules(colors);
 		}
 	private:
 		OsmData *m_data;
@@ -286,11 +315,6 @@ class OsmCanvas
 		bool m_dragging;
 
 		TileSorter *m_tileSorter;
-
-		OsmTag *m_fastTags;
-
-		RuleControl *m_drawRuleControl;
-		ColorRules *m_colorRules;
 
 		wxApp *m_app;
 		bool m_done;

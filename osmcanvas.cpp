@@ -57,8 +57,6 @@ bool TileSorter::RenderTiles(wxApp *app, OsmCanvas *canvas, double lon, double l
 		return false;
 	}
 
-	bool fast = false;//m_visibleTiles->GetSize() > 16;
-
 	while (!mustCancel && m_curLayer < NUMLAYERS)
 	{
 		while (m_curTile && !mustCancel)
@@ -92,7 +90,7 @@ bool TileSorter::RenderTiles(wxApp *app, OsmCanvas *canvas, double lon, double l
 	
 					if (!already)
 					{
-						canvas->RenderWay(w->m_way, fast, m_curLayer);
+						RenderWay(w->m_way, m_curLayer);
 					}
 				}	// for way
 			}  // if overlaps
@@ -121,8 +119,6 @@ OsmCanvas::OsmCanvas(wxApp * app, wxWindow *parent, wxString const &fileName)
 	m_done = false;
 	m_restart = true;
 	m_app = app;
-	m_drawRuleControl = NULL;
-	m_colorRules = NULL;
 	m_dragging = false;
 	m_locked = true;
 	wxString binFile = fileName;
@@ -189,48 +185,26 @@ OsmCanvas::OsmCanvas(wxApp * app, wxWindow *parent, wxString const &fileName)
 
 	m_lastX = m_lastY = 0;
 
-	m_tileSorter = new TileSorter(m_data->m_minlon, m_data->m_minlat, m_data->m_maxlon, m_data->m_maxlat, .05, .04);
+	m_tileSorter = new TileSorter(&m_renderer, m_data->m_minlon, m_data->m_minlat, m_data->m_maxlon, m_data->m_maxlat, .05, .04);
 
 	m_tileSorter->AddWays(static_cast<OsmWay *>(m_data->m_ways.m_content));
-
-	m_fastTags = NULL;
-//    m_fastTags = new OsmTag("boundary");
-	m_fastTags = new OsmTag("highway", "motorway", m_fastTags);
-	m_fastTags = new OsmTag("natural", "coastline", m_fastTags);
-//    m_fastTags = new OsmTag("natural", "water", m_fastTags);
-	m_fastTags = new OsmTag("railway", "rail", m_fastTags);
 
 	m_timer.Start(100);
 }
 
 
-void OsmCanvas::Rect(wxString const &text, double lon1, double lat1, double lon2, double lat2, int border, int r, int g, int b)
+void TileSorter::Rect(wxString const &text, double lon1, double lat1, double lon2, double lat2, double border, int r, int g, int b)
 {
-	m_renderer.SetLineColor(r,g,b);
-	m_renderer.Rect(lon1, lat1, lon2 - lon1, lat2 - lat1, border / m_scale, r, g, b);
-	m_renderer.DrawCenteredText(text.mb_str(wxConvUTF8), (lon1 + lon2)/2, (lat1 + lat2)/2, 0, r, g, b);
+	m_renderer->SetLineColor(r,g,b);
+	m_renderer->Rect(lon1, lat1, lon2 - lon1, lat2 - lat1, border , r, g, b);
+	m_renderer->DrawCenteredText(text.mb_str(wxConvUTF8), (lon1 + lon2)/2, (lat1 + lat2)/2, 0, r, g, b);
 }
 
 // render using default colours. should plug in rule engine here
-void OsmCanvas::RenderWay(OsmWay *w, bool fast, int curLayer)
+void TileSorter::RenderWay(OsmWay *w, int curLayer)
 {
 
-	if (fast)
-	{
-		bool draw = false;
-		for (OsmTag *t = m_fastTags; t; t = static_cast<OsmTag *>(t->m_next))
-		{
-			if (w->HasTag(*t))
-				draw = true;
-		}
-
-		if (!draw)
-		{
-			return;
-		}
-	}
-
-	if ((!m_drawRuleControl) || m_drawRuleControl->Evaluate(w))
+	if ((!m_drawRule) || m_drawRule->Evaluate(w))
 	{
 		wxColour c = wxColour(150,150,150);
 		bool poly = false;
@@ -256,47 +230,47 @@ void OsmCanvas::RenderWay(OsmWay *w, bool fast, int curLayer)
 }
 
 
-void OsmCanvas::RenderWay(OsmWay *w, wxColour lineColour, bool poly, wxColour fillColour)
+void TileSorter::RenderWay(OsmWay *w, wxColour lineColour, bool poly, wxColour fillColour)
 {
 
 
-	m_renderer.SetLineColor(lineColour.Red(), lineColour.Green(), lineColour.Blue());
-	m_renderer.SetFillColor(fillColour.Red(), fillColour.Green(), fillColour.Blue());
+	m_renderer->SetLineColor(lineColour.Red(), lineColour.Green(), lineColour.Blue());
+	m_renderer->SetFillColor(fillColour.Red(), fillColour.Green(), fillColour.Blue());
 
 	if (!poly)
 	{
-		m_renderer.Begin(Renderer::R_LINE);
+		m_renderer->Begin(Renderer::R_LINE);
 		for (unsigned j = 0; j < w->m_numResolvedNodes; j++)
 		{
 			OsmNode *node = w->m_resolvedNodes[j];
 		
 			if (node)
 			{
-				m_renderer.AddPoint(node->m_lon, node->m_lat);
+				m_renderer->AddPoint(node->m_lon, node->m_lat);
 			}
 			else
 			{
-				m_renderer.End();
-				m_renderer.Begin(Renderer::R_LINE);
+				m_renderer->End();
+				m_renderer->Begin(Renderer::R_LINE);
 			}
 		
 		}
-		m_renderer.End();
+		m_renderer->End();
 	}
 	else
 	{
-		m_renderer.Begin(Renderer::R_POLYGON);
+		m_renderer->Begin(Renderer::R_POLYGON);
 		for (unsigned j = 0; j < w->m_numResolvedNodes; j++)
 		{
 			OsmNode *node = w->m_resolvedNodes[j];
 		
 			if (node)
 			{
-				m_renderer.AddPoint(node->m_lon, node->m_lat);
+				m_renderer->AddPoint(node->m_lon, node->m_lat);
 			}
 			
 		}
-		m_renderer.End();
+		m_renderer->End();
 	}
 }
 
@@ -336,7 +310,7 @@ void OsmCanvas::Render(bool force)
 	{
 		m_renderer.Clear();
 	}
-	Rect(wxEmptyString, m_data->m_minlon, m_data->m_minlat, m_data->m_maxlon, m_data->m_maxlat, 0, 0,255,0);
+	m_tileSorter->Rect(wxEmptyString, m_data->m_minlon, m_data->m_minlat, m_data->m_maxlon, m_data->m_maxlat, 0, 0,255,0);
 
 	m_done = m_tileSorter->RenderTiles(m_app, this, m_xOffset, m_yOffset, w / xScale, h / m_scale, m_restart);
 	m_restart = false;
@@ -418,17 +392,6 @@ void OsmCanvas::OnLeftUp(wxMouseEvent &evt)
 
 }
 
-
-void OsmCanvas::SetDrawRuleControl(RuleControl *r)
-{
-	m_drawRuleControl = r;
-}
-
-
-void OsmCanvas::SetColorRules(ColorRules *r)
-{
-	m_colorRules = r;
-}
 
 void OsmCanvas::SetupRenderer()
 {
