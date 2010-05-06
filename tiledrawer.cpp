@@ -15,6 +15,40 @@ TileWay::~TileWay()
 	m_tiles->UnRef();
 }
 
+
+TileDrawer::TileDrawer(Renderer *renderer, double minLon,double minLat, double maxLon, double maxLat, double dLon, double dLat)
+{
+	m_renderer = renderer;
+	m_tiles = NULL;
+
+	m_drawRule = NULL;
+	m_colorRules = NULL;
+	
+	m_xNum = static_cast<int>((maxLon - minLon) / dLon) + 1;
+	m_yNum = static_cast<int>((maxLat - minLat) / dLat) + 1;
+	m_minLon = minLon;
+	m_w = m_xNum * dLon;
+	m_minLat = minLat;
+	m_h = m_yNum *dLat;
+	m_dLon = dLon;
+	m_dLat = dLat;
+	m_renderedTiles = m_visibleTiles = NULL;
+	
+	unsigned id = 0;
+	// build a list of empty tiles;
+	m_tileArray = new OsmTile **[m_xNum];
+	for (unsigned x = 0; x < m_xNum; x++)
+	{
+		m_tileArray[x] = new OsmTile *[m_yNum];
+		for (unsigned y = 0; y < m_yNum; y++)
+		{
+			m_tiles = new OsmTile(id++, m_minLon + x * dLon , m_minLat + y * dLat, m_minLon + (x + 1) * dLon, m_minLat + (y+1) * dLat, m_tiles);
+			m_tileArray[x][y] = m_tiles;
+		}
+	}
+ }
+
+
 bool TileDrawer::RenderTiles(wxApp *app, OsmCanvas *canvas, double lon, double lat, double w, double h, bool restart)
 {
 	bool mustCancel = false;
@@ -178,4 +212,48 @@ void TileDrawer::RenderWay(OsmWay *w, wxColour lineColour, bool poly, wxColour f
 	}
 }
 
+TileList *TileDrawer::GetTiles(double minLon, double minLat, double maxLon, double maxLat)
+{
+//            printf("gettiles (%g %g)-(%g-%g):\n", minLon, minLat, maxLon, maxLat);
+	int xMin = static_cast<int>((minLon - m_minLon) / m_dLon);
+	int xMax = static_cast<int>((maxLon - m_minLon) / m_dLon) + 1;
+	int yMin = static_cast<int>((minLat - m_minLat) / m_dLat);
+	int yMax = static_cast<int>((maxLat - m_minLat) / m_dLat) + 1;
+
+	if (xMin < 0) xMin = 0;
+	if (xMin > static_cast<int>(m_xNum - 1)) xMin = static_cast<int>(m_xNum - 1);
+	if (yMin < 0) yMin = 0;
+	if (yMin > static_cast<int>(m_yNum - 1)) yMin = static_cast<int>(m_yNum - 1);
+
+	if (xMax < 0) xMax = 0;
+	if (xMax > static_cast<int>(m_xNum)) xMax = static_cast<int>(m_xNum);
+	if (yMax < 0) yMax = 0;
+	if (yMax > static_cast<int>(m_yNum)) yMax = static_cast<int>(m_yNum);
+
+	TileList *ret = NULL;
+
+//            printf("(%d,%d)-(%d, %d) (%d tiles)\n", xMin, yMin, xMax, yMax, (xMax - xMin)*(yMax - yMin));
+	int xMiddle = (xMax + xMin)/2;
+	int yMiddle = (yMax + yMin)/2;
+
+	for (int x = xMin; x < xMax; x++)
+	{
+		for (int y = yMin; y < yMax; y++)
+		{
+			if (x != xMiddle || y != yMiddle)
+			{
+				ret = new TileList(m_tileArray[x][y], ret);
+			}
+		}
+	}
+
+	ret = new TileList(m_tileArray[xMiddle][yMiddle], ret);
+	
+	if (ret)
+		ret->Ref();
+
+	return ret;
+
+	
+}
 
