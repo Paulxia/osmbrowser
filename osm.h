@@ -18,12 +18,12 @@ class DRect
 			m_w = -1;
 		}
 		
-		DRect(double minX, double minY, double maxX = -1, double maxY = 0)
+		DRect(double minX, double minY, int w = -1, double h = 0)
 		{
 			m_x = minX;
 			m_y = minY;
-			m_w = maxX - minX;
-			m_h = maxY - minY;
+			m_w = w;
+			m_h = h;
 		}
 
 		bool IsEmpty()

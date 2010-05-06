@@ -224,7 +224,7 @@ class OsmTile
 {
 	public:
 		OsmTile(unsigned id, double minLon, double minLat, double maxLon, double maxLat, OsmTile *next)
-			: IdObject(id, next), DRect(minLon, minLat, maxLon, maxLat)
+			: IdObject(id, next), DRect(minLon, minLat, maxLon - minLon, maxLat - minLat)
 		{
 			m_ways = NULL;
 //            printf("created tile %u %g,%g  %g-%g\n", id, minLon, minLat, maxLon, maxLat);
