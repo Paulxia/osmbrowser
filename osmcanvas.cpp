@@ -122,11 +122,19 @@ OsmCanvas::OsmCanvas(wxApp * app, wxWindow *parent, wxString const &fileName)
 	m_drawRuleControl = NULL;
 	m_colorRules = NULL;
 	m_dragging = false;
+	m_locked = true;
 	wxString binFile = fileName;
+
 	binFile.Append(wxT(".cache"));
 
-	FILE *infile = fopen(binFile.mb_str(wxConvUTF8), "r");
+	FILE *infile;
+	if (fileName.IsSameAs(wxT("-")))
+	{
+		binFile = wxString(wxT("stdin.cache"));
+	}
 
+	infile = fopen(binFile.mb_str(wxConvUTF8), "r");
+	
 	if (infile)
 	{
 		printf("found preprocessed file %s, opening that instead.\n", (char const *)(binFile.mb_str(wxConvUTF8)) );
@@ -134,8 +142,15 @@ OsmCanvas::OsmCanvas(wxApp * app, wxWindow *parent, wxString const &fileName)
 	}
 	else
 	{
-		infile = fopen(fileName.mb_str(wxConvUTF8), "r");
-	
+		if (fileName.IsSameAs(wxT("-")))
+		{
+			infile = stdin;
+		}
+		else
+		{
+			infile = fopen(fileName.mb_str(wxConvUTF8), "r");
+		}
+
 		if (!infile)
 		{
 			puts("could not open file:");
