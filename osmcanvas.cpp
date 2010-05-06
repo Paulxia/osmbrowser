@@ -286,7 +286,7 @@ void OsmCanvas::RenderWay(OsmWay *w, bool fast, int curLayer)
 	{
 		wxColour c = wxColour(150,150,150);
 		bool poly = false;
-		int layer = 0;
+		int layer = 1;
 		if (m_colorRules)
 		{
 			for (int i = 0; i < m_colorRules->m_num; i++)
