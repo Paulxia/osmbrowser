@@ -29,7 +29,7 @@ TileWay::~TileWay()
 	m_tiles->UnRef();
 }
 
-bool TileSorter::RenderTiles(wxApp *app, OsmCanvas *canvas, double lon, double lat, double w, double h, bool restart)
+bool TileDrawer::RenderTiles(wxApp *app, OsmCanvas *canvas, double lon, double lat, double w, double h, bool restart)
 {
 	bool mustCancel = false;
 
@@ -185,15 +185,15 @@ OsmCanvas::OsmCanvas(wxApp * app, wxWindow *parent, wxString const &fileName)
 
 	m_lastX = m_lastY = 0;
 
-	m_tileSorter = new TileSorter(&m_renderer, m_data->m_minlon, m_data->m_minlat, m_data->m_maxlon, m_data->m_maxlat, .05, .04);
+	m_tileDrawer = new TileDrawer(&m_renderer, m_data->m_minlon, m_data->m_minlat, m_data->m_maxlon, m_data->m_maxlat, .05, .04);
 
-	m_tileSorter->AddWays(static_cast<OsmWay *>(m_data->m_ways.m_content));
+	m_tileDrawer->AddWays(static_cast<OsmWay *>(m_data->m_ways.m_content));
 
 	m_timer.Start(100);
 }
 
 
-void TileSorter::Rect(wxString const &text, double lon1, double lat1, double lon2, double lat2, double border, int r, int g, int b)
+void TileDrawer::Rect(wxString const &text, double lon1, double lat1, double lon2, double lat2, double border, int r, int g, int b)
 {
 	m_renderer->SetLineColor(r,g,b);
 	m_renderer->Rect(lon1, lat1, lon2 - lon1, lat2 - lat1, border , r, g, b);
@@ -201,7 +201,7 @@ void TileSorter::Rect(wxString const &text, double lon1, double lat1, double lon
 }
 
 // render using default colours. should plug in rule engine here
-void TileSorter::RenderWay(OsmWay *w, int curLayer)
+void TileDrawer::RenderWay(OsmWay *w, int curLayer)
 {
 
 	if ((!m_drawRule) || m_drawRule->Evaluate(w))
@@ -230,7 +230,7 @@ void TileSorter::RenderWay(OsmWay *w, int curLayer)
 }
 
 
-void TileSorter::RenderWay(OsmWay *w, wxColour lineColour, bool poly, wxColour fillColour)
+void TileDrawer::RenderWay(OsmWay *w, wxColour lineColour, bool poly, wxColour fillColour)
 {
 
 
@@ -310,9 +310,9 @@ void OsmCanvas::Render(bool force)
 	{
 		m_renderer.Clear();
 	}
-	m_tileSorter->Rect(wxEmptyString, m_data->m_minlon, m_data->m_minlat, m_data->m_maxlon, m_data->m_maxlat, 0, 0,255,0);
+	m_tileDrawer->Rect(wxEmptyString, m_data->m_minlon, m_data->m_minlat, m_data->m_maxlon, m_data->m_maxlat, 0, 0,255,0);
 
-	m_done = m_tileSorter->RenderTiles(m_app, this, m_xOffset, m_yOffset, w / xScale, h / m_scale, m_restart);
+	m_done = m_tileDrawer->RenderTiles(m_app, this, m_xOffset, m_yOffset, w / xScale, h / m_scale, m_restart);
 	m_restart = false;
 
 	Draw(NULL);

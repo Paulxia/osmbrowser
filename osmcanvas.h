@@ -82,10 +82,10 @@ class TileList
 
 class OsmCanvas;
 
-class TileSorter
+class TileDrawer
 {
 	public:
-		TileSorter(Renderer *renderer, double minLon,double minLat, double maxLon, double maxLat, double dLon, double dLat)
+		TileDrawer(Renderer *renderer, double minLon,double minLat, double maxLon, double maxLat, double dLon, double dLat)
 		{
 			m_renderer = renderer;
 			m_tiles = NULL;
@@ -117,7 +117,7 @@ class TileSorter
 			}
 		 }
 
-		~TileSorter()
+		~TileDrawer()
 		{
 			m_tiles->DestroyList();
 			for (unsigned x = 0; x < m_xNum; x++)
@@ -283,8 +283,8 @@ class OsmCanvas
 
 		void SetRuleControls(RuleControl *rules, ColorRules *colors)
 		{
-			m_tileSorter->SetDrawRuleControl(rules);
-			m_tileSorter->SetColorRules(colors);
+			m_tileDrawer->SetDrawRuleControl(rules);
+			m_tileDrawer->SetColorRules(colors);
 		}
 	private:
 		OsmData *m_data;
@@ -314,7 +314,7 @@ class OsmCanvas
 		int m_lastX, m_lastY;
 		bool m_dragging;
 
-		TileSorter *m_tileSorter;
+		TileDrawer *m_tileDrawer;
 
 		wxApp *m_app;
 		bool m_done;
