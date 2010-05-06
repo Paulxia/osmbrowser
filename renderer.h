@@ -74,6 +74,11 @@ class RendererSimple
 
 		void End()
 		{
+			if (!m_numPoints)
+			{
+				return;
+			}
+			
 			switch(m_type)
 			{
 				case Renderer::R_LINE:
@@ -123,6 +128,8 @@ class RendererWxBitmap
 			m_wxPoints = NULL;
 			m_numWxPoints  = 0;
 			m_bitmap = NULL;
+			m_brush.SetColour(0,0,0);
+			m_pen.SetColour(0,0,0);
 		}
 
 		~RendererWxBitmap()
@@ -153,7 +160,21 @@ class RendererWxBitmap
 		wxBrush m_brush;
 		unsigned m_numWxPoints;
 	protected:
-		void ScalePoints();
+		void ScalePoints()
+		{
+			if (m_numWxPoints < m_maxPoints)
+			{
+				delete [] m_wxPoints;
+				m_wxPoints = new wxPoint[m_maxPoints];
+				m_numWxPoints = m_maxPoints;
+			}
+		
+			for (unsigned i = 0; i < m_numPoints; i++)
+			{
+				m_wxPoints[i].x = static_cast<int>((m_points[i].x - m_offX) * m_scaleX);
+				m_wxPoints[i].y = m_bitmap->GetHeight() - static_cast<int>((m_points[i].y - m_offY) * m_scaleY);
+			}
+		}
 
 		void DrawPolygon();
 
