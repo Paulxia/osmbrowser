@@ -48,6 +48,7 @@ bool TileRenderer::RenderTiles(wxApp *app, OsmCanvas *canvas, double lon, double
 		m_visibleTiles = GetTiles(bb);
 
 		m_curTile = m_visibleTiles;
+		m_curLayer = 0;
 	}
 
 	if (!m_visibleTiles)
@@ -56,45 +57,56 @@ bool TileRenderer::RenderTiles(wxApp *app, OsmCanvas *canvas, double lon, double
 	}
 
 	bool fast = false;//m_visibleTiles->GetSize() > 16;
-	
-	while (m_curTile && !mustCancel)
+
+	while (!mustCancel && m_curLayer < NUMLAYERS)
 	{
-		OsmTile *t = m_curTile->m_tile;
-		if (t->OverLaps(bb))
+		while (m_curTile && !mustCancel)
 		{
-			for (TileWay *w = t->m_ways; w && !mustCancel; w = static_cast<TileWay *>(w->m_next))
+			OsmTile *t = m_curTile->m_tile;
+			if (t->OverLaps(bb))
 			{
-				bool already = false;
-				// loop over all tiles that contaoin this way
-				for (TileList *a = w->m_tiles; a; a = static_cast<TileList *>(a->m_next))
+				for (TileWay *w = t->m_ways; w && !mustCancel; w = static_cast<TileWay *>(w->m_next))
 				{
-					// loop over all tiles already drawn
-					for (TileList *o = m_renderedTiles; o ; o = static_cast<TileList *>(o->m_next))
+
+					bool already = false;
+					// loop over all tiles that contaoin this way
+					for (TileList *a = w->m_tiles; a; a = static_cast<TileList *>(a->m_next))
 					{
-						 if (o->m_tile->m_id == a->m_tile->m_id)
-						 {
-							already = true;
+						// loop over all tiles already drawn
+						for (TileList *o = m_renderedTiles; o ; o = static_cast<TileList *>(o->m_next))
+						{
+							 if (o->m_tile->m_id == a->m_tile->m_id)
+							 {
+								already = true;
+								break;
+							 }
+						}
+	
+						if (already)
+						{
 							break;
-						 }
+						}
 					}
-
-					if (already)
+	
+					if (!already)
 					{
-						break;
+						canvas->RenderWay(w->m_way, fast, m_curLayer);
 					}
-				}
-
-				if (!already)
-				{
-					canvas->RenderWay(w->m_way, fast);
-				}
-			}
-		}
+				}	// for way
+			}  // if overlaps
+			mustCancel = app->Pending();
+			m_renderedTiles = new TileList(t, m_renderedTiles);
+			m_curTile = static_cast<TileList *>(m_curTile->m_next);
+		}	 // while curTile
 		
-		mustCancel = app->Pending();
-		m_renderedTiles = new TileList(t, m_renderedTiles);
-		m_curTile = static_cast<TileList *>(m_curTile->m_next);
-	}
+		if (!m_curTile)
+		{
+			m_curLayer++;
+			m_curTile = m_visibleTiles;
+			m_renderedTiles->DestroyList();
+			m_renderedTiles = NULL;
+		}
+	}  // while curLayer
 
 	return !mustCancel;
 }
@@ -237,7 +249,7 @@ void OsmCanvas::DrawTileOutline(OsmTile *t, int r, int g, int b)
 
 
 // render using default colours. should plug in rule engine here
-void OsmCanvas::RenderWay(OsmWay *w, bool fast)
+void OsmCanvas::RenderWay(OsmWay *w, bool fast, int curLayer)
 {
 
 	if (fast)
@@ -259,6 +271,7 @@ void OsmCanvas::RenderWay(OsmWay *w, bool fast)
 	{
 		wxColour c = wxColour(150,150,150);
 		bool poly = false;
+		int layer = 0;
 		if (m_colorRules)
 		{
 			for (int i = 0; i < m_colorRules->m_num; i++)
@@ -267,13 +280,15 @@ void OsmCanvas::RenderWay(OsmWay *w, bool fast)
 				{
 					c = m_colorRules->m_pickers[i]->GetColour();
 					poly = m_colorRules->m_checkBoxes[i]->IsChecked();
-
+					layer = m_colorRules->m_layers[i]->GetSelection();
 					break; // stop after first match
 				}
 			}
 		}
-		
-		RenderWay(w, c, poly, c);
+		if (curLayer == layer)
+		{
+			RenderWay(w, c, poly, c);
+		}
 	}
 }
 

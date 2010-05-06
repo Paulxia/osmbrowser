@@ -210,7 +210,7 @@ class TileRenderer
 		double m_minLon, m_minLat, m_w, m_h, m_dLon, m_dLat;
 
 		TileList *m_visibleTiles, *m_renderedTiles, *m_curTile;
-		
+		int m_curLayer;
 		
 };
 

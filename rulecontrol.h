@@ -8,10 +8,13 @@
 #include <wx/richtext/richtextctrl.h>
 #include <wx/combobox.h>
 #include <wx/config.h>
+#include <wx/choice.h>
 
 #include "s_expr.h"
 #include "osmcanvas.h"
 #include "frame.h"
+
+#define NUMLAYERS 3
 
 class RuleControl
 	: public wxTextCtrl, public ExpressionParser
@@ -61,6 +64,34 @@ class ColorPicker
 		OsmCanvas *m_canvas;
 };
 
+class LayerPicker
+	: public wxChoice
+{
+	public:
+		LayerPicker(wxWindow *parent, OsmCanvas *canvas)
+			: wxChoice(parent, -1)
+		{
+			m_canvas = canvas;
+			for (int  i = 0; i < NUMLAYERS; i++)
+			{
+				Append(wxString::Format(wxT("%d"), i));
+			}
+			SetSelection(0);
+		}
+		void Save(wxString const &group);
+		void Load(wxString const &group);
+
+	private:
+		void OnSelect(wxCommandEvent &evt)
+		{
+			m_canvas->Redraw();
+		}
+
+		OsmCanvas *m_canvas;
+
+		DECLARE_EVENT_TABLE();
+};
+
 class PolyCheckBox
 	: public wxCheckBox
 {
@@ -95,6 +126,7 @@ class ColorRules
 			m_pickers = new ColorPicker *[m_max];
 			m_rules = new RuleControl *[m_max];
 			m_checkBoxes = new PolyCheckBox *[m_max];
+			m_layers = new LayerPicker *[m_max];
 
 			m_parent = parent;
 			m_canvas = canvas;
@@ -121,6 +153,7 @@ class ColorRules
 		ColorPicker **m_pickers;
 		RuleControl **m_rules;
 		PolyCheckBox **m_checkBoxes;
+		LayerPicker **m_layers;
 
 		int m_max;
 		int m_num;

@@ -10,6 +10,11 @@ BEGIN_EVENT_TABLE(ColorPicker, wxColourPickerCtrl)
 	EVT_COLOURPICKER_CHANGED(-1, ColorPicker::OnChanged)
 END_EVENT_TABLE()
 
+BEGIN_EVENT_TABLE(LayerPicker, wxChoice)
+	EVT_CHOICE(-1, LayerPicker::OnSelect)
+END_EVENT_TABLE()
+
+
 BEGIN_EVENT_TABLE(PolyCheckBox, wxCheckBox)
 	EVT_CHECKBOX(-1, PolyCheckBox::OnChanged)
 END_EVENT_TABLE()
@@ -112,8 +117,12 @@ void ColorRules::Add()
 	m_pickers[m_num] = new ColorPicker(m_parent, m_canvas);
 	m_checkBoxes[m_num] = new PolyCheckBox(m_parent, m_canvas);
 	m_rules[m_num] = new RuleControl(m_parent, m_canvas);
+	m_layers[m_num] = new LayerPicker(m_parent, m_canvas);
 
-	s->Add(m_pickers[m_num]);
+	wxSizer *top = new wxBoxSizer(wxHORIZONTAL);
+	s->Add(top, 0, wxEXPAND);
+	top->Add(m_pickers[m_num], 0);
+	top->Add(m_layers[m_num], 1);
 	s->Add(m_checkBoxes[m_num]);
 	s->Add(m_rules[m_num], 0,wxEXPAND);
 
@@ -132,7 +141,10 @@ void ColorRules::Remove(int number)
 
 	assert(s);
 
-	s->Detach(m_pickers[number]);
+	wxSizer *top = s->GetItem(static_cast<size_t>(0))->GetSizer();
+
+	top->Detach(m_pickers[number]);
+	top->Detach(m_layers[number]);
 	s->Detach(m_checkBoxes[number]);
 	s->Detach(m_rules[number]);
 
@@ -141,6 +153,7 @@ void ColorRules::Remove(int number)
 	delete m_pickers[number];
 	delete m_checkBoxes[number];
 	delete m_rules[number];
+	delete m_layers[number];
 
 	m_num--;
 	for (int i = number; i < m_num; i++)
@@ -148,6 +161,7 @@ void ColorRules::Remove(int number)
 		m_pickers[i] = m_pickers[i+1];
 		m_checkBoxes[i] = m_checkBoxes[i+1];
 		m_rules[i] = m_rules[i+1];
+		m_layers[i] = m_layers[i+1];
 	}
 }
 
@@ -166,6 +180,7 @@ void ColorRules::Save(wxString const &name)
 		m_rules[i]->Save(baseGroup + ruleGroup);
 		m_checkBoxes[i]->Save(baseGroup + ruleGroup);
 		m_pickers[i]->Save(baseGroup + ruleGroup);
+		m_layers[i]->Save(baseGroup + ruleGroup);
 		
 	}
 }
@@ -190,6 +205,7 @@ void ColorRules::Load(wxString const &name)
 		m_rules[i]->Load(baseGroup + ruleGroup);
 		m_checkBoxes[i]->Load(baseGroup + ruleGroup);
 		m_pickers[i]->Load(baseGroup + ruleGroup);
+		m_layers[i]->Load(baseGroup + ruleGroup);
 		
 	}
 }
@@ -275,4 +291,25 @@ void ColorPicker::Load(wxString const &group)
 	SetColour(col);
 
 }
+
+void LayerPicker::Save(wxString const &group)
+{
+	wxString key = group + wxT("layer");
+
+	wxConfigBase *config = wxConfig::Get();
+
+	config->Write(key, static_cast<long>(GetSelection()));
+
+}
+
+void LayerPicker::Load(wxString const &group)
+{
+	wxString key = group + wxT("layer");
+
+	wxConfigBase *config = wxConfig::Get();
+
+	SetSelection(config->Read(key, 0l));
+
+}
+
 

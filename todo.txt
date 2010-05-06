@@ -1,4 +1,4 @@
-- layers
+- move RenderWay function to tileRender class. Only line/polygon drawing stuff in Canvas
 - identification (select elements and display info)
 - create rule to hide/show/color selection
 - draw relations & nodes with tags
