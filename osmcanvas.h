@@ -62,6 +62,7 @@ class RendererSimple
 
 		void Begin(Renderer::TYPE type)
 		{
+			m_numPoints = 0;
 			m_type = type;
 		}
 
@@ -127,7 +128,7 @@ class RendererWxBitmap
 		{
 			m_wxPoints = NULL;
 			m_numWxPoints  = 0;
-			m_h = 0;
+			m_bitmap = NULL;
 		}
 
 		~RendererWxBitmap()
@@ -143,38 +144,30 @@ class RendererWxBitmap
 
 		void SetLineColor(int r, int g, int b, int a = 0)
 		{
-			wxPen pen(wxColour(r,g,b));
-			m_dc.SetPen(pen);
+			m_pen.SetColour(wxColour(r,g,b));
 		}
 
 		void SetFillColor(int r, int g, int b, int a = 0)
 		{
-			if (a > 128)
-			{
-				m_dc.SetBrush(*wxTRANSPARENT_BRUSH);
-			}
-			else
-			{
-				wxBrush brush(wxColour(r,g,b));
-				m_dc.SetBrush(brush);
-			}
+			m_brush.SetColour(wxColour(r,g,b));
 		}
 
 		void Setup(wxBitmap *bitmap, DRect const &viewport)
 		{
 			m_offX = viewport.m_x;
 			m_offY = viewport.m_y;
-			m_h = bitmap->GetHeight();
+			m_bitmap = bitmap;
 
 			m_scaleX = bitmap->GetWidth() / viewport.m_w;
 			m_scaleY = bitmap->GetHeight() / viewport.m_h;
-			m_dc.SelectObject(*bitmap);
 		}
 	private:
 		double m_offX, m_offY, m_scaleX, m_scaleY;
-		int m_h;
+		wxBitmap *m_bitmap;
 		wxMemoryDC m_dc;
 		wxPoint *m_wxPoints;
+		wxPen m_pen;
+		wxBrush m_brush;
 		unsigned m_numWxPoints;
 	protected:
 		void ScalePoints()
@@ -189,19 +182,24 @@ class RendererWxBitmap
 			for (unsigned i = 0; i < m_numPoints; i++)
 			{
 				m_wxPoints[i].x = static_cast<int>((m_points[i].x - m_offX) * m_scaleX);
-				m_wxPoints[i].y = m_h - static_cast<int>((m_points[i].y - m_offY) * m_scaleY);
+				m_wxPoints[i].y = m_bitmap->GetHeight() - static_cast<int>((m_points[i].y - m_offY) * m_scaleY);
 			}
 		}
 		
 		void DrawPolygon()
 		{
 			ScalePoints();
+			m_dc.SelectObject(*m_bitmap);
+			m_dc.SetPen(m_pen);
+			m_dc.SetBrush(m_brush);
 			m_dc.DrawPolygon(m_numPoints, m_wxPoints);
 		}
 
 		void DrawLine()
 		{
 			ScalePoints();
+			m_dc.SelectObject(*m_bitmap);
+			m_dc.SetPen(m_pen);
 			m_dc.DrawLines(m_numPoints, m_wxPoints);
 		}
 };
