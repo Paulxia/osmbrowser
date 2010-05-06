@@ -36,6 +36,8 @@ bool TileRenderer::RenderTiles(wxApp *app, OsmCanvas *canvas, double lon, double
 	DRect bb(lon, lat);
 	bb.SetSize(w, h);
 
+//	canvas->Rect(wxEmptyString, bb, 0, 255,0,0);
+
 	if (restart || !m_visibleTiles)
 	{
 		if (m_visibleTiles)
@@ -63,6 +65,7 @@ bool TileRenderer::RenderTiles(wxApp *app, OsmCanvas *canvas, double lon, double
 		while (m_curTile && !mustCancel)
 		{
 			OsmTile *t = m_curTile->m_tile;
+//			canvas->Rect(wxEmptyString, *t, -1, 0,255,0);
 			if (t->OverLaps(bb))
 			{
 				for (TileWay *w = t->m_ways; w && !mustCancel; w = static_cast<TileWay *>(w->m_next))
