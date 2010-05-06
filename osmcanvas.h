@@ -285,45 +285,6 @@ class OsmCanvas
 		int m_lastX, m_lastY;
 		bool m_dragging;
 
-
-		#define MAXPOLYCOUNT (1024*16)
-		void StartPolygon()
-		{
-			m_polygonCount = 0;
-			m_polygonVisible = true;
-		}
-		
-		void AddPoint(int x, int y)
-		{
-			int w = m_backBuffer.GetWidth();
-			int h = m_backBuffer.GetHeight();
-
-		
-			if (m_polygonCount < MAXPOLYCOUNT)
-			{
-				m_polygonPoints[m_polygonCount].x = x;
-				m_polygonPoints[m_polygonCount].y = y;
-
-				m_polygonCount++;
-
-				if (x > 0 && x < w && y > 0 && y < h)
-				{
-					m_polygonVisible = true;
-				}
-			}
-			
-		}
-		
-		void EndPolygon(wxDC *dc)
-		{
-			if (m_polygonCount)
-				dc->DrawPolygon(m_polygonCount, m_polygonPoints);
-		}
-
-		wxPoint m_polygonPoints[MAXPOLYCOUNT];
-		int m_polygonCount;
-		bool m_polygonVisible;
-
 		TileSorter *m_tileSorter;
 
 		OsmTag *m_fastTags;
