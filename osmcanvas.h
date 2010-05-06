@@ -21,7 +21,7 @@ class Renderer
 		virtual void Begin(Renderer::TYPE type) = 0;
 		virtual void AddPoint(double x, double y) = 0;
 		virtual void End() = 0;
-		virtual void DrawTextCentered(char const *text, double x, double y, double angle) = 0;
+		virtual void DrawCenteredText(char const *text, double x, double y, double angle, int r, int g, int b) = 0;
 
 		void Rect(DRect const &re, double border, int r, int g, int b)
 		{
@@ -33,18 +33,19 @@ class Renderer
 			Begin(R_LINE);
 			AddPoint(x - border, y - border);
 			AddPoint(x + w + 2 * border, y - border);
-			AddPoint(x + w + 2 * border, y + 2 * border);
-			AddPoint(x - border, y + 2 * border);
+			AddPoint(x + w + 2 * border, y + h + 2 * border);
+			AddPoint(x - border, y + h + 2 * border);
 			AddPoint(x - border, y - border);
 			End();
 		}
 
-		virtual void SetLineColor(int r, int g, int b) = 0;
-		virtual void SetFillColor(int r, int g, int b) = 0;
+		virtual void SetLineColor(int r, int g, int b, int a = 0) = 0;
+		virtual void SetFillColor(int r, int g, int b, int a = 0) = 0;
 
 };
 
 class RendererSimple
+	: public Renderer
 {
 	public:
 		RendererSimple()
@@ -135,21 +136,28 @@ class RendererWxBitmap
 			//m_dc.SelectObject(NULL);
 		}
 
-		void DrawTextCentered(char const *s, double x, double y, double angle)
+		void DrawCenteredText(char const *s, double x, double y, double angle, int r, int g, int b)
 		{
 			// not implemented yet
 		}
 
-		void SetLineColor(int r, int g, int b)
+		void SetLineColor(int r, int g, int b, int a = 0)
 		{
 			wxPen pen(wxColour(r,g,b));
 			m_dc.SetPen(pen);
 		}
 
-		void SetFillColor(int r, int g, int b)
+		void SetFillColor(int r, int g, int b, int a = 0)
 		{
-			wxBrush brush(wxColour(r,g,b));
-			m_dc.SetBrush(brush);
+			if (a > 128)
+			{
+				m_dc.SetBrush(*wxTRANSPARENT_BRUSH);
+			}
+			else
+			{
+				wxBrush brush(wxColour(r,g,b));
+				m_dc.SetBrush(brush);
+			}
 		}
 
 		void Setup(wxBitmap *bitmap, DRect const &viewport)
