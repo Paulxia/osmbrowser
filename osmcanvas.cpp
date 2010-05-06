@@ -126,6 +126,7 @@ OsmCanvas::OsmCanvas(wxApp * app, wxWindow *parent, wxString const &fileName)
 	m_dragging = false;
 	m_locked = true;
 	wxString binFile = fileName;
+	m_renderW = m_renderH = -1;
 
 	binFile.Append(wxT(".cache"));
 
@@ -206,49 +207,9 @@ OsmCanvas::OsmCanvas(wxApp * app, wxWindow *parent, wxString const &fileName)
 
 void OsmCanvas::Rect(wxString const &text, double lon1, double lat1, double lon2, double lat2, int border, int r, int g, int b)
 {
-	int width = m_backBuffer.GetWidth();
-	int height = m_backBuffer.GetHeight();
-	wxMemoryDC dc;
-	dc.SelectObject(m_backBuffer);
-	double xScale = cos(m_yOffset * M_PI / 180) * m_scale;
-
-	double sxMax = m_xOffset + width / xScale;
-	double syMax = m_yOffset + height / xScale;
-
-	wxPen pen;
-
-	pen.SetColour(r,g,b);
-
-	dc.SetPen(pen);
-	dc.SetBrush(*wxTRANSPARENT_BRUSH);
-
-	int x1 = (lon1 - m_xOffset) * xScale;
-	int y1 = (lat1 - m_yOffset) * m_scale;
-
-	int x2 = (lon2 - m_xOffset) * xScale;
-	int y2 = (lat2 - m_yOffset) * m_scale;
-
-	y1 = height - y1;
-	y2 = height - y2;
-
-	int xd = x1 < x2 ? x1 : x2;
-	int yd = y1 < y2 ? y1 : y2;
-
-	int wd = x2 - x1;
-	int hd = y1 - y2;
-
-	if (wd < 0)
-		wd = -wd;
-
-	if (hd < 0)
-		hd = -hd;
-	
-	
-
-	dc.DrawRectangle(xd+border, yd-border, wd - 2*border, hd - 2*border);
-
-	dc.DrawText(text, xd + wd /2, yd + hd /2);
-
+	m_renderer.SetLineColor(r,g,b);
+	m_renderer.Rect(lon1, lat1, lon2 - lon1, lat2 - lat1, border / m_scale, r, g, b);
+	m_renderer.DrawCenteredText(text.mb_str(wxConvUTF8), (lon1 + lon2)/2, (lat1 + lat2)/2, 0, r, g, b);
 }
 
 // render using default colours. should plug in rule engine here
@@ -399,6 +360,12 @@ void OsmCanvas::Render(bool force)
 	}
 	int w = m_backBuffer.GetWidth();
 	int h = m_backBuffer.GetHeight();
+
+	if (w != m_renderW || h != m_renderH)
+	{
+		SetupRenderer();
+	}
+	
 	double xScale = cos(m_yOffset * M_PI / 180) * m_scale;
 
 	if (m_restart)
@@ -440,6 +407,7 @@ void OsmCanvas::OnMouseWheel(wxMouseEvent &evt)
 	m_xOffset -= xm;
 	m_yOffset -= ym;
 
+	SetupRenderer();
 	Redraw();
 }
 
@@ -461,6 +429,7 @@ void OsmCanvas::OnMouseMove(wxMouseEvent &evt)
 		m_xOffset -= dx;
 		m_yOffset += dy;
 
+		SetupRenderer();
 		Redraw();
 		
 	}
@@ -497,4 +466,16 @@ void OsmCanvas::SetDrawRuleControl(RuleControl *r)
 void OsmCanvas::SetColorRules(ColorRules *r)
 {
 	m_colorRules = r;
+}
+
+void OsmCanvas::SetupRenderer()
+{
+	double scaleCorrection = cos(m_yOffset * M_PI / 180);
+
+	m_renderW = m_backBuffer.GetWidth();
+	m_renderH = m_backBuffer.GetHeight();
+	double sw = m_renderW / (scaleCorrection * m_scale);
+	double sh = m_renderH / m_scale;
+
+	m_renderer.Setup(&m_backBuffer, DRect(m_xOffset, m_yOffset, sw, sh));
 }

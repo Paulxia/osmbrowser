@@ -528,6 +528,11 @@ class OsmCanvas
 		bool m_restart;
 		bool m_locked;
 		wxTimer m_timer;
+
+		void SetupRenderer();
+		RendererWxBitmap m_renderer;
+
+		int m_renderW, m_renderH;
 };
 
 
