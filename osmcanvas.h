@@ -450,7 +450,6 @@ class OsmCanvas
 		void Redraw()
 		{
 			m_restart = true;
-//			Render();
 		}
 	private:
 		OsmData *m_data;
