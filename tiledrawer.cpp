@@ -1,7 +1,7 @@
 #include "tiledrawer.h"
 #include "rulecontrol.h"
 
-TileWay::TileWay(OsmWay *way, TileList *allTiles, TileWay *next)
+TileWay::TileWay(OsmWay *way, TileSpans *allTiles, TileWay *next)
 	: ListObject(next)
 {
 	m_way = way;
@@ -32,8 +32,7 @@ TileDrawer::TileDrawer(Renderer *renderer, double minLon,double minLat, double m
 	m_h = m_yNum *dLat;
 	m_dLon = dLon;
 	m_dLat = dLat;
-	m_renderedTiles = m_visibleTiles = NULL;
-	
+	m_visibleTiles = NULL;
 	unsigned id = 0;
 	// build a list of empty tiles;
 	m_tileArray = new OsmTile **[m_xNum];
@@ -60,12 +59,10 @@ bool TileDrawer::RenderTiles(wxApp *app, OsmCanvas *canvas, double lon, double l
 	if (restart || !m_visibleTiles)
 	{
 		if (m_visibleTiles)
-			m_visibleTiles->DestroyList();
+			m_visibleTiles->UnRef();
 
-		if (m_renderedTiles)
-			m_renderedTiles->DestroyList();
 
-		m_renderedTiles = NULL;
+		m_renderedTiles.MakeEmpty();
 		m_visibleTiles = GetTiles(bb);
 
 		m_curTile = m_visibleTiles;
@@ -87,35 +84,15 @@ bool TileDrawer::RenderTiles(wxApp *app, OsmCanvas *canvas, double lon, double l
 			{
 				for (TileWay *w = t->m_ways; w && !mustCancel; w = static_cast<TileWay *>(w->m_next))
 				{
-
-					bool already = false;
-					// loop over all tiles that contaoin this way
-					for (TileList *a = w->m_tiles; a; a = static_cast<TileList *>(a->m_next))
-					{
-						// loop over all tiles already drawn
-						for (TileList *o = m_renderedTiles; o ; o = static_cast<TileList *>(o->m_next))
-						{
-							 if (o->m_tile->m_id == a->m_tile->m_id)
-							 {
-								already = true;
-								break;
-							 }
-						}
-	
-						if (already)
-						{
-							break;
-						}
-					}
-	
-					if (!already)
+					if (!w->m_tiles->InterSect(&m_renderedTiles))
 					{
 						RenderWay(w->m_way, m_curLayer);
 					}
 				}	// for way
 			}  // if overlaps
 			mustCancel = app->Pending();
-			m_renderedTiles = new TileList(t, m_renderedTiles);
+
+			m_renderedTiles.Add(t);
 			m_curTile = static_cast<TileList *>(m_curTile->m_next);
 		}	 // while curTile
 		
@@ -123,8 +100,7 @@ bool TileDrawer::RenderTiles(wxApp *app, OsmCanvas *canvas, double lon, double l
 		{
 			m_curLayer++;
 			m_curTile = m_visibleTiles;
-			m_renderedTiles->DestroyList();
-			m_renderedTiles = NULL;
+			m_renderedTiles.MakeEmpty();
 		}
 	}  // while curLayer
 
@@ -212,6 +188,20 @@ void TileDrawer::RenderWay(OsmWay *w, wxColour lineColour, bool poly, wxColour f
 	}
 }
 
+TileSpans *TileDrawer::GetTileSpans(TileList *all)
+{
+	TileSpans *ret = new TileSpans;
+
+	for (TileList *t = all; t; t = static_cast<TileList *>(t->m_next))
+	{
+		ret->Add(t->m_tile);
+	}
+	
+	ret->Ref();
+	return ret;
+	
+}
+
 TileList *TileDrawer::GetTiles(double minLon, double minLat, double maxLon, double maxLat)
 {
 //            printf("gettiles (%g %g)-(%g-%g):\n", minLon, minLat, maxLon, maxLat);
@@ -232,22 +222,15 @@ TileList *TileDrawer::GetTiles(double minLon, double minLat, double maxLon, doub
 
 	TileList *ret = NULL;
 
-//            printf("(%d,%d)-(%d, %d) (%d tiles)\n", xMin, yMin, xMax, yMax, (xMax - xMin)*(yMax - yMin));
-	int xMiddle = (xMax + xMin)/2;
-	int yMiddle = (yMax + yMin)/2;
 
 	for (int x = xMin; x < xMax; x++)
 	{
 		for (int y = yMin; y < yMax; y++)
 		{
-			if (x != xMiddle || y != yMiddle)
-			{
-				ret = new TileList(m_tileArray[x][y], ret);
-			}
+			ret = new TileList(m_tileArray[x][y], ret);
 		}
 	}
 
-	ret = new TileList(m_tileArray[xMiddle][yMiddle], ret);
 	
 	if (ret)
 		ret->Ref();

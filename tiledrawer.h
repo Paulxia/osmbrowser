@@ -8,18 +8,19 @@
 class TileList;
 class RuleControl;
 class ColorRules;
+class TileSpans;
 
 
 class TileWay
 	: public ListObject
 {
 	public:
-		TileWay(OsmWay *way, TileList *allTiles, TileWay *next);
+		TileWay(OsmWay *way, TileSpans *allTiles, TileWay *next);
 
 		~TileWay();
 		
 		OsmWay *m_way; // the way to render
-		TileList *m_tiles; // all tiles containing this way, to prevent multiple redraws
+		TileSpans *m_tiles; // all tiles containing this way, to prevent multiple redraws
 		
 };
 
@@ -39,7 +40,7 @@ class OsmTile
 			m_ways->DestroyList();
 		}
 
-		void AddWay(OsmWay *way, TileList *allTiles)
+		void AddWay(OsmWay *way, TileSpans *allTiles)
 		{
 //            printf("tile %u add way %u\n", m_id, way->m_id);
 			m_ways = new TileWay(way, allTiles, m_ways);
@@ -47,6 +48,153 @@ class OsmTile
 
 		TileWay *m_ways;
 
+};
+
+class Span
+	: public ListObject
+{
+	public:
+		Span(unsigned first, Span *tail = NULL)
+		{
+			m_next = tail;
+			m_start = first;
+			m_end = first + 1;
+		}
+
+		bool InterSect(Span *other)
+		{
+			return Contains(other->m_start) || Contains(other->m_end -1);
+		}
+
+		unsigned GetSize()
+		{
+			return m_end - m_start;
+		}
+		
+		bool Contains(unsigned id)
+		{
+			return ((id >= m_start) && ( id < m_end));
+		}
+
+		bool AddIfPossible(unsigned id)
+		{
+			if (id == m_start -1)
+			{
+				m_start--;
+				return true;
+			}
+
+			if (id == m_end)
+			{
+				m_end++;
+				return true;
+			}
+
+			return false;
+		}
+
+		unsigned m_start;
+		unsigned m_end;
+		Span *m_next;
+};
+
+class TileSpans
+{
+	public:
+		TileSpans()
+		{
+			m_spans = NULL;
+		}
+
+		~TileSpans()
+		{
+			MakeEmpty();
+		}
+
+		void MakeEmpty()
+		{
+			if (m_spans)
+			{
+				m_spans->DestroyList();
+				m_spans = NULL;
+			}
+		}
+		
+		void Add(OsmTile *t)
+		{
+			// try to add it to an existing span
+			for (Span *s = m_spans; s; s = static_cast<Span *>(s->m_next))
+			{
+				if (s->AddIfPossible(t->m_id))
+				{
+					return;
+				}
+				// create new span
+				m_spans = new Span(t->m_id, m_spans);
+			}
+		}
+		
+		bool Contains(OsmTile *t)
+		{
+			for (Span *s = m_spans; s; s = static_cast<Span *>(s->m_next))
+			{
+				if (s->Contains(t->m_id))
+				{
+					return true;
+				}
+
+				return false;
+			}
+		}
+
+		bool ContainsMoreThan1()
+		{
+			if (!m_spans)
+			{
+				return false;
+			}
+
+			if (m_spans->m_next || (m_spans->GetSize() > 1))
+			{
+				return true;
+			}
+
+			return false;
+		}
+
+		bool InterSect(TileSpans *other)
+		{
+			for (Span *s = m_spans; s; s = static_cast<Span *>(s->m_next))
+			{
+				for (Span *os = other->m_spans; os; os = static_cast<Span *>(os->m_next))
+				{
+					if (s->InterSect(os))
+					{
+						return true;
+					}
+				}
+			}
+
+			return false;
+		}
+
+		void Ref()
+		{
+			m_refCount++;
+		}
+
+		void UnRef()
+		{
+			m_refCount--;
+			if (!m_refCount)
+			{
+				delete this;
+			}
+		}
+
+	private:
+		Span *m_spans;
+		unsigned m_refCount;
 };
 
 class TileList
@@ -113,17 +261,24 @@ class TileDrawer
 		void AddWay(OsmWay *way)
 		{
 			DRect bb = way->GetBB();
+
+			TileList *tiles = GetTiles(bb);
+			assert(tiles);
+			TileSpans *spans = GetTileSpans(tiles);
+			assert(spans);
 			
-			TileList *allTiles = GetTiles(bb);
-			assert(allTiles);
-			for (TileList *l = allTiles; l; l = static_cast<TileList *>(l->m_next))
+			for (TileList *l = tiles; l; l = static_cast<TileList *>(l->m_next))
 			{
-				l->m_tile->AddWay(way, allTiles->m_next ? allTiles : NULL);
+				l->m_tile->AddWay(way, spans);
 			}
-			allTiles->UnRef();
-			
+
+
+			tiles->UnRef();
+			spans->UnRef();
 		}
 
+		TileSpans *GetTileSpans(TileList *tiles);
+		
 		TileList *GetTiles(DRect box)
 		{
 			return GetTiles(box.m_x, box.m_y, box.m_x + box.m_w, box.m_y + box.m_h);
@@ -164,7 +319,8 @@ class TileDrawer
 		unsigned m_xNum, m_yNum;
 		double m_minLon, m_minLat, m_w, m_h, m_dLon, m_dLat;
 
-		TileList *m_visibleTiles, *m_renderedTiles, *m_curTile;
+		TileList *m_visibleTiles, *m_curTile;
+		TileSpans m_renderedTiles;
 		int m_curLayer;
 
 		Renderer *m_renderer;
