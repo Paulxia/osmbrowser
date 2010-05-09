@@ -52,10 +52,22 @@ MainFrame::MainFrame(wxApp *app, const wxString& title, wxString const &fileName
 	leftPanel->SetSizer(leftSizer);
 
 	leftPanel->SetScrollRate(0, 10);
-        
-	m_canvas = new OsmCanvas(app, splitter, fileName);
 
-	splitter->SplitVertically(leftPanel, m_canvas, 250);
+	wxSplitterWindow *subSplitter = new wxSplitterWindow(splitter, -1, wxDefaultPosition, wxDefaultSize, wxSP_3D);
+
+	m_canvas = new OsmCanvas(app, subSplitter, fileName);
+
+	wxPanel *rightPanel = new wxScrolledWindow(subSplitter);
+
+	splitter->SetMinimumPaneSize(50);
+	subSplitter->SetMinimumPaneSize(50);
+
+	subSplitter->SetSashGravity(1.0);
+
+
+	splitter->SplitVertically(leftPanel, subSplitter, 250);
+	subSplitter->SplitVertically(m_canvas, rightPanel, -200);
+
 
 	wxStaticText *text = new wxStaticText(leftPanel, -1 , wxT("Drawing Rule:"));
 
