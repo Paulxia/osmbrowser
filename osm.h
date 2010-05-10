@@ -9,6 +9,8 @@
 #include <wx/hashmap.h>
 #include <wx/arrstr.h>
 
+#define DISTSQUARED(x1, y1, x2, y2)  (((x1) - (x2)) * ((x1) - (x2)) + ((y1) - (y2)) * ((y1) - (y2)))
+
 class DRect
 {
 	public:
@@ -855,15 +857,47 @@ class OsmWay
 
 	DRect GetBB()
 	{
-		DRect ret;
+		DRect m_bb;
+		if (m_bb.m_w < 0)
+		{
+			for (unsigned i = 0; i < m_numResolvedNodes; i++)
+			{
+				if (m_resolvedNodes[i])
+				{
+					m_bb.Include(m_resolvedNodes[i]->m_lon, m_resolvedNodes[i]->m_lat);
+				}
+			}
+		}
+		return m_bb;
+	}
+
+
+	OsmNode *GetClosestNode(double lon, double lat, double *foundDistSquared)
+	{
+		double found = -1;
+		unsigned foundIndex = 0;
+		double distsq;
+		
 		for (unsigned i = 0; i < m_numResolvedNodes; i++)
 		{
 			if (m_resolvedNodes[i])
 			{
-				ret.Include(m_resolvedNodes[i]->m_lon, m_resolvedNodes[i]->m_lat);
+				distsq = DISTSQUARED(m_resolvedNodes[i]->m_lon, m_resolvedNodes[i]->m_lat, lon, lat);
+
+				if (found < 0 || distsq < found)
+				{
+					foundIndex = i;
+					found = distsq;
+				}
 			}
 		}
-		return ret;
+
+		if (foundDistSquared)
+		{
+			*foundDistSquared = found;
+		}
+
+		return m_resolvedNodes[foundIndex];
 	}
 
 	void AddNodeRef(unsigned id)
@@ -877,6 +911,7 @@ class OsmWay
 	// these are only valid after calling resolve
 	OsmNode **m_resolvedNodes;
 	unsigned m_numResolvedNodes;
+//	DRect m_bb;
 };
 
 

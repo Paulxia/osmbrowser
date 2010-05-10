@@ -15,11 +15,12 @@ TileWay::~TileWay()
 	m_tiles->UnRef();
 }
 
-
 TileDrawer::TileDrawer(Renderer *renderer, double minLon,double minLat, double maxLon, double maxLat, double dLon, double dLat)
 {
 	m_renderer = renderer;
 	m_tiles = NULL;
+
+	m_selection = NULL;
 
 	m_drawRule = NULL;
 	m_colorRules = NULL;
@@ -202,30 +203,39 @@ TileSpans *TileDrawer::GetTileSpans(TileList *all)
 	
 }
 
+void TileDrawer::LatLonToIndex(double lon, double lat, int *x, int *y)
+{
+	if (x)
+	{
+		*x = static_cast<int>((lon - m_minLon) / m_dLon);
+		if (*x < 0) *x = 0;
+		if (*x > static_cast<int>(m_xNum - 1)) *x = static_cast<int>(m_xNum - 1);
+	}
+
+	if (y)
+	{
+		*y = static_cast<int>((lat - m_minLat) / m_dLat);
+	if (*y < 0) *y = 0;
+	if (*y > static_cast<int>(m_yNum - 1)) *y = static_cast<int>(m_yNum - 1);
+	}
+}
+
+
 TileList *TileDrawer::GetTiles(double minLon, double minLat, double maxLon, double maxLat)
 {
 //            printf("gettiles (%g %g)-(%g-%g):\n", minLon, minLat, maxLon, maxLat);
-	int xMin = static_cast<int>((minLon - m_minLon) / m_dLon);
-	int xMax = static_cast<int>((maxLon - m_minLon) / m_dLon) + 1;
-	int yMin = static_cast<int>((minLat - m_minLat) / m_dLat);
-	int yMax = static_cast<int>((maxLat - m_minLat) / m_dLat) + 1;
+	int xMin = 0, xMax = 0, yMin = 0, yMax = 0;
 
-	if (xMin < 0) xMin = 0;
-	if (xMin > static_cast<int>(m_xNum - 1)) xMin = static_cast<int>(m_xNum - 1);
-	if (yMin < 0) yMin = 0;
-	if (yMin > static_cast<int>(m_yNum - 1)) yMin = static_cast<int>(m_yNum - 1);
+	LatLonToIndex(minLon, minLat, &xMin, &yMin);
+	LatLonToIndex(maxLon, maxLat, &xMax, &yMax);
 
-	if (xMax < 0) xMax = 0;
-	if (xMax > static_cast<int>(m_xNum)) xMax = static_cast<int>(m_xNum);
-	if (yMax < 0) yMax = 0;
-	if (yMax > static_cast<int>(m_yNum)) yMax = static_cast<int>(m_yNum);
 
 	TileList *ret = NULL;
 
 
-	for (int x = xMin; x < xMax; x++)
+	for (int x = xMin; x <= xMax; x++)
 	{
-		for (int y = yMin; y < yMax; y++)
+		for (int y = yMin; y <= yMax; y++)
 		{
 			ret = new TileList(m_tileArray[x][y], ret);
 		}
@@ -240,3 +250,45 @@ TileList *TileDrawer::GetTiles(double minLon, double minLat, double maxLon, doub
 	
 }
 
+OsmNode *TileDrawer::GetClosestNodeInTile(int x, int y, double lon, double lat, double *foundDistSq)
+{
+	double fDSq;
+	double shortest = -1;
+	OsmNode *found = NULL;
+	OsmNode *n;
+
+	for (TileWay *t = m_tileArray[x][y]->m_ways; t; t = static_cast<TileWay *>(t->m_next))
+	{
+		OsmWay * w = t->m_way;
+		if (!m_drawRule || m_drawRule->Evaluate(w))
+		{
+			n = w->GetClosestNode(lon,lat, &fDSq);
+
+			if (shortest < 0.0 || fDSq < shortest)
+			{
+				shortest = fDSq;
+				found = n;
+			}
+		}
+	}
+
+	if (foundDistSq)
+	{
+		*foundDistSq = shortest;
+	}
+
+	return found;
+}
+
+
+OsmNode *TileDrawer::GetClosestNode(double lat, double lon)
+{
+	int x =0, y = 0;
+	double distSq = -1;
+
+	LatLonToIndex(lat, lon, &x, &y);
+
+	OsmNode *found = GetClosestNodeInTile(x, y, lon, lat, &distSq);
+
+	return found;
+}

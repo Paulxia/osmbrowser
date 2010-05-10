@@ -289,6 +289,14 @@ class TileDrawer
 
 		bool RenderTiles(wxApp *app, OsmCanvas *canvas, double lon, double lat, double w, double h, bool restart);
 
+		OsmNode *GetClosestNodeInTile(int x, int y, double lon, double lat, double *foundDistSq);
+
+		OsmNode *GetClosestNode(double lon, double lat);
+
+		void SetSelection(double lon, double lat)
+		{
+			m_selection = GetClosestNode(lon, lat);
+		}
 
 		void SetDrawRuleControl(RuleControl *r)
 		{
@@ -314,6 +322,8 @@ class TileDrawer
 
 	private:
 
+		void LatLonToIndex(double lon, double lat, int *x, int *y);
+
 		OsmTile *m_tiles;
 		OsmTile ***m_tileArray;
 		unsigned m_xNum, m_yNum;
@@ -327,6 +337,8 @@ class TileDrawer
 
 		RuleControl *m_drawRule;
 		ColorRules *m_colorRules;
+
+		OsmNode *m_selection;
 };
 
 #endif
