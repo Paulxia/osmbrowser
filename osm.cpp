@@ -199,7 +199,7 @@ IdObject *IdObjectStore::GetObject(unsigned id)
 
 
 OsmData::OsmData()
-	: m_nodes(20), m_ways(16), m_relations(16)
+	: m_nodes(24), m_ways(16), m_relations(16)
 {
 	m_minlat = m_maxlat = m_minlon = m_maxlon = 0;
 	m_parsingState = PARSE_TOPLEVEL;
