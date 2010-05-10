@@ -19,7 +19,7 @@ CC=gcc
 CXX=g++
 LD=g++
 
-CFLAGS = -Wall -Werror -O0 -g -Wno-unused -D_FILE_OFFSET_BITS=64
+CFLAGS = -Wall -Werror -O3 -g -Wno-unused -Wno-unused-result -D_FILE_OFFSET_BITS=64
 CXXFLAGS = $(CFLAGS) `wx-config --cxxflags`
 LDFLAGS = -g
 
