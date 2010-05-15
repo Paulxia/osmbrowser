@@ -67,7 +67,6 @@ bool TileDrawer::RenderTiles(wxApp *app, OsmCanvas *canvas, double lon, double l
 		m_visibleTiles = GetTiles(bb);
 
 		m_curTile = m_visibleTiles;
-		m_curLayer = 0;
 	}
 
 	if (!m_visibleTiles)
@@ -75,8 +74,6 @@ bool TileDrawer::RenderTiles(wxApp *app, OsmCanvas *canvas, double lon, double l
 		return false;
 	}
 
-	while (!mustCancel && m_curLayer < NUMLAYERS)
-	{
 		while (m_curTile && !mustCancel)
 		{
 			OsmTile *t = m_curTile->m_tile;
@@ -87,7 +84,7 @@ bool TileDrawer::RenderTiles(wxApp *app, OsmCanvas *canvas, double lon, double l
 				{
 					if (!w->m_tiles->InterSect(&m_renderedTiles))
 					{
-						RenderWay(w->m_way, m_curLayer);
+						RenderWay(w->m_way);
 					}
 				}	// for way
 			}  // if overlaps
@@ -97,26 +94,19 @@ bool TileDrawer::RenderTiles(wxApp *app, OsmCanvas *canvas, double lon, double l
 			m_curTile = static_cast<TileList *>(m_curTile->m_next);
 		}	 // while curTile
 		
-		if (!m_curTile)
-		{
-			m_curLayer++;
-			m_curTile = m_visibleTiles;
-			m_renderedTiles.MakeEmpty();
-		}
-	}  // while curLayer
 
 	return !mustCancel;
 }
 
-void TileDrawer::Rect(wxString const &text, double lon1, double lat1, double lon2, double lat2, double border, int r, int g, int b)
+void TileDrawer::Rect(wxString const &text, double lon1, double lat1, double lon2, double lat2, double border, int r, int g, int b, int layer)
 {
 	m_renderer->SetLineColor(r,g,b);
-	m_renderer->Rect(lon1, lat1, lon2 - lon1, lat2 - lat1, border , r, g, b);
-	m_renderer->DrawCenteredText(text.mb_str(wxConvUTF8), (lon1 + lon2)/2, (lat1 + lat2)/2, 0, r, g, b);
+	m_renderer->Rect(lon1, lat1, lon2 - lon1, lat2 - lat1, border , r, g, b, layer);
+	m_renderer->DrawCenteredText(text.mb_str(wxConvUTF8), (lon1 + lon2)/2, (lat1 + lat2)/2, 0, r, g, b, layer);
 }
 
 // render using default colours. should plug in rule engine here
-void TileDrawer::RenderWay(OsmWay *w, int curLayer)
+void TileDrawer::RenderWay(OsmWay *w)
 {
 
 	if ((!m_drawRule) || m_drawRule->Evaluate(w))
@@ -137,15 +127,12 @@ void TileDrawer::RenderWay(OsmWay *w, int curLayer)
 				}
 			}
 		}
-		if (curLayer == layer)
-		{
-			RenderWay(w, c, poly, c);
-		}
+		RenderWay(w, c, poly, c, layer);
 	}
 }
 
 
-void TileDrawer::RenderWay(OsmWay *w, wxColour lineColour, bool poly, wxColour fillColour)
+void TileDrawer::RenderWay(OsmWay *w, wxColour lineColour, bool poly, wxColour fillColour, int layer)
 {
 
 
@@ -154,7 +141,7 @@ void TileDrawer::RenderWay(OsmWay *w, wxColour lineColour, bool poly, wxColour f
 
 	if (!poly)
 	{
-		m_renderer->Begin(Renderer::R_LINE);
+		m_renderer->Begin(Renderer::R_LINE, layer);
 		for (unsigned j = 0; j < w->m_numResolvedNodes; j++)
 		{
 			OsmNode *node = w->m_resolvedNodes[j];
@@ -166,7 +153,7 @@ void TileDrawer::RenderWay(OsmWay *w, wxColour lineColour, bool poly, wxColour f
 			else
 			{
 				m_renderer->End();
-				m_renderer->Begin(Renderer::R_LINE);
+				m_renderer->Begin(Renderer::R_LINE, layer);
 			}
 		
 		}
@@ -174,7 +161,7 @@ void TileDrawer::RenderWay(OsmWay *w, wxColour lineColour, bool poly, wxColour f
 	}
 	else
 	{
-		m_renderer->Begin(Renderer::R_POLYGON);
+		m_renderer->Begin(Renderer::R_POLYGON, layer);
 		for (unsigned j = 0; j < w->m_numResolvedNodes; j++)
 		{
 			OsmNode *node = w->m_resolvedNodes[j];

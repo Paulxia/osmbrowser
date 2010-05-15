@@ -309,16 +309,16 @@ class TileDrawer
 		}
 
 		// with explicit colours
-		void RenderWay(OsmWay *w, wxColour lineColour, bool polygon = false, wxColour fillColour = wxColour(255,255,55));
+		void RenderWay(OsmWay *w, wxColour lineColour, bool polygon, wxColour fillColour, int layer);
 
 		// with default colours
-		void RenderWay(OsmWay *w, int curlayer);
-		void Rect(wxString const &text, DRect const &re, int border, int r, int g, int b)
+		void RenderWay(OsmWay *w);
+		void Rect(wxString const &text, DRect const &re, int border, int r, int g, int b, int layer)
 		{
-			Rect(text, re.m_x, re.m_y, re.m_x + re.m_w, re.m_y + re.m_h, border, r, g, b);
+			Rect(text, re.m_x, re.m_y, re.m_x + re.m_w, re.m_y + re.m_h, border, r, g, b, layer);
 		}
 		
-		void Rect(wxString const &text, double lon1, double lat1, double lon2, double lat2, double border, int r, int g, int b);
+		void Rect(wxString const &text, double lon1, double lat1, double lon2, double lat2, double border, int r, int g, int b, int layer);
 
 	private:
 
@@ -331,7 +331,6 @@ class TileDrawer
 
 		TileList *m_visibleTiles, *m_curTile;
 		TileSpans m_renderedTiles;
-		int m_curLayer;
 
 		Renderer *m_renderer;
 

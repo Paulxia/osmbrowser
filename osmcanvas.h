@@ -14,7 +14,7 @@ class OsmCanvas
 	: public Canvas
 {
 	public:
-		OsmCanvas(wxApp *app, wxWindow *parent, wxString const &fileName);
+		OsmCanvas(wxApp *app, wxWindow *parent, wxString const &fileName, int numLayers);
 		void Render(bool force = false);
 
 		~OsmCanvas();
