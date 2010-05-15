@@ -77,7 +77,7 @@ bool TileDrawer::RenderTiles(wxApp *app, OsmCanvas *canvas, double lon, double l
 		while (m_curTile && !mustCancel)
 		{
 			OsmTile *t = m_curTile->m_tile;
-//			canvas->Rect(wxEmptyString, *t, -1, 0,255,0);
+			Rect(wxEmptyString, *t, -1, 0,255,255, NUMLAYERS);
 			if (t->OverLaps(bb))
 			{
 				for (TileWay *w = t->m_ways; w && !mustCancel; w = static_cast<TileWay *>(w->m_next))
@@ -101,7 +101,7 @@ bool TileDrawer::RenderTiles(wxApp *app, OsmCanvas *canvas, double lon, double l
 void TileDrawer::Rect(wxString const &text, double lon1, double lat1, double lon2, double lat2, double border, int r, int g, int b, int layer)
 {
 	m_renderer->SetLineColor(r,g,b);
-	m_renderer->Rect(lon1, lat1, lon2 - lon1, lat2 - lat1, border , r, g, b, layer);
+	m_renderer->Rect(lon1, lat1, lon2 - lon1, lat2 - lat1, border , r, g, b, false, layer);
 	m_renderer->DrawCenteredText(text.mb_str(wxConvUTF8), (lon1 + lon2)/2, (lat1 + lat2)/2, 0, r, g, b, layer);
 }
 
@@ -190,18 +190,18 @@ TileSpans *TileDrawer::GetTileSpans(TileList *all)
 	
 }
 
-void TileDrawer::LatLonToIndex(double lon, double lat, int *x, int *y)
+void TileDrawer::LonLatToIndex(double lon, double lat, int *x, int *y)
 {
 	if (x)
 	{
-		*x = static_cast<int>((lon - m_minLon) / m_dLon);
+		*x = static_cast<int>(floor((lon - m_minLon) / m_dLon));
 		if (*x < 0) *x = 0;
 		if (*x > static_cast<int>(m_xNum - 1)) *x = static_cast<int>(m_xNum - 1);
 	}
 
 	if (y)
 	{
-		*y = static_cast<int>((lat - m_minLat) / m_dLat);
+		*y = static_cast<int>(floor((lat - m_minLat) / m_dLat));
 	if (*y < 0) *y = 0;
 	if (*y > static_cast<int>(m_yNum - 1)) *y = static_cast<int>(m_yNum - 1);
 	}
@@ -213,8 +213,8 @@ TileList *TileDrawer::GetTiles(double minLon, double minLat, double maxLon, doub
 //            printf("gettiles (%g %g)-(%g-%g):\n", minLon, minLat, maxLon, maxLat);
 	int xMin = 0, xMax = 0, yMin = 0, yMax = 0;
 
-	LatLonToIndex(minLon, minLat, &xMin, &yMin);
-	LatLonToIndex(maxLon, maxLat, &xMax, &yMax);
+	LonLatToIndex(minLon, minLat, &xMin, &yMin);
+	LonLatToIndex(maxLon, maxLat, &xMax, &yMax);
 
 
 	TileList *ret = NULL;
@@ -239,7 +239,7 @@ TileList *TileDrawer::GetTiles(double minLon, double minLat, double maxLon, doub
 
 OsmNode *TileDrawer::GetClosestNodeInTile(int x, int y, double lon, double lat, double *foundDistSq)
 {
-	double fDSq;
+	double fDSq = 0;
 	double shortest = -1;
 	OsmNode *found = NULL;
 	OsmNode *n;
@@ -253,6 +253,7 @@ OsmNode *TileDrawer::GetClosestNodeInTile(int x, int y, double lon, double lat, 
 
 			if (shortest < 0.0 || fDSq < shortest)
 			{
+//				printf(" found %p distsq %f\n", n, fDSq);
 				shortest = fDSq;
 				found = n;
 			}
@@ -268,14 +269,48 @@ OsmNode *TileDrawer::GetClosestNodeInTile(int x, int y, double lon, double lat, 
 }
 
 
-OsmNode *TileDrawer::GetClosestNode(double lat, double lon)
+OsmNode *TileDrawer::GetClosestNode(double lon, double lat)
 {
 	int x =0, y = 0;
 	double distSq = -1;
 
-	LatLonToIndex(lat, lon, &x, &y);
+	LonLatToIndex(lon, lat, &x, &y);
 
 	OsmNode *found = GetClosestNodeInTile(x, y, lon, lat, &distSq);
 
 	return found;
+}
+
+
+bool TileDrawer::SetSelection(double lon, double lat)
+{
+	OsmNode *s = GetClosestNode(lon, lat);
+
+//	printf("setsel %f %f : %p (%f %f)\n", lon, lat, s, s->m_lon, s->m_lat);
+
+	if (s != m_selection)
+	{
+		m_selection = s;
+		DrawOverlay(true);
+//		Rect(wxEmptyString, DRect(lon, lat, 0, 0), 2, 0,0,255, NUMLAYERS);
+		m_renderer->Commit();
+		return true;
+	}
+
+	return false;
+}
+
+
+
+void TileDrawer::DrawOverlay(bool clear)
+{
+	if (clear)
+		m_renderer->Clear(NUMLAYERS);
+		
+	if (m_selection)
+	{
+		double lon = m_selection->m_lon;
+		double lat = m_selection->m_lat;
+		m_renderer->Rect(lon, lat, 0, 0, 4, 255,0,0, true, NUMLAYERS);
+	}
 }

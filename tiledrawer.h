@@ -293,10 +293,10 @@ class TileDrawer
 
 		OsmNode *GetClosestNode(double lon, double lat);
 
-		void SetSelection(double lon, double lat)
-		{
-			m_selection = GetClosestNode(lon, lat);
-		}
+		// returns true if the selection has changed and you should refresh the canvas
+		bool SetSelection(double lon, double lat);
+
+		void DrawOverlay(bool clear = false);
 
 		void SetDrawRuleControl(RuleControl *r)
 		{
@@ -313,7 +313,7 @@ class TileDrawer
 
 		// with default colours
 		void RenderWay(OsmWay *w);
-		void Rect(wxString const &text, DRect const &re, int border, int r, int g, int b, int layer)
+		void Rect(wxString const &text, DRect const &re, double border, int r, int g, int b, int layer)
 		{
 			Rect(text, re.m_x, re.m_y, re.m_x + re.m_w, re.m_y + re.m_h, border, r, g, b, layer);
 		}
@@ -322,7 +322,7 @@ class TileDrawer
 
 	private:
 
-		void LatLonToIndex(double lon, double lat, int *x, int *y);
+		void LonLatToIndex(double lon, double lat, int *x, int *y);
 
 		OsmTile *m_tiles;
 		OsmTile ***m_tileArray;

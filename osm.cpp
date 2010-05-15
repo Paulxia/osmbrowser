@@ -58,6 +58,36 @@ bool OsmTag::KeyExists(char const *key)
 }
 
 
+OsmNode *OsmWay::GetClosestNode(double lon, double lat, double *foundDistSquared)
+{
+	double found = -1;
+	unsigned foundIndex = 0;
+	double distsq;
+	
+	for (unsigned i = 0; i < m_numResolvedNodes; i++)
+	{
+		if (m_resolvedNodes[i])
+		{
+			distsq = DISTSQUARED(m_resolvedNodes[i]->m_lon, m_resolvedNodes[i]->m_lat, lon, lat);
+
+//			printf("%p:  %f %f  %f %f  %f\n", m_resolvedNodes[i], m_resolvedNodes[i]->m_lon, m_resolvedNodes[i]->m_lat, lon, lat, distsq);
+			if (found < 0 || distsq < found)
+			{
+				foundIndex = i;
+				found = distsq;
+			}
+		}
+	}
+
+	if (foundDistSquared)
+	{
+		*foundDistSquared = found;
+	}
+
+	return m_resolvedNodes[foundIndex];
+}
+
+
 void OsmWay::Resolve(IdObjectStore *store)
 {
 	if (!m_nodeRefs)

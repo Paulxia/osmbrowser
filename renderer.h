@@ -18,23 +18,25 @@ class Renderer
 			R_LINE
 		};
 		virtual void Begin(Renderer::TYPE type, int layer) = 0;
-		virtual void AddPoint(double x, double y) = 0;
+		virtual void AddPoint(double x, double y, double xshift = 0, double yshift = 0) = 0;
 		virtual void End() = 0;
 		virtual void DrawCenteredText(char const *text, double x, double y, double angle, int r, int g, int b, int layer) = 0;
 
-		void Rect(DRect const &re, double border, int r, int g, int b, int layer)
+		void Rect(DRect const &re, double border, int r, int g, int b, bool filled, int layer)
 		{
-			Rect(re.m_x, re.m_y, re.m_w, re.m_h, border, r, g, b, layer);
+			Rect(re.m_x, re.m_y, re.m_w, re.m_h, border, r, g, b, filled, layer);
 		}
 
-		void Rect(double x, double y, double w, double h, double border, int r, int g, int b, int layer)
+		void Rect(double x, double y, double w, double h, double border, int r, int g, int b, bool filled, int layer)
 		{
-			Begin(R_LINE, layer);
-			AddPoint(x - border, y - border);
-			AddPoint(x + w + 2 * border, y - border);
-			AddPoint(x + w + 2 * border, y + h + 2 * border);
-			AddPoint(x - border, y + h + 2 * border);
-			AddPoint(x - border, y - border);
+			SetLineColor(r,g,b);
+			SetFillColor(r,g,b);
+			Begin(filled ? R_POLYGON  : R_LINE, layer);
+			AddPoint(x, y, -border, -border);
+			AddPoint(x + w, y, border, -border);
+			AddPoint(x + w, y + h, border, border);
+			AddPoint(x, y + h, -border, border);
+			AddPoint(x, y, -border, -border);
 			End();
 		}
 
@@ -59,6 +61,7 @@ class RendererSimple
 		{
 			m_maxPoints = 1024;
 			m_points = new RendererSimple::Point[m_maxPoints];
+			m_shifts = new RendererSimple::Point[m_maxPoints];
 			m_numPoints = 0;
 		}
 
@@ -74,7 +77,7 @@ class RendererSimple
 			m_curLayer = layer;
 		}
 
-		void AddPoint(double x, double y)
+		void AddPoint(double x, double y, double xs = 0, double ys = 0)
 		{
 			if (m_numPoints >= m_maxPoints)
 			{
@@ -83,6 +86,8 @@ class RendererSimple
 
 			m_points[m_numPoints].x = x;
 			m_points[m_numPoints].y = y;
+			m_shifts[m_numPoints].x = xs;
+			m_shifts[m_numPoints].y = ys;
 			m_numPoints++;
 		}
 
@@ -117,17 +122,22 @@ class RendererSimple
 		{
 			m_maxPoints *=2;
 			RendererSimple::Point *n = new  RendererSimple::Point[m_maxPoints];
+			RendererSimple::Point *ns = new  RendererSimple::Point[m_maxPoints];
 			for (unsigned i = 0; i < m_numPoints; i++)
 			{
 				n[i] = m_points[i];
+				ns[i] = m_shifts[i];
 			}
 
 			delete [] m_points;
+			delete [] m_shifts;
 			m_points = n;
+			m_shifts = ns;
 		}
 	protected:
 		Renderer::TYPE m_type;
 		RendererSimple::Point *m_points;
+		RendererSimple::Point *m_shifts;
 		unsigned m_maxPoints;
 		unsigned m_numPoints;
 		int m_curLayer;
@@ -208,8 +218,8 @@ class RendererWxBitmap
 		
 			for (unsigned i = 0; i < m_numPoints; i++)
 			{
-				m_wxPoints[i].x = static_cast<int>((m_points[i].x - m_offX) * m_scaleX);
-				m_wxPoints[i].y = m_layer[0].GetHeight() - static_cast<int>((m_points[i].y - m_offY) * m_scaleY);
+				m_wxPoints[i].x = static_cast<int>((m_points[i].x - m_offX) * m_scaleX + m_shifts[i].x);
+				m_wxPoints[i].y = m_layer[0].GetHeight() - static_cast<int>((m_points[i].y - m_offY) * m_scaleY + m_shifts[i].y);
 			}
 		}
 		void BlitWithTransparency(wxBitmap *from, wxImage  *to);

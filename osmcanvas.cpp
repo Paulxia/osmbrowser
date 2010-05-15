@@ -135,6 +135,8 @@ void OsmCanvas::Render(bool force)
 	m_done = m_tileDrawer->RenderTiles(m_app, this, m_xOffset, m_yOffset, w / xScale, h / m_scale, m_restart);
 	m_restart = false;
 
+	m_tileDrawer->DrawOverlay();
+	
 	m_renderer.Commit();
 	Draw(NULL);
 	return;
@@ -189,6 +191,15 @@ void OsmCanvas::OnMouseMove(wxMouseEvent &evt)
 		SetupRenderer();
 		Redraw();
 		
+	}
+	else
+	{
+		double lon = m_xOffset + evt.m_x / (m_scale * scaleCorrection);
+		double lat = m_yOffset + (m_backBuffer.GetHeight() - evt.m_y) / m_scale;
+		if (m_tileDrawer->SetSelection(lon, lat))
+		{
+			Draw();
+		}
 	}
 }
 
