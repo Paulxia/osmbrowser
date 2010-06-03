@@ -8,6 +8,7 @@
 #include <wx/wx.h>
 
 #include "rulecontrol.h"
+#include "info.h"
 
 BEGIN_EVENT_TABLE(MainFrame, wxFrame)
     EVT_MENU(Minimal_Quit,  MainFrame::OnQuit)
@@ -59,6 +60,15 @@ MainFrame::MainFrame(wxApp *app, const wxString& title, wxString const &fileName
 
 	wxPanel *rightPanel = new wxScrolledWindow(subSplitter);
 
+	wxSizer *rightSizer = new wxBoxSizer(wxVERTICAL);
+
+	rightPanel->SetSizer(rightSizer);
+	
+	m_info = new InfoTreeCtrl(rightPanel);
+	rightSizer->Add(m_info, 1, wxEXPAND);
+
+	rightPanel->FitInside();
+	
 	splitter->SetMinimumPaneSize(50);
 	subSplitter->SetMinimumPaneSize(50);
 
@@ -82,6 +92,7 @@ MainFrame::MainFrame(wxApp *app, const wxString& title, wxString const &fileName
 	leftSizer->Add(new AddButton(leftPanel, m_colorRules), 0, wxEXPAND);
 
 	m_canvas->SetRuleControls(m_drawRule, m_colorRules);
+	m_canvas->SetInfoDisplay(m_info);
 
 	RulesComboBox *rulesComboBox = new RulesComboBox(leftPanel, this);
 

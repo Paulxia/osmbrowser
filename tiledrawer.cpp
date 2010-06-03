@@ -12,8 +12,26 @@ TileWay::TileWay(OsmWay *way, TileSpans *allTiles, TileWay *next)
 
 TileWay::~TileWay()
 {
-	m_tiles->UnRef();
+	if (m_tiles)
+		m_tiles->UnRef();
 }
+
+
+TileWay *OsmTile::GetWaysContainingNode(OsmNode *node)
+{
+	TileWay *ret = NULL;
+
+	for (TileWay *t = m_ways; t; t = static_cast<TileWay *>(t->m_next))
+	{
+		if (t->m_way->ContainsNode(node))
+		{
+			ret = new TileWay(t->m_way, NULL, ret);
+		}
+	}
+
+	return ret;
+}
+
 
 TileDrawer::TileDrawer(Renderer *renderer, double minLon,double minLat, double maxLon, double maxLat, double dLon, double dLat)
 {
@@ -314,3 +332,15 @@ void TileDrawer::DrawOverlay(bool clear)
 		m_renderer->Rect(lon, lat, 0, 0, 4, 255,0,0, true, NUMLAYERS);
 	}
 }
+
+//destroy the list when done. the TileSpans member will not be set
+TileWay *TileDrawer::GetWaysContainingNode(OsmNode *node)
+{
+
+	int x = 0, y = 0;
+	LonLatToIndex(node->m_lon, node->m_lat, &x, &y);
+	
+
+	return m_tileArray[x][y]->GetWaysContainingNode(node);
+}
+

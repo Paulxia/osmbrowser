@@ -9,6 +9,7 @@
 class TileDrawer;
 class RuleControl;
 class ColorRules;
+class InfoTreeCtrl;
 
 class OsmCanvas
 	: public Canvas
@@ -39,9 +40,11 @@ class OsmCanvas
 		}
 
 		void SetRuleControls(RuleControl *rules, ColorRules *colors);
-		
+
+		void SetInfoDisplay(InfoTreeCtrl *info);
 	private:
 		OsmData *m_data;
+		InfoTreeCtrl *m_info;
 		DECLARE_EVENT_TABLE();
 
 		void OnMouseWheel(wxMouseEvent &evt);

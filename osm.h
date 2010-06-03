@@ -874,6 +874,18 @@ class OsmWay
 
 	OsmNode *GetClosestNode(double lon, double lat, double *foundDistSquared);
 
+
+	bool ContainsNode(OsmNode const *node) const
+	{
+		for (unsigned i = 0; i < m_numResolvedNodes; i++)
+		{
+			if (m_resolvedNodes[i]->m_id == node->m_id)
+				return true;
+		}
+
+		return false;
+	}
+
 	void AddNodeRef(unsigned id)
 	{
 		m_nodeRefs = new IdObject(id, m_nodeRefs);

@@ -40,6 +40,9 @@ class OsmTile
 			m_ways->DestroyList();
 		}
 
+
+		TileWay *GetWaysContainingNode(OsmNode *node);
+
 		void AddWay(OsmWay *way, TileSpans *allTiles)
 		{
 //            printf("tile %u add way %u\n", m_id, way->m_id);
@@ -293,6 +296,9 @@ class TileDrawer
 
 		OsmNode *GetClosestNode(double lon, double lat);
 
+		//destroy the list when done. the TileSpans member will not be set
+		TileWay *GetWaysContainingNode(OsmNode *node);
+		
 		// returns true if the selection has changed and you should refresh the canvas
 		bool SetSelection(double lon, double lat);
 
@@ -319,6 +325,16 @@ class TileDrawer
 		}
 		
 		void Rect(wxString const &text, double lon1, double lat1, double lon2, double lat2, double border, int r, int g, int b, int layer);
+
+		TileWay *GetSelection()
+		{
+			if (!m_selection)
+			{
+				return NULL;
+			}
+
+			return GetWaysContainingNode(m_selection);
+		}
 
 	private:
 

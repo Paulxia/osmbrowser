@@ -7,6 +7,7 @@
 
 #include "osmcanvas.h"
 class RuleControl;
+class InfoTreeCtrl;
 
 // Define a new frame type: this is going to be our main frame
 class MainFrame : public wxFrame
@@ -23,6 +24,7 @@ public:
     OsmCanvas *m_canvas;
 	RuleControl *m_drawRule;
 	ColorRules *m_colorRules;
+	InfoTreeCtrl *m_info;
 
 	void Save(wxString const &name);
 	void Load(wxString const &name);

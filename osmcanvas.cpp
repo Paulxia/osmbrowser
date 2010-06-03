@@ -2,6 +2,7 @@
 #include "parse.h"
 #include "rulecontrol.h"
 #include "tiledrawer.h"
+#include "info.h"
 
 BEGIN_EVENT_TABLE(OsmCanvas, Canvas)
 	EVT_MOUSEWHEEL(OsmCanvas::OnMouseWheel)
@@ -25,6 +26,7 @@ OsmCanvas::OsmCanvas(wxApp * app, wxWindow *parent, wxString const &fileName, in
 	m_app = app;
 	m_dragging = false;
 	m_locked = true;
+	m_info = NULL;
 	wxString binFile = fileName;
 
 	binFile.Append(wxT(".cache"));
@@ -199,6 +201,15 @@ void OsmCanvas::OnMouseMove(wxMouseEvent &evt)
 		if (m_tileDrawer->SetSelection(lon, lat))
 		{
 			Draw();
+
+			if (m_info)
+			{
+				TileWay *list = m_tileDrawer->GetSelection();
+
+				m_info->SetInfo(list);
+
+				list->DestroyList();
+			}
 		}
 	}
 }
@@ -243,3 +254,7 @@ void OsmCanvas::SetRuleControls(RuleControl *rules, ColorRules *colors)
 	m_tileDrawer->SetColorRules(colors);
 }
 
+void OsmCanvas::SetInfoDisplay(InfoTreeCtrl *info)
+{
+	m_info = info;
+}
