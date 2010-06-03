@@ -11,7 +11,7 @@ CPP_OBJECTS_BARE= wxmain wxcanvas osmcanvas osm parse s_expr rulecontrol frame r
 
 C_OBJECTS_BARE =
 
-LIBS= -lexpat `wx-config --libs`
+LIBS= -lexpat `wx-config --libs` `pkg-config cairo --libs`
 
 PROGNAME= wxosmparse
 
@@ -20,7 +20,7 @@ CXX=g++
 LD=g++
 
 CFLAGS = -Wall -Werror -O3 -g -Wno-unused -Wno-unused-result -D_FILE_OFFSET_BITS=64
-CXXFLAGS = $(CFLAGS) `wx-config --cxxflags`
+CXXFLAGS = $(CFLAGS) `wx-config --cxxflags` `pkg-config cairo --cflags`
 LDFLAGS = -g
 
 RM=rm -f

@@ -48,6 +48,8 @@ class Renderer
 		// merge all layers and output to screen
 		virtual void Commit() = 0;
 
+		virtual void Setup(wxBitmap *output, DRect const &viewport) = 0;
+
 	protected:
 		int m_numLayers;
 };
