@@ -206,9 +206,11 @@ void OsmCanvas::OnMouseMove(wxMouseEvent &evt)
 			{
 				TileWay *list = m_tileDrawer->GetSelection();
 
+
 				m_info->SetInfo(list);
 
-				list->DestroyList();
+				if (list)
+					list->DestroyList();
 			}
 		}
 	}
