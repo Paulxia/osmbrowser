@@ -338,6 +338,8 @@ class TileDrawer
 
 		bool SetSelectedWay(OsmWay *way);
 
+		bool SetSelectionColor(int r, int g, int b, bool redraw);
+
 	private:
 
 		void LonLatToIndex(double lon, double lat, int *x, int *y);
@@ -357,6 +359,7 @@ class TileDrawer
 
 		OsmNode *m_selection;
 		OsmWay *m_selectedWay;
+		wxColour m_selectionColor;
 };
 
 #endif

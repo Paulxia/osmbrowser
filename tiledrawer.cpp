@@ -39,6 +39,7 @@ TileDrawer::TileDrawer(Renderer *renderer, double minLon,double minLat, double m
 	m_tiles = NULL;
 
 	m_selection = NULL;
+	m_selectionColor = wxColour(255,0,0);
 
 	m_drawRule = NULL;
 	m_colorRules = NULL;
@@ -343,12 +344,12 @@ void TileDrawer::DrawOverlay(bool clear)
 	{
 		double lon = m_selection->m_lon;
 		double lat = m_selection->m_lat;
-		m_renderer->Rect(lon, lat, 0, 0, 4, 255,0,0, true, NUMLAYERS);
+		m_renderer->Rect(lon, lat, 0, 0, 4, m_selectionColor.Red(), m_selectionColor.Green(), m_selectionColor.Blue(), true, NUMLAYERS);
 	}
 
 	if (m_selectedWay)
 	{
-		RenderWay(m_selectedWay, wxColour(255,0,0), false, wxColour(0,0,0), 3, NUMLAYERS);
+		RenderWay(m_selectedWay, m_selectionColor, false, wxColour(0,0,0), 3, NUMLAYERS);
 	}
 }
 
@@ -363,3 +364,20 @@ TileWay *TileDrawer::GetWaysContainingNode(OsmNode *node)
 	return m_tileArray[x][y]->GetWaysContainingNode(node);
 }
 
+bool TileDrawer::SetSelectionColor(int r, int g, int b, bool redraw)
+{
+	wxColour newColor(r, g, b);
+
+	bool changed = newColor != m_selectionColor;
+
+	m_selectionColor = newColor;
+
+	if (changed && redraw)
+	{
+		DrawOverlay(true);
+		m_renderer->Commit();
+		return true;
+	}
+
+	return false;
+}

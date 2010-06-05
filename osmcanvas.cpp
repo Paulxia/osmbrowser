@@ -97,6 +97,8 @@ OsmCanvas::OsmCanvas(wxApp * app, wxWindow *parent, wxString const &fileName, in
 
 	m_tileDrawer->AddWays(static_cast<OsmWay *>(m_data->m_ways.m_content));
 
+	m_tileDrawer->SetSelectionColor(255,100,100, false);
+
 	m_timer.Start(100);
 }
 
@@ -250,6 +252,7 @@ void OsmCanvas::OnLeftUp(wxMouseEvent &evt)
 		m_cursorLocked = !m_cursorLocked;
 		if (!m_cursorLocked)
 		{
+			m_tileDrawer->SetSelectionColor(255,100,100, true);
 			double scaleCorrection = cos(m_yOffset * M_PI / 180);
 			double lon = m_xOffset + evt.m_x / (m_scale * scaleCorrection);
 			double lat = m_yOffset + (m_backBuffer.GetHeight() - evt.m_y) / m_scale;
@@ -267,6 +270,10 @@ void OsmCanvas::OnLeftUp(wxMouseEvent &evt)
 						list->DestroyList();
 				}
 			}
+		}
+		else
+		{
+			m_tileDrawer->SetSelectionColor(255,0,0, true);
 		}
 
 	}
