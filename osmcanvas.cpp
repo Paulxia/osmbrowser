@@ -246,6 +246,12 @@ void OsmCanvas::OnLeftUp(wxMouseEvent &evt)
 		ReleaseMouse();
 	m_dragging = false;
 
+	// we have dragged, so cancel any locked cursor change
+	if (!m_firstDragStep)
+	{
+		m_cursorLocked = !m_cursorLocked;
+	}
+
 }
 
 
