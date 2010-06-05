@@ -339,6 +339,7 @@ class TileDrawer
 		void SetSelectedWay(OsmWay *way)
 		{
 			m_selectedWay = way;
+			DrawOverlay(true);
 		}
 
 	private:

@@ -42,6 +42,9 @@ class OsmCanvas
 		void SetRuleControls(RuleControl *rules, ColorRules *colors);
 
 		void SetInfoDisplay(InfoTreeCtrl *info);
+
+
+		void SelectWay(OsmWay *way);
 	private:
 		OsmData *m_data;
 		InfoTreeCtrl *m_info;

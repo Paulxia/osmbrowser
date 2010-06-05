@@ -91,6 +91,7 @@ MainFrame::MainFrame(wxApp *app, const wxString& title, wxString const &fileName
 
 	leftSizer->Add(new AddButton(leftPanel, m_colorRules), 0, wxEXPAND);
 
+	m_info->SetCanvas(m_canvas);
 	m_canvas->SetRuleControls(m_drawRule, m_colorRules);
 	m_canvas->SetInfoDisplay(m_info);
 

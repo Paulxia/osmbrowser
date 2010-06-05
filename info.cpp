@@ -1,15 +1,38 @@
 #include "info.h"
+#include "osmcanvas.h"
+
+BEGIN_EVENT_TABLE(InfoTreeCtrl, wxTreeCtrl)
+	EVT_TREE_SEL_CHANGED(-1, InfoTreeCtrl::OnSelection)
+END_EVENT_TABLE()
 
 
+class InfoData
+	: public wxTreeItemData
+{
+	public:
+		InfoData(OsmWay *way)
+		{
+			m_way = way;
+		}
+
+		OsmWay *m_way;
+
+};
 
 
 InfoTreeCtrl::InfoTreeCtrl(wxWindow *parent)
 	: wxTreeCtrl(parent, -1)
 {
+	m_canvas = NULL;
 }
 
 void InfoTreeCtrl::SetInfo(TileWay *ways)
 {
+	if (m_canvas)
+	{
+		m_canvas->SelectWay(NULL);
+	}
+
 	DeleteAllItems();
 
 	wxTreeItemId root = AddRoot(wxT("this node is a member of:"));
@@ -26,7 +49,8 @@ void InfoTreeCtrl::SetInfo(TileWay *ways)
 
 void InfoTreeCtrl::AddWay(wxTreeItemId const &root, OsmWay *way)
 {
-	wxTreeItemId w = AppendItem(root, wxString::Format(wxT("%ud"), way->m_id));
+	InfoData *data = new InfoData(way);
+	wxTreeItemId w = AppendItem(root, wxString::Format(wxT("%ud"), way->m_id), -1, -1, data);
 
 	for (OsmTag *t = way->m_tags; t; t = static_cast<OsmTag *>(t->m_next))
 	{
@@ -44,6 +68,35 @@ void InfoTreeCtrl::AddWay(wxTreeItemId const &root, OsmWay *way)
 
 		
 		AppendItem(w, tag);
+	}
+}
+
+void InfoTreeCtrl::SetCanvas(OsmCanvas *canvas)
+{
+	m_canvas = canvas;
+}
+
+
+void InfoTreeCtrl::OnSelection(wxTreeEvent &evt)
+{
+	wxTreeItemId id = evt.GetItem();
+
+
+	InfoData *data = static_cast<InfoData *>(GetItemData(id));
+
+
+	if (!m_canvas)
+	{
+		return;
+	}
+	
+	if (data)
+	{
+		m_canvas->SelectWay(data->m_way);
+	}
+	else
+	{
+		m_canvas->SelectWay(NULL);
 	}
 }
 

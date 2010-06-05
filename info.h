@@ -6,6 +6,8 @@
 
 #include "tiledrawer.h"
 
+class OsmCanvas;
+
 class InfoTreeCtrl
 	: public wxTreeCtrl
 {
@@ -14,8 +16,16 @@ class InfoTreeCtrl
 
 		void SetInfo(TileWay *ways);
 
+		void SetCanvas(OsmCanvas *c);
+
 	private:
 		void AddWay(wxTreeItemId const &root, OsmWay *way);
+
+		OsmCanvas *m_canvas;
+
+		DECLARE_EVENT_TABLE();
+
+		void OnSelection(wxTreeEvent &evt);
 };
 
 #endif
