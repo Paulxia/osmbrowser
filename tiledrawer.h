@@ -336,11 +336,7 @@ class TileDrawer
 			return GetWaysContainingNode(m_selection);
 		}
 
-		void SetSelectedWay(OsmWay *way)
-		{
-			m_selectedWay = way;
-			DrawOverlay(true);
-		}
+		bool SetSelectedWay(OsmWay *way);
 
 	private:
 

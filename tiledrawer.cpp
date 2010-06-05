@@ -318,6 +318,19 @@ bool TileDrawer::SetSelection(double lon, double lat)
 	return false;
 }
 
+bool TileDrawer::SetSelectedWay(OsmWay *way)
+{
+	if (way != m_selectedWay)
+	{
+		m_selectedWay = way;
+		DrawOverlay(true);
+		m_renderer->Commit();
+
+		return true;
+	}
+	return false;
+}
+
 
 
 void TileDrawer::DrawOverlay(bool clear)

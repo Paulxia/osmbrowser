@@ -280,6 +280,8 @@ void OsmCanvas::SetInfoDisplay(InfoTreeCtrl *info)
 
 void OsmCanvas::SelectWay(OsmWay *way)
 {
-	m_tileDrawer->SetSelectedWay(way);
-	Draw();
+	if (m_tileDrawer->SetSelectedWay(way))
+	{
+		Draw();
+	}
 }
