@@ -145,15 +145,16 @@ void TileDrawer::RenderWay(OsmWay *w)
 				}
 			}
 		}
-		RenderWay(w, c, poly, c, layer);
+		RenderWay(w, c, poly, c, 1, layer);
 	}
 }
 
 
-void TileDrawer::RenderWay(OsmWay *w, wxColour lineColour, bool poly, wxColour fillColour, int layer)
+void TileDrawer::RenderWay(OsmWay *w, wxColour lineColour, bool poly, wxColour fillColour, int width, int layer)
 {
 
 
+	m_renderer->SetLineWidth(width);
 	m_renderer->SetLineColor(lineColour.Red(), lineColour.Green(), lineColour.Blue());
 	m_renderer->SetFillColor(fillColour.Red(), fillColour.Green(), fillColour.Blue());
 
@@ -347,7 +348,7 @@ void TileDrawer::DrawOverlay(bool clear)
 
 	if (m_selectedWay)
 	{
-		RenderWay(m_selectedWay, wxColour(255,0,0), false, wxColour(0,0,0), NUMLAYERS);
+		RenderWay(m_selectedWay, wxColour(255,0,0), false, wxColour(0,0,0), 3, NUMLAYERS);
 	}
 }
 

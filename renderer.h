@@ -42,6 +42,7 @@ class Renderer
 
 		virtual void SetLineColor(int r, int g, int b, int a = 0) = 0;
 		virtual void SetFillColor(int r, int g, int b, int a = 0) = 0;
+		virtual void SetLineWidth(int width) = 0;
 
 		virtual void Clear(int layer = -1) = 0;
 
@@ -177,6 +178,11 @@ class RendererWxBitmap
 		void SetFillColor(int r, int g, int b, int a = 0)
 		{
 			m_brush.SetColour(wxColour(r,g,b));
+		}
+
+		void SetLineWidth(int width)
+		{
+			m_pen.SetWidth(width);
 		}
 
 		void Clear(int layer = -1)

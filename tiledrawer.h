@@ -315,7 +315,7 @@ class TileDrawer
 		}
 
 		// with explicit colours
-		void RenderWay(OsmWay *w, wxColour lineColour, bool polygon, wxColour fillColour, int layer);
+		void RenderWay(OsmWay *w, wxColour lineColour, bool polygon, wxColour fillColour, int width, int layer);
 
 		// with default colours
 		void RenderWay(OsmWay *w);

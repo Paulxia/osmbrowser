@@ -235,8 +235,6 @@ void OsmCanvas::OnLeftDown(wxMouseEvent &evt)
 	m_dragging = true;
 	m_firstDragStep = true;
 
-	m_cursorLocked = !m_cursorLocked;
-
 }
 
 
@@ -246,10 +244,31 @@ void OsmCanvas::OnLeftUp(wxMouseEvent &evt)
 		ReleaseMouse();
 	m_dragging = false;
 
-	// we have dragged, so cancel any locked cursor change
-	if (!m_firstDragStep)
+	// we haven't dragged, so change the cursor locking
+	if (m_firstDragStep)
 	{
 		m_cursorLocked = !m_cursorLocked;
+		if (!m_cursorLocked)
+		{
+			double scaleCorrection = cos(m_yOffset * M_PI / 180);
+			double lon = m_xOffset + evt.m_x / (m_scale * scaleCorrection);
+			double lat = m_yOffset + (m_backBuffer.GetHeight() - evt.m_y) / m_scale;
+			if (m_tileDrawer->SetSelection(lon, lat))
+			{
+				Draw();
+
+				if (m_info)
+				{
+					TileWay *list = m_tileDrawer->GetSelection();
+
+					m_info->SetInfo(list);
+
+					if (list)
+						list->DestroyList();
+				}
+			}
+		}
+
 	}
 
 }
