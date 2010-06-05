@@ -29,6 +29,10 @@ class RuleControl
 		void Save(wxString const &group);
 		void Load(wxString const &group);
 
+		void SetValueOnEmpty(bool val)
+		{
+			m_valueOnEmpty = val;
+		}
 	private:
 		DECLARE_EVENT_TABLE();
 
@@ -38,6 +42,7 @@ class RuleControl
 
 		LogicalExpression *m_expr;
 		OsmCanvas *m_canvas;
+		bool m_valueOnEmpty;
 };
 
 class ColorPicker

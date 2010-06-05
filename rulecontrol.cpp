@@ -35,6 +35,7 @@ RuleControl::RuleControl(wxWindow *parent, OsmCanvas *canvas, wxSize const &size
 {
 	m_expr = 0;
 	m_canvas = canvas;
+	m_valueOnEmpty = true;
 }
 
 RuleControl::~RuleControl()
@@ -101,7 +102,7 @@ void RuleControl::SetColor(int from, int to, E_COLORS color)
 bool RuleControl::Evaluate(IdObjectWithTags *o)
 {
 	if (!m_expr)
-		return true;
+		return m_valueOnEmpty;
 
 		return m_expr->GetValue(o);
 }
@@ -125,6 +126,8 @@ void ColorRules::Add()
 	top->Add(m_layers[m_num], 1);
 	s->Add(m_checkBoxes[m_num]);
 	s->Add(m_rules[m_num], 0,wxEXPAND);
+
+	m_rules[m_num]->SetValueOnEmpty(false);
 
 	m_parent->FitInside();
 	m_num++;
