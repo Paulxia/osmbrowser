@@ -82,6 +82,8 @@ class OsmCanvas
 		void SetupRenderer();
 		RendererWxBitmap m_renderer;
 
+		bool m_cursorLocked;
+		bool m_firstDragStep;
 };
 
 

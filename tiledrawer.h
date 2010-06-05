@@ -304,8 +304,6 @@ class TileDrawer
 
 		void DrawOverlay(bool clear = false);
 
-		int GetOverlayLayer() { return NUMLAYERS; }
-
 		void SetDrawRuleControl(RuleControl *r)
 		{
 			m_drawRule = r;
@@ -338,6 +336,11 @@ class TileDrawer
 			return GetWaysContainingNode(m_selection);
 		}
 
+		void SetSelectedWay(OsmWay *way)
+		{
+			m_selectedWay = way;
+		}
+
 	private:
 
 		void LonLatToIndex(double lon, double lat, int *x, int *y);
@@ -356,6 +359,7 @@ class TileDrawer
 		ColorRules *m_colorRules;
 
 		OsmNode *m_selection;
+		OsmWay *m_selectedWay;
 };
 
 #endif

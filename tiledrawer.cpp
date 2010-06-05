@@ -331,6 +331,11 @@ void TileDrawer::DrawOverlay(bool clear)
 		double lat = m_selection->m_lat;
 		m_renderer->Rect(lon, lat, 0, 0, 4, 255,0,0, true, NUMLAYERS);
 	}
+
+	if (m_selectedWay)
+	{
+		RenderWay(m_selectedWay, wxColour(255,0,0), false, wxColour(0,0,0), NUMLAYERS);
+	}
 }
 
 //destroy the list when done. the TileSpans member will not be set

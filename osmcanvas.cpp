@@ -27,6 +27,8 @@ OsmCanvas::OsmCanvas(wxApp * app, wxWindow *parent, wxString const &fileName, in
 	m_dragging = false;
 	m_locked = true;
 	m_info = NULL;
+	m_cursorLocked = false;
+	m_firstDragStep = false;
 	wxString binFile = fileName;
 
 	binFile.Append(wxT(".cache"));
@@ -181,36 +183,41 @@ void OsmCanvas::OnMouseMove(wxMouseEvent &evt)
 		int idx = evt.m_x - m_lastX;
 		int idy = evt.m_y - m_lastY;
 
+		if (!m_firstDragStep || idx * idx + idy *idy > 25)
+		{
+			m_firstDragStep = false;
+			m_lastX = evt.m_x;
+			m_lastY = evt.m_y;
+			double dx = idx / (m_scale * scaleCorrection);
+			double dy = idy / m_scale;
 
-		m_lastX = evt.m_x;
-		m_lastY = evt.m_y;
-		double dx = idx / (m_scale * scaleCorrection);
-		double dy = idy / m_scale;
+			m_xOffset -= dx;
+			m_yOffset += dy;
 
-		m_xOffset -= dx;
-		m_yOffset += dy;
-
-		SetupRenderer();
-		Redraw();
-		
+			SetupRenderer();
+			Redraw();
+		}
 	}
 	else
 	{
-		double lon = m_xOffset + evt.m_x / (m_scale * scaleCorrection);
-		double lat = m_yOffset + (m_backBuffer.GetHeight() - evt.m_y) / m_scale;
-		if (m_tileDrawer->SetSelection(lon, lat))
+		if (!m_cursorLocked)
 		{
-			Draw();
-
-			if (m_info)
+			double lon = m_xOffset + evt.m_x / (m_scale * scaleCorrection);
+			double lat = m_yOffset + (m_backBuffer.GetHeight() - evt.m_y) / m_scale;
+			if (m_tileDrawer->SetSelection(lon, lat))
 			{
-				TileWay *list = m_tileDrawer->GetSelection();
-
-
-				m_info->SetInfo(list);
-
-				if (list)
-					list->DestroyList();
+				Draw();
+	
+				if (m_info)
+				{
+					TileWay *list = m_tileDrawer->GetSelection();
+	
+	
+					m_info->SetInfo(list);
+	
+					if (list)
+						list->DestroyList();
+				}
 			}
 		}
 	}
@@ -226,6 +233,10 @@ void OsmCanvas::OnLeftDown(wxMouseEvent &evt)
 	m_lastY = evt.m_y;
 
 	m_dragging = true;
+	m_firstDragStep = true;
+
+	m_cursorLocked = !m_cursorLocked;
+
 }
 
 
