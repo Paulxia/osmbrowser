@@ -304,6 +304,8 @@ class TileDrawer
 
 		void DrawOverlay(bool clear = false);
 
+		int GetOverlayLayer() { return NUMLAYERS; }
+
 		void SetDrawRuleControl(RuleControl *r)
 		{
 			m_drawRule = r;
