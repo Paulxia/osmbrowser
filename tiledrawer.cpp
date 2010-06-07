@@ -40,6 +40,7 @@ TileDrawer::TileDrawer(Renderer *renderer, double minLon,double minLat, double m
 
 	m_selection = NULL;
 	m_selectionColor = wxColour(255,0,0);
+	m_selectedWay = NULL;
 
 	m_drawRule = NULL;
 	m_colorRules = NULL;
