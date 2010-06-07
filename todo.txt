@@ -1,11 +1,10 @@
-- identification (select elements and display info)
 - create rule to hide/show/color selection
 - draw relations & nodes with tags
 - draw name tags on map?
 - allow saving current selection to osm
 - also read attributes? (otherwise we lose info on saving)
 - on pan draw only new parts
-- draw wide roads
+- draw wide roads/ line/fill styles
 - render with agg/opengl/cairo instead of ugly wx gfx
 - empty or/and should act as disabled
 - disabled rule should rteurn false (so it is ot applied)
