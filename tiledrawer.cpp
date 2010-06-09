@@ -110,7 +110,11 @@ bool TileDrawer::RenderTiles(wxApp *app, OsmCanvas *canvas, double lon, double l
 	while (m_curTile && !mustCancel && (count++ < maxNumToRender))
 	{
 		OsmTile *t = m_curTile->m_tile;
-		Rect(wxEmptyString, *t, -1, 0,255,255, 200, NUMLAYERS);
+		if (m_curLayer >=0 )
+		{
+			Rect(wxEmptyString, *t, -1, 0,255,255, 200, NUMLAYERS);
+		}
+		
 		if (t->OverLaps(bb))
 		{
 			for (TileWay *w = t->m_ways; w && !mustCancel; w = static_cast<TileWay *>(w->m_next))
