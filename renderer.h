@@ -22,6 +22,8 @@ class Renderer
 		virtual void End() = 0;
 		virtual void DrawCenteredText(char const *text, double x, double y, double angle, int r, int g, int b, int layer) = 0;
 
+		virtual bool SupportsLayers() = 0;
+
 		void Rect(DRect const &re, double border, int r, int g, int b, bool filled, int layer)
 		{
 			Rect(re.m_x, re.m_y, re.m_w, re.m_h, border, r, g, b, filled, layer);
@@ -167,6 +169,8 @@ class RendererWxBitmap
 			delete [] m_wxPoints;
 			//m_dc.SelectObject(NULL);
 		}
+
+		bool SupportsLayers() { return true; }
 
 		void DrawCenteredText(char const *s, double x, double y, double angle, int r, int g, int b, int layer);
 

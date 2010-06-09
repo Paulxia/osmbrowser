@@ -351,6 +351,8 @@ class TileDrawer
 
 		TileList *m_visibleTiles, *m_curTile;
 		TileSpans m_renderedTiles;
+		int m_curLayer;
+
 
 		Renderer *m_renderer;
 

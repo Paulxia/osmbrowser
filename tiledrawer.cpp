@@ -44,6 +44,9 @@ TileDrawer::TileDrawer(Renderer *renderer, double minLon,double minLat, double m
 
 	m_drawRule = NULL;
 	m_colorRules = NULL;
+
+	m_curTile = NULL;
+	m_curLayer = renderer->SupportsLayers() ? -1 : 0;
 	
 	m_xNum = static_cast<int>((maxLon - minLon) / dLon) + 1;
 	m_yNum = static_cast<int>((maxLat - minLat) / dLat) + 1;
@@ -87,6 +90,8 @@ bool TileDrawer::RenderTiles(wxApp *app, OsmCanvas *canvas, double lon, double l
 		m_visibleTiles = GetTiles(bb);
 
 		m_curTile = m_visibleTiles;
+
+		m_curLayer = m_renderer->SupportsLayers() ? -1 : 0;
 	}
 
 	if (!m_visibleTiles)
@@ -94,28 +99,34 @@ bool TileDrawer::RenderTiles(wxApp *app, OsmCanvas *canvas, double lon, double l
 		return false;
 	}
 
-		while (m_curTile && !mustCancel)
+	while (m_curTile && !mustCancel)
+	{
+		OsmTile *t = m_curTile->m_tile;
+		Rect(wxEmptyString, *t, -1, 0,255,255, NUMLAYERS);
+		if (t->OverLaps(bb))
 		{
-			OsmTile *t = m_curTile->m_tile;
-			Rect(wxEmptyString, *t, -1, 0,255,255, NUMLAYERS);
-			if (t->OverLaps(bb))
+			for (TileWay *w = t->m_ways; w && !mustCancel; w = static_cast<TileWay *>(w->m_next))
 			{
-				for (TileWay *w = t->m_ways; w && !mustCancel; w = static_cast<TileWay *>(w->m_next))
+				if (!w->m_tiles->InterSect(&m_renderedTiles))
 				{
-					if (!w->m_tiles->InterSect(&m_renderedTiles))
-					{
-						RenderWay(w->m_way);
-					}
-				}	// for way
-			}  // if overlaps
-			mustCancel = app->Pending();
+					RenderWay(w->m_way);
+				}
+			}	// for way
+		}  // if overlaps
+		mustCancel = app->Pending();
 
-			m_renderedTiles.Add(t);
-			m_curTile = static_cast<TileList *>(m_curTile->m_next);
-		}	 // while curTile
-		
+		m_renderedTiles.Add(t);
+		m_curTile = static_cast<TileList *>(m_curTile->m_next);
+	}	 // while curTile
 
-	return !mustCancel;
+	if (!m_curTile && m_curLayer >= 0)
+	{
+		m_curLayer++;
+		if (m_curLayer < NUMLAYERS)
+			m_curTile = m_visibleTiles;
+	}
+
+	return !m_curTile;
 }
 
 void TileDrawer::Rect(wxString const &text, double lon1, double lat1, double lon2, double lat2, double border, int r, int g, int b, int layer)
@@ -147,7 +158,9 @@ void TileDrawer::RenderWay(OsmWay *w)
 				}
 			}
 		}
-		RenderWay(w, c, poly, c, 1, layer);
+
+		if (m_curLayer < 0 || m_curLayer == layer)
+			RenderWay(w, c, poly, c, 1, m_curLayer <0 ? layer : 0);
 	}
 }
 
@@ -338,6 +351,11 @@ bool TileDrawer::SetSelectedWay(OsmWay *way)
 
 void TileDrawer::DrawOverlay(bool clear)
 {
+	if (!m_renderer->SupportsLayers())
+	{
+		return; //! warn maybe?
+	}
+
 	if (clear)
 		m_renderer->Clear(NUMLAYERS);
 		
