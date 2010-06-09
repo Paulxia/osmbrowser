@@ -4,18 +4,55 @@
 #include <cairo.h>
 #include "renderer.h"
 
-class CairoRenderer
+class CairoRendererBase
 	: public Renderer
 {
 	public:
+	CairoRendererBase(int numLayers)
+		: Renderer(numLayers)
+	{
+			m_width = m_height = -1;
+	}
+
+	void SetLineColor(int r, int g, int b, int a = 0)
+	{
+		m_lineA = (255 - a) / 255.0;
+		m_lineR = (r / 255.0);
+		m_lineG = (g / 255.0);
+		m_lineB = (b / 255.0);
+	}
+
+	void SetFillColor(int r, int g, int b, int a = 0)
+	{
+		m_fillA = (255 - a) / 255.0;
+		m_fillR = (r / 255.0);
+		m_fillG = (g / 255.0);
+		m_fillB = (b / 255.0);
+	}
+
+	void SetLineWidth(int width)
+	{
+		m_lineWidth = width;
+	}
+
+	protected:
+		double m_fillR, m_fillG, m_fillB, m_fillA;
+		double m_lineR, m_lineG, m_lineB, m_lineA;
+		double m_lineWidth;
+		int m_width, m_height;
+
+} ;
+
+class CairoRenderer
+	: public CairoRendererBase
+{
+	public:
 		CairoRenderer(int numLayers)
-			: Renderer(numLayers)
+			: CairoRendererBase(numLayers)
 		{
 			layerBuffers = new cairo_surface_t *[m_numLayers];
 			layers = new cairo_t *[m_numLayers];
 
-			m_width = m_height = -1;
-			
 			for (int i = 0; i < m_numLayers; i++)
 			{
 				layerBuffers[i] = NULL;
@@ -84,27 +121,6 @@ class CairoRenderer
 			}
 		}
 
-		void SetLineColor(int r, int g, int b, int a = 0)
-		{
-			m_lineA = (255 - a) / 255.0;
-			m_lineR = (r / 255.0);
-			m_lineG = (g / 255.0);
-			m_lineB = (b / 255.0);
-		}
-		
-		void SetFillColor(int r, int g, int b, int a = 0)
-		{
-			m_fillA = (255 - a) / 255.0;
-			m_fillR = (r / 255.0);
-			m_fillG = (g / 255.0);
-			m_fillB = (b / 255.0);
-		}
-
-		void SetLineWidth(int width)
-		{
-			m_lineWidth = width;
-		}
-
 		bool SupportsLayers() { return true; }
 
 		void Clear(int layer = -1)
@@ -130,13 +146,9 @@ class CairoRenderer
 
 
 	private:
-		double m_fillR, m_fillG, m_fillB, m_fillA;
-		double m_lineR, m_lineG, m_lineB, m_lineA;
-		double m_lineWidth;
 		Renderer::TYPE  m_type;
 		int m_curLayer;
 		double m_scaleX, m_scaleY, m_offX, m_offY;
-		int m_width, m_height;
 		cairo_t **layers;
 		cairo_surface_t **layerBuffers;
 
