@@ -72,19 +72,23 @@ TileDrawer::TileDrawer(Renderer *renderer, double minLon,double minLat, double m
  }
 
 
-bool TileDrawer::RenderTiles(wxApp *app, OsmCanvas *canvas, double lon, double lat, double w, double h, bool restart)
+bool TileDrawer::RenderTiles(wxApp *app, OsmCanvas *canvas, double lon, double lat, double w, double h, bool restart, int maxNumToRender, double *progress)
 {
 	bool mustCancel = false;
 
 	DRect bb(lon, lat, w, h);
 
-//	canvas->Rect(wxEmptyString, bb, 0, 255,0,0);
-
 	if (restart || !m_visibleTiles)
 	{
 		if (m_visibleTiles)
+		{
 			m_visibleTiles->UnRef();
+		}
 
+		if (progress)
+		{
+			*progress = 0.0;
+		}
 
 		m_renderedTiles.MakeEmpty();
 		m_visibleTiles = GetTiles(bb);
@@ -92,6 +96,9 @@ bool TileDrawer::RenderTiles(wxApp *app, OsmCanvas *canvas, double lon, double l
 		m_curTile = m_visibleTiles;
 
 		m_curLayer = m_renderer->SupportsLayers() ? -1 : 0;
+
+		m_numTilesToRender = m_visibleTiles->GetSize();
+		m_numTilesRendered = 0;
 	}
 
 	if (!m_visibleTiles)
@@ -99,7 +106,8 @@ bool TileDrawer::RenderTiles(wxApp *app, OsmCanvas *canvas, double lon, double l
 		return false;
 	}
 
-	while (m_curTile && !mustCancel)
+	int count = 0;
+	while (m_curTile && !mustCancel && (count++ < maxNumToRender))
 	{
 		OsmTile *t = m_curTile->m_tile;
 		Rect(wxEmptyString, *t, -1, 0,255,255, 200, NUMLAYERS);
@@ -117,6 +125,7 @@ bool TileDrawer::RenderTiles(wxApp *app, OsmCanvas *canvas, double lon, double l
 
 		m_renderedTiles.Add(t);
 		m_curTile = static_cast<TileList *>(m_curTile->m_next);
+		m_numTilesRendered++;
 	}	 // while curTile
 
 	if (!m_curTile && m_curLayer >= 0)
@@ -124,6 +133,16 @@ bool TileDrawer::RenderTiles(wxApp *app, OsmCanvas *canvas, double lon, double l
 		m_curLayer++;
 		if (m_curLayer < NUMLAYERS)
 			m_curTile = m_visibleTiles;
+	}
+
+	if (progress)
+	{
+		*progress = static_cast<double>(m_numTilesRendered)/ m_numTilesToRender;
+
+		if (m_curLayer >= 0)
+		{
+			*progress /= NUMLAYERS;
+		}
 	}
 
 	return !m_curTile;

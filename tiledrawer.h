@@ -247,6 +247,14 @@ class TileDrawer
 			delete [] m_tileArray;
 		}
 
+		Renderer *SetRenderer(Renderer *renderer)
+		{
+			Renderer *old = m_renderer;
+			m_renderer = renderer;
+
+			return old;
+		}
+
 		void AddWays(OsmWay *ways)
 		{
 			unsigned count = 0;
@@ -290,7 +298,13 @@ class TileDrawer
 		// you should UnRef the list when done, which will destroy it if not used anymore
 		TileList *GetTiles(double minLon, double minLat, double maxLon, double maxLat);
 
-		bool RenderTiles(wxApp *app, OsmCanvas *canvas, double lon, double lat, double w, double h, bool restart);
+		// renders the next numToRender tiles using the current renderer
+		// lon,lat,w,h  - rectangle to render
+		// restart - start from the beginning (clears the current drawing)
+		// numToRender  - render this many tiles and then return (so you can do progress displays etc)
+		// progress - if non null the progress will be reported (in the range 0-1)
+		// returns true when all tiles are rendered
+		bool RenderTiles(wxApp *app, OsmCanvas *canvas, double lon, double lat, double w, double h, bool restart, int numToRender, double *progress);
 
 		OsmNode *GetClosestNodeInTile(int x, int y, double lon, double lat, double *foundDistSq);
 
@@ -352,6 +366,7 @@ class TileDrawer
 		TileList *m_visibleTiles, *m_curTile;
 		TileSpans m_renderedTiles;
 		int m_curLayer;
+		int m_numTilesRendered, m_numTilesToRender;
 
 
 		Renderer *m_renderer;

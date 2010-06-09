@@ -138,7 +138,8 @@ void OsmCanvas::Render(bool force)
 	}
 //	m_tileDrawer->Rect(wxEmptyString, m_data->m_minlon, m_data->m_minlat, m_data->m_maxlon, m_data->m_maxlat, 0, 0,255, 0, 0, 0);
 
-	m_done = m_tileDrawer->RenderTiles(m_app, this, m_xOffset, m_yOffset, w / xScale, h / m_scale, m_restart);
+	double progress;
+	m_done = m_tileDrawer->RenderTiles(m_app, this, m_xOffset, m_yOffset, w / xScale, h / m_scale, m_restart, 10, &progress);
 	m_restart = false;
 
 	m_tileDrawer->DrawOverlay();

@@ -3,6 +3,7 @@
 
 #include <wx/frame.h>
 #include <wx/string.h>
+#include <wx/gauge.h>
 #include <wx/app.h>
 
 #include "osmcanvas.h"
@@ -13,13 +14,13 @@ class InfoTreeCtrl;
 class MainFrame : public wxFrame
 {
 public:
-    // ctor(s)
-    MainFrame(wxApp *app, const wxString& title, wxString const &fileName);
+	MainFrame(wxApp *app, const wxString& title, wxString const &fileName);
 
-    // event handlers (these functions should _not_ be virtual)
-    void OnQuit(wxCommandEvent& event);
-    void OnAbout(wxCommandEvent& event);
-	void OnClose(wxCloseEvent &close);
+	// event handlers (these functions should _not_ be virtual)
+	void OnQuit(wxCommandEvent& event);
+	void OnAbout(wxCommandEvent& event);
+	void OnClose(wxCloseEvent &event);
+	void OnSize(wxSizeEvent &event);
 
     OsmCanvas *m_canvas;
 	RuleControl *m_drawRule;
@@ -29,9 +30,14 @@ public:
 	void Save(wxString const &name);
 	void Load(wxString const &name);
 
+	void SetProgress(double progress, wxString const &text = wxEmptyString);
+
 private:
-    // any class wishing to process wxWidgets events must use this macro
-    DECLARE_EVENT_TABLE()
+	wxGauge *m_progress;
+	wxStatusBar *m_statusBar;
+
+	// any class wishing to process wxWidgets events must use this macro
+	DECLARE_EVENT_TABLE()
 
 };
 

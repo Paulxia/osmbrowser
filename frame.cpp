@@ -11,9 +11,10 @@
 #include "info.h"
 
 BEGIN_EVENT_TABLE(MainFrame, wxFrame)
-    EVT_MENU(Minimal_Quit,  MainFrame::OnQuit)
-    EVT_MENU(Minimal_About, MainFrame::OnAbout)
-    EVT_CLOSE(MainFrame::OnClose)
+	EVT_MENU(Minimal_Quit,  MainFrame::OnQuit)
+	EVT_MENU(Minimal_About, MainFrame::OnAbout)
+	EVT_CLOSE(MainFrame::OnClose)
+	EVT_SIZE(MainFrame::OnSize)
 END_EVENT_TABLE()
 
 
@@ -100,11 +101,17 @@ MainFrame::MainFrame(wxApp *app, const wxString& title, wxString const &fileName
 	leftSizer->Insert(0, rulesComboBox, 0, wxEXPAND);
 
 	Load(wxT("lastused"));
-#if wxUSE_STATUSBAR
     // create a status bar just for fun (by default with 1 pane only)
-    CreateStatusBar(2);
-    SetStatusText(_T("Welcome to wxWidgets!"));
-#endif // wxUSE_STATUSBAR
+
+	m_statusBar = CreateStatusBar(2);
+	SetStatusText(_T("Welcome to osmbrowser!"));
+
+	wxRect rect;
+
+	m_statusBar->GetFieldRect(1, rect);
+	m_progress = new wxGauge(m_statusBar, -1, 1000, rect.GetPosition(), rect.GetSize(), wxGA_SMOOTH);
+	m_progress->Show(false);
+
 }
 
 
@@ -156,4 +163,35 @@ void MainFrame::Load(wxString const &name)
 	m_canvas->Redraw();
 }
 
+void MainFrame::SetProgress(double progress, wxString const &text)
+{
+	if (progress >= 0)
+	{
+		m_progress->Show();
+	}
+	else
+	{
+		m_progress->Show(false);
+	}
 
+	if (1000 * progress >= 0)
+	{
+		m_progress->SetValue(static_cast<int>(progress * 1000));
+	}
+
+	if (text.Length())
+	{
+		SetStatusText(text);
+	}
+	else
+	{
+		SetStatusText(wxT("Welcome to osmbrowser!"));
+	}
+}
+
+void MainFrame::OnSize(wxSizeEvent &evt)
+{
+	wxRect rect;
+	m_statusBar->GetFieldRect(1, rect);
+	m_progress->SetSize(rect);
+}
