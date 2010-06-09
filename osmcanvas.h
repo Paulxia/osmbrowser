@@ -6,6 +6,8 @@
 #include "wxcanvas.h"
 #include "osm.h"
 #include "renderer.h"
+#include "cairorenderer.h"
+
 class TileDrawer;
 class RuleControl;
 class ColorRules;
@@ -83,7 +85,9 @@ class OsmCanvas
 		wxTimer m_timer;
 
 		void SetupRenderer();
-		RendererWxBitmap m_renderer;
+//		RendererWxBitmap m_renderer;
+
+		CairoRenderer m_renderer;
 
 		bool m_cursorLocked;
 		bool m_firstDragStep;
