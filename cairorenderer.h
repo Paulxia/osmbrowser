@@ -2,6 +2,7 @@
 #define __CAIRORENDERER__H__
 
 #include <cairo.h>
+#include <cairo-pdf.h>
 #include "renderer.h"
 
 class CairoRendererBase
@@ -155,5 +156,45 @@ class CairoRenderer
 		wxBitmap *m_outputBitmap;
 };
 
+
+class CairoPdfRenderer
+	: public CairoRendererBase
+{
+	public:
+		CairoPdfRenderer(wxString const &fileName, int w, int h)
+			: CairoRendererBase(1)
+		{
+			m_surface = cairo_pdf_surface_create(fileName.mb_str(wxConvUTF8), w, h);
+			m_context = cairo_create(m_surface);
+			m_width = w;
+			m_height = h;
+		}
+
+		~CairoPdfRenderer()
+		{
+			cairo_destroy(m_context);
+			cairo_surface_destroy(m_surface);
+		}
+
+		void Setup(wxBitmap *output, DRect const &viewport);
+		void Begin(Renderer::TYPE type, int layer);
+		void AddPoint(double x, double y, double xshift = 0, double yshift = 0);
+		void End();
+		virtual void DrawCenteredText(char const *text, double x, double y, double angle, int r, int g, int b, int a, int layer);
+
+		bool SupportsLayers() { return false; }
+
+		void Clear(int layer = -1) { /* pdf doesn't support clearing */ }
+
+		void Commit() { /* nop, we don't support layers */ }
+
+
+		
+	private:
+		Renderer::TYPE  m_type;
+		double m_offX, m_offY, m_scaleX, m_scaleY;
+		cairo_surface_t *m_surface;
+		cairo_t *m_context;
+};
 
 #endif
