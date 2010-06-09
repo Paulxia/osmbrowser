@@ -123,7 +123,7 @@ class CairoRenderer
 
 		void Commit();
 
-		virtual void DrawCenteredText(char const *text, double x, double y, double angle, int r, int g, int b, int layer)
+		virtual void DrawCenteredText(char const *text, double x, double y, double angle, int r, int g, int b, int a, int layer)
 		{
 			// not implemented
 		}

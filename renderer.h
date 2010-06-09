@@ -20,19 +20,19 @@ class Renderer
 		virtual void Begin(Renderer::TYPE type, int layer) = 0;
 		virtual void AddPoint(double x, double y, double xshift = 0, double yshift = 0) = 0;
 		virtual void End() = 0;
-		virtual void DrawCenteredText(char const *text, double x, double y, double angle, int r, int g, int b, int layer) = 0;
+		virtual void DrawCenteredText(char const *text, double x, double y, double angle, int r, int g, int b, int a, int layer) = 0;
 
 		virtual bool SupportsLayers() = 0;
 
-		void Rect(DRect const &re, double border, int r, int g, int b, bool filled, int layer)
+		void Rect(DRect const &re, double border, int r, int g, int b, int a, bool filled, int layer)
 		{
-			Rect(re.m_x, re.m_y, re.m_w, re.m_h, border, r, g, b, filled, layer);
+			Rect(re.m_x, re.m_y, re.m_w, re.m_h, border, r, g, b, a, filled, layer);
 		}
 
-		void Rect(double x, double y, double w, double h, double border, int r, int g, int b, bool filled, int layer)
+		void Rect(double x, double y, double w, double h, double border, int r, int g, int b, int a, bool filled, int layer)
 		{
-			SetLineColor(r,g,b);
-			SetFillColor(r,g,b);
+			SetLineColor(r,g,b,a);
+			SetFillColor(r,g,b,a);
 			Begin(filled ? R_POLYGON  : R_LINE, layer);
 			AddPoint(x, y, -border, -border);
 			AddPoint(x + w, y, border, -border);
@@ -172,7 +172,7 @@ class RendererWxBitmap
 
 		bool SupportsLayers() { return true; }
 
-		void DrawCenteredText(char const *s, double x, double y, double angle, int r, int g, int b, int layer);
+		void DrawCenteredText(char const *s, double x, double y, double angle, int r, int g, int b, int a, int layer);
 
 		void SetLineColor(int r, int g, int b, int a = 0)
 		{

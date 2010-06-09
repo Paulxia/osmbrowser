@@ -2,7 +2,7 @@
 
 #include <wx/image.h>
 
-void RendererWxBitmap::DrawCenteredText(char const *s, double x, double y, double angle, int r, int g, int b, int layer)
+void RendererWxBitmap::DrawCenteredText(char const *s, double x, double y, double angle, int r, int g, int b, int a,  int layer)
 {
 	// not implemented yet
 }

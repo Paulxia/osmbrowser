@@ -319,12 +319,12 @@ class TileDrawer
 
 		// with default colours
 		void RenderWay(OsmWay *w);
-		void Rect(wxString const &text, DRect const &re, double border, int r, int g, int b, int layer)
+		void Rect(wxString const &text, DRect const &re, double border, int r, int g, int b, int a, int layer)
 		{
-			Rect(text, re.m_x, re.m_y, re.m_x + re.m_w, re.m_y + re.m_h, border, r, g, b, layer);
+			Rect(text, re.m_x, re.m_y, re.m_x + re.m_w, re.m_y + re.m_h, border, r, g, b, a, layer);
 		}
 		
-		void Rect(wxString const &text, double lon1, double lat1, double lon2, double lat2, double border, int r, int g, int b, int layer);
+		void Rect(wxString const &text, double lon1, double lat1, double lon2, double lat2, double border, int r, int g, int b,int a, int layer);
 
 		TileWay *GetSelection()
 		{

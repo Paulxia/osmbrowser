@@ -102,7 +102,7 @@ bool TileDrawer::RenderTiles(wxApp *app, OsmCanvas *canvas, double lon, double l
 	while (m_curTile && !mustCancel)
 	{
 		OsmTile *t = m_curTile->m_tile;
-		Rect(wxEmptyString, *t, -1, 0,255,255, NUMLAYERS);
+		Rect(wxEmptyString, *t, -1, 0,255,255, 200, NUMLAYERS);
 		if (t->OverLaps(bb))
 		{
 			for (TileWay *w = t->m_ways; w && !mustCancel; w = static_cast<TileWay *>(w->m_next))
@@ -129,11 +129,10 @@ bool TileDrawer::RenderTiles(wxApp *app, OsmCanvas *canvas, double lon, double l
 	return !m_curTile;
 }
 
-void TileDrawer::Rect(wxString const &text, double lon1, double lat1, double lon2, double lat2, double border, int r, int g, int b, int layer)
+void TileDrawer::Rect(wxString const &text, double lon1, double lat1, double lon2, double lat2, double border, int r, int g, int b, int a, int layer)
 {
-	m_renderer->SetLineColor(r,g,b);
-	m_renderer->Rect(lon1, lat1, lon2 - lon1, lat2 - lat1, border , r, g, b, false, layer);
-	m_renderer->DrawCenteredText(text.mb_str(wxConvUTF8), (lon1 + lon2)/2, (lat1 + lat2)/2, 0, r, g, b, layer);
+	m_renderer->Rect(lon1, lat1, lon2 - lon1, lat2 - lat1, border, r, g, b, a, false, layer);
+	m_renderer->DrawCenteredText(text.mb_str(wxConvUTF8), (lon1 + lon2)/2, (lat1 + lat2)/2, 0, r, g, b, a,  layer);
 }
 
 // render using default colours. should plug in rule engine here
@@ -363,7 +362,7 @@ void TileDrawer::DrawOverlay(bool clear)
 	{
 		double lon = m_selection->m_lon;
 		double lat = m_selection->m_lat;
-		m_renderer->Rect(lon, lat, 0, 0, 4, m_selectionColor.Red(), m_selectionColor.Green(), m_selectionColor.Blue(), true, NUMLAYERS);
+		m_renderer->Rect(lon, lat, 0, 0, 4, m_selectionColor.Red(), m_selectionColor.Green(), m_selectionColor.Blue(), 200, true, NUMLAYERS);
 	}
 
 	if (m_selectedWay)
