@@ -11,6 +11,7 @@ class Renderer
 		{
 			m_numLayers = numLayers;
 		}
+		virtual ~Renderer() { }
 		
 		enum TYPE
 		{
