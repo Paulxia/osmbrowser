@@ -814,13 +814,52 @@ class IdObjectWithTags
 		OsmTag *m_tags;
 };
 
-class OsmNode
+class IdObjectWithTagsAndAttributes
 	: public IdObjectWithTags
+{
+	public:
+		IdObjectWithTagsAndAttributes(unsigned id = 0, IdObjectWithTagsAndAttributes *next = NULL)
+			: IdObjectWithTags(id, next)
+		{
+			m_attribs = NULL;
+		}
+		
+		~IdObjectWithTagsAndAttributes()
+		{
+			if (m_attribs)
+			{
+				m_attribs->DestroyList();
+			}
+		}
+
+		void AddAttribute(char const *key, char const *value)
+		{
+			m_attribs = new OsmTag(key, value, m_attribs);
+		}
+
+		bool HasAttribute(OsmTag const &tag)
+		{
+			return m_attribs ? m_attribs->HasTag(tag) : false;
+		}
+
+		bool HasAttribute(char const *key, char const *value = NULL)
+		{
+			OsmTag t(key, value);
+			return m_attribs ? m_attribs->HasTag(t) : false;
+		}
+
+
+		OsmTag *m_attribs;
+
+};
+
+class OsmNode
+	: public IdObjectWithTagsAndAttributes
 {
 	public:
 
 	OsmNode(unsigned id, double lat, double lon, OsmNode *next = NULL)
-		: IdObjectWithTags(id, next)
+		: IdObjectWithTagsAndAttributes(id, next)
 	{
 		m_lat = lat;
 		m_lon = lon;
@@ -833,12 +872,12 @@ class OsmNode
 
 
 class OsmWay
-	: public IdObjectWithTags
+	: public IdObjectWithTagsAndAttributes
 {
 	public:
 
 	OsmWay(unsigned id, OsmWay *next = NULL)
-		: IdObjectWithTags(id, next)
+		: IdObjectWithTagsAndAttributes(id, next)
 	{
 		m_nodeRefs = NULL;
 		m_resolvedNodes = NULL;
@@ -982,6 +1021,7 @@ class OsmData
 	void AddWayRef(unsigned id);
 
 	void AddTag(char const *k, char const *v);
+	void AddAttribute(char const *k, char const *v);
 
 	typedef enum
 	{

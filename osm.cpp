@@ -361,6 +361,26 @@ void OsmData::AddTag(char const *key, char const *value)
 	}
 }
 
+void OsmData::AddAttribute(char const *key, char const *value)
+{
+	switch(m_parsingState)
+	{
+		default:
+			abort();
+			break;
+		case PARSE_NODE:
+			static_cast<IdObjectWithTagsAndAttributes *>(m_nodes.m_content)->AddAttribute(key, value);
+			break;
+		case PARSE_WAY:
+			static_cast<IdObjectWithTagsAndAttributes *>(m_ways.m_content)->AddAttribute(key, value);
+			break;
+		case PARSE_RELATION:
+			static_cast<IdObjectWithTagsAndAttributes *>(m_relations.m_content)->AddAttribute(key, value);
+			break;
+	}
+}
+
+
 void OsmData::Resolve()
 {
 	for (OsmWay *w = static_cast<OsmWay *>(m_ways.m_content); w; w = static_cast<OsmWay *>(w->m_next))

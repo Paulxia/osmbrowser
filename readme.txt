@@ -3,7 +3,7 @@ compiling  (only tested on ubuntu 9.10 /10.04, though other distro's or cygwin o
 dependencies:
          wxwidgets (version > 2.8)
          cairo	(with pdf support)
-
+         expat (in non-widechar mode)
 If you have all the dependencies installed, just running make should do the trick. The executable will be called osmbrowse
 
 
