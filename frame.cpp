@@ -11,8 +11,9 @@
 #include "info.h"
 
 BEGIN_EVENT_TABLE(MainFrame, wxFrame)
-	EVT_MENU(Minimal_Quit,  MainFrame::OnQuit)
-	EVT_MENU(Minimal_About, MainFrame::OnAbout)
+	EVT_MENU(Menu_Quit,  MainFrame::OnQuit)
+	EVT_MENU(Menu_About, MainFrame::OnAbout)
+	EVT_MENU(Menu_Save_Pdf, MainFrame::OnSavePdf)
 	EVT_CLOSE(MainFrame::OnClose)
 	EVT_SIZE(MainFrame::OnSize)
 END_EVENT_TABLE()
@@ -33,9 +34,10 @@ MainFrame::MainFrame(wxApp *app, const wxString& title, wxString const &fileName
 
     // the "About" item should be in the help menu
     wxMenu *helpMenu = new wxMenu;
-    helpMenu->Append(Minimal_About, _T("&About...\tF1"), _T("Show about dialog"));
+    helpMenu->Append(Menu_About, _T("&About...\tF1"), _T("Show about dialog"));
 
-    fileMenu->Append(Minimal_Quit, _T("E&xit\tAlt-X"), _T("Quit this program"));
+    fileMenu->Append(Menu_Save_Pdf, _T("Save P&df\tAlt-P"), _T("save current view to pdf"));
+    fileMenu->Append(Menu_Quit, _T("E&xit\tAlt-X"), _T("Quit this program"));
 
     // now append the freshly created menu to the menu bar...
     wxMenuBar *menuBar = new wxMenuBar();
@@ -191,7 +193,14 @@ void MainFrame::SetProgress(double progress, wxString const &text)
 
 void MainFrame::OnSize(wxSizeEvent &evt)
 {
+	evt.Skip();
 	wxRect rect;
 	m_statusBar->GetFieldRect(1, rect);
 	m_progress->SetSize(rect);
 }
+
+void MainFrame::OnSavePdf(wxCommandEvent& WXUNUSED(event))
+{
+	m_canvas->SaveView(wxT("out.pdf"), this);
+}
+

@@ -19,6 +19,7 @@ public:
 	// event handlers (these functions should _not_ be virtual)
 	void OnQuit(wxCommandEvent& event);
 	void OnAbout(wxCommandEvent& event);
+	void OnSavePdf(wxCommandEvent &event);
 	void OnClose(wxCloseEvent &event);
 	void OnSize(wxSizeEvent &event);
 
@@ -48,14 +49,12 @@ private:
 // IDs for the controls and the menu commands
 enum
 {
-    // menu items
-    Minimal_Quit = wxID_EXIT,
+	Menu_Quit = wxID_EXIT,
+	Menu_About = wxID_ABOUT,
+	Menu_Save_Pdf = wxID_HIGHEST
 
-    // it is important for the id corresponding to the "About" command to have
-    // this standard value as otherwise it won't be handled properly under Mac
-    // (where it is special and put into the "Apple" menu)
-    Minimal_About = wxID_ABOUT
 };
+
 
 
 

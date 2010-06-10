@@ -12,6 +12,7 @@ class TileDrawer;
 class RuleControl;
 class ColorRules;
 class InfoTreeCtrl;
+class MainFrame;
 
 class OsmCanvas
 	: public Canvas
@@ -45,6 +46,7 @@ class OsmCanvas
 
 		void SetInfoDisplay(InfoTreeCtrl *info);
 
+		void SaveView(wxString const &fileName, MainFrame *mainFrame);
 
 		void SelectWay(OsmWay *way);
 	private:

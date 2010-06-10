@@ -3,6 +3,7 @@
 #include "rulecontrol.h"
 #include "tiledrawer.h"
 #include "info.h"
+#include "frame.h"
 
 BEGIN_EVENT_TABLE(OsmCanvas, Canvas)
 	EVT_MOUSEWHEEL(OsmCanvas::OnMouseWheel)
@@ -311,3 +312,34 @@ void OsmCanvas::SelectWay(OsmWay *way)
 		Draw();
 	}
 }
+
+void OsmCanvas::SaveView(wxString const &fileName, MainFrame *mainFrame)
+{
+	int w = m_backBuffer.GetWidth();
+	int h = m_backBuffer.GetHeight();
+
+	double xScale = cos(m_yOffset * M_PI / 180) * m_scale;
+
+	Renderer *r = new CairoPdfRenderer(fileName, w*10, h*10);
+
+	r->Setup(&m_backBuffer, DRect(m_xOffset, m_yOffset, w /  xScale, h / m_scale));
+
+	Renderer *old = m_tileDrawer->SetRenderer(r);
+
+	double progress;
+
+	bool done = m_tileDrawer->RenderTiles(m_app, this, m_xOffset, m_yOffset, w / xScale, h / m_scale, true, 10, &progress);
+	mainFrame->SetProgress(progress);
+
+	while (!done)
+	{
+		done = m_tileDrawer->RenderTiles(m_app, this, m_xOffset, m_yOffset, w / xScale, h / m_scale, false, 10, &progress);
+		mainFrame->SetProgress(progress);
+	}
+
+	mainFrame->SetProgress(-1);
+	m_tileDrawer->SetRenderer(old);
+
+	delete r;
+}
+
