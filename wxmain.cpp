@@ -31,7 +31,7 @@ bool MyApp::OnInit()
 
 	if (argc !=2)
 	{
-		printf("usage: osmparse <osmfile>\n");
+		printf("usage: osmbrowser <osmfile>\n");
 		return false;
 	}
 
