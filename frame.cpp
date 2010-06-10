@@ -137,14 +137,9 @@ void MainFrame::OnQuit(wxCommandEvent& WXUNUSED(event))
 void MainFrame::OnAbout(wxCommandEvent& WXUNUSED(event))
 {
     wxMessageBox(wxString::Format(
-                    _T("Welcome to %s!\n")
-                    _T("\n")
-                    _T("This is the minimal wxWidgets sample\n")
-                    _T("running under %s."),
-                    wxVERSION_STRING,
-                    wxGetOsDescription().c_str()
+                    _T("Welcome to osmbrowser!\n")
                  ),
-                 _T("About wxWidgets minimal sample"),
+                 _T("About osmbrowser"),
                  wxOK | wxICON_INFORMATION,
                  this);
 }

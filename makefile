@@ -13,7 +13,7 @@ C_OBJECTS_BARE =
 
 LIBS= -lexpat `wx-config --libs` `pkg-config cairo --libs`
 
-PROGNAME= wxosmparse
+PROGNAME= osmbrowser
 
 CC=gcc
 CXX=g++

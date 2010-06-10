@@ -35,7 +35,7 @@ bool MyApp::OnInit()
 		return false;
 
 
-	wxConfig *cfg = new wxConfig(wxT("wxOsmFilter"));
+	wxConfig *cfg = new wxConfig(wxT("OsmBrowser"));
 
 	wxConfig::Set(cfg);
 
@@ -46,7 +46,7 @@ bool MyApp::OnInit()
 	}
 
 	// create the main application window
-	MainFrame *frame = new MainFrame(this, _T("Minimal wxWidgets App"), argv[1]);
+	MainFrame *frame = new MainFrame(this, _T("Osm Browser"), argv[1]);
 
 	// and show it (the frames, unlike simple controls, are not shown when
 	// created initially)
