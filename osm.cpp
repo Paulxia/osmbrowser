@@ -237,6 +237,7 @@ OsmData::OsmData()
 	m_minlat = m_maxlat = m_minlon = m_maxlon = 0;
 	m_parsingState = PARSE_TOPLEVEL;
 	m_elementCount = 0;
+	m_skipAttribs = false;
 }
 
 void OsmData::StartNode(unsigned id, double lat, double lon)
@@ -363,6 +364,11 @@ void OsmData::AddTag(char const *key, char const *value)
 
 void OsmData::AddAttribute(char const *key, char const *value)
 {
+	if (m_skipAttribs)
+	{
+		return;
+	}
+	
 	switch(m_parsingState)
 	{
 		default:

@@ -7,9 +7,9 @@
 #include "osm.h"
 #include <stdio.h>
 
-OsmData *parse_osm(FILE *file);
+OsmData *parse_osm(FILE *file, bool skipAttribs = false);
 
-OsmData *parse_binary(FILE *file);
+OsmData *parse_binary(FILE *file, bool skipAttribs = false);
 
 void write_binary(OsmData *d, FILE *f);
 

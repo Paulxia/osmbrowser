@@ -157,7 +157,7 @@ void XMLCALL end_element_handler(void *user_data, const XML_Char *name)
 
 
 
-OsmData *parse_osm(FILE *file)
+OsmData *parse_osm(FILE *file, bool skipAttribs)
 {
 	char buffer[1024];
 	int len;
@@ -167,6 +167,8 @@ OsmData *parse_osm(FILE *file)
 	assert(sizeof(XML_Char) == sizeof(char));
 
 	OsmData *ret = new OsmData;
+
+	ret->m_skipAttribs = skipAttribs;
 
 	XML_Parser xml = XML_ParserCreate(NULL);
 
@@ -366,10 +368,12 @@ static void ReadRelationWithAttributes(OsmData *d, FILE *f)
 }
 
 
-OsmData *parse_binary(FILE *f)
+OsmData *parse_binary(FILE *f, bool skipAttribs)
 {
 	OsmData *ret = new OsmData();
 
+
+	ret->m_skipAttribs = skipAttribs;
 	unsigned count = 0;
 	while (!feof(f))
 	{

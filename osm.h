@@ -1035,6 +1035,9 @@ class OsmData
 
 	void Resolve();
 	unsigned m_elementCount;
+
+	bool m_skipAttribs;
+
 };
 
 
