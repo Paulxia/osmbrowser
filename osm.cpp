@@ -1,3 +1,6 @@
+// this file is part of osmbrowser
+// copyright Martijn Versteegh
+// osmbrowser is licenced under the gpl v3
 #include "osm.h"
 #include <assert.h> // for lazy memory allocation checking
 #include <stdlib.h>

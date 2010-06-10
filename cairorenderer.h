@@ -1,3 +1,6 @@
+// this file is part of osmbrowser
+// copyright Martijn Versteegh
+// osmbrowser is licenced under the gpl v3
 #ifndef __CAIRORENDERER__H__
 #define __CAIRORENDERER__H__
 

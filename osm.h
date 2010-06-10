@@ -1,3 +1,6 @@
+// this file is part of osmbrowser
+// copyright Martijn Versteegh
+// osmbrowser is licenced under the gpl v3
 #ifndef __OSMDATA_H__
 #define __OSMDATA_H__
 

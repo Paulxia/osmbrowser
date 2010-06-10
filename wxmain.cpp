@@ -1,16 +1,6 @@
-// For compilers that support precompilation, includes "wx/wx.h".
-#include "wx/wxprec.h"
- 
-#ifdef __BORLANDC__
-	#pragma hdrstop
-#endif
-
-// for all others, include the necessary headers (this file is usually all you
-// need because it includes almost all "standard" wxWidgets headers)
-#ifndef WX_PRECOMP
-	#include "wx/wx.h"
-#endif
-
+// this file is part of osmbrowser
+// copyright Martijn Versteegh
+// osmbrowser is licenced under the gpl v3
 #include <wx/cmdline.h>
 #include <wx/config.h>
 #include "osmcanvas.h"

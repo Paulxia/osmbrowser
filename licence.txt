@@ -1,0 +1,1 @@
+Osmbrowser is licenced under the GPL v3, see gpl.txt

@@ -1,3 +1,6 @@
+// this file is part of osmbrowser
+// copyright Martijn Versteegh
+// osmbrowser is licenced under the gpl v3
 #ifndef __PARSE_H__
 #define __PARSE_H__
 
