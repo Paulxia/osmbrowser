@@ -8,4 +8,5 @@
 - empty or/and should act as disabled
 - disabled rule should not be evaluated at all
 - read multiple files
+- start without cmdline args and open file from menu
 - read shapefiles?
