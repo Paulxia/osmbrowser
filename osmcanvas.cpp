@@ -332,6 +332,8 @@ void OsmCanvas::SelectWay(OsmWay *way)
 {
 	if (m_tileDrawer->SetSelectedWay(way))
 	{
+		m_tileDrawer->DrawOverlay(m_renderer, true);
+		m_renderer->Commit();
 		Draw();
 	}
 }
