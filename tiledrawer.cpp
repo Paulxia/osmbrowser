@@ -33,9 +33,8 @@ TileWay *OsmTile::GetWaysContainingNode(OsmNode *node)
 }
 
 
-TileDrawer::TileDrawer(Renderer *renderer, double minLon,double minLat, double maxLon, double maxLat, double dLon, double dLat)
+TileDrawer::TileDrawer(double minLon,double minLat, double maxLon, double maxLat, double dLon, double dLat)
 {
-	m_renderer = renderer;
 	m_tiles = NULL;
 
 	m_selection = NULL;
@@ -46,8 +45,7 @@ TileDrawer::TileDrawer(Renderer *renderer, double minLon,double minLat, double m
 	m_colorRules = NULL;
 
 	m_curTile = NULL;
-	m_curLayer = renderer->SupportsLayers() ? -1 : 0;
-	
+	m_curLayer = -1;
 	m_xNum = static_cast<int>((maxLon - minLon) / dLon) + 1;
 	m_yNum = static_cast<int>((maxLat - minLat) / dLat) + 1;
 	m_minLon = minLon;
@@ -72,7 +70,7 @@ TileDrawer::TileDrawer(Renderer *renderer, double minLon,double minLat, double m
  }
 
 
-bool TileDrawer::RenderTiles(wxApp *app, OsmCanvas *canvas, double lon, double lat, double w, double h, bool restart, int maxNumToRender, double *progress)
+bool TileDrawer::RenderTiles(wxApp *app, Renderer *renderer, double lon, double lat, double w, double h, bool restart, int maxNumToRender, double *progress)
 {
 	bool mustCancel = false;
 
@@ -95,7 +93,7 @@ bool TileDrawer::RenderTiles(wxApp *app, OsmCanvas *canvas, double lon, double l
 
 		m_curTile = m_visibleTiles;
 
-		m_curLayer = m_renderer->SupportsLayers() ? -1 : 0;
+		m_curLayer = renderer->SupportsLayers() ? -1 : 0;
 
 		m_numTilesToRender = m_visibleTiles->GetSize();
 		m_numTilesRendered = 0;
@@ -112,7 +110,7 @@ bool TileDrawer::RenderTiles(wxApp *app, OsmCanvas *canvas, double lon, double l
 		OsmTile *t = m_curTile->m_tile;
 		if (m_curLayer < 0)
 		{
-			Rect(wxEmptyString, *t, -1, 0,255,255, 200, NUMLAYERS);
+			Rect(renderer, wxEmptyString, *t, -1, 0,255,255, 200, NUMLAYERS);
 		}
 		
 		if (t->OverLaps(bb))
@@ -121,7 +119,7 @@ bool TileDrawer::RenderTiles(wxApp *app, OsmCanvas *canvas, double lon, double l
 			{
 				if (!w->m_tiles->InterSect(&m_renderedTiles))
 				{
-					RenderWay(w->m_way);
+					RenderWay(renderer, w->m_way);
 				}
 			}	// for way
 		}  // if overlaps
@@ -151,17 +149,19 @@ bool TileDrawer::RenderTiles(wxApp *app, OsmCanvas *canvas, double lon, double l
 		}
 	}
 
+	DrawOverlay(renderer, true);
+
 	return !m_curTile;
 }
 
-void TileDrawer::Rect(wxString const &text, double lon1, double lat1, double lon2, double lat2, double border, int r, int g, int b, int a, int layer)
+void TileDrawer::Rect(Renderer *renderer, wxString const &text, double lon1, double lat1, double lon2, double lat2, double border, int r, int g, int b, int a, int layer)
 {
-	m_renderer->Rect(lon1, lat1, lon2 - lon1, lat2 - lat1, border, r, g, b, a, false, layer);
-	m_renderer->DrawCenteredText(text.mb_str(wxConvUTF8), (lon1 + lon2)/2, (lat1 + lat2)/2, 0, r, g, b, a,  layer);
+	renderer->Rect(lon1, lat1, lon2 - lon1, lat2 - lat1, border, r, g, b, a, false, layer);
+	renderer->DrawCenteredText(text.mb_str(wxConvUTF8), (lon1 + lon2)/2, (lat1 + lat2)/2, 0, r, g, b, a,  layer);
 }
 
 // render using default colours. should plug in rule engine here
-void TileDrawer::RenderWay(OsmWay *w)
+void TileDrawer::RenderWay(Renderer *r, OsmWay *w)
 {
 
 	if ((!m_drawRule) || m_drawRule->Evaluate(w))
@@ -184,53 +184,53 @@ void TileDrawer::RenderWay(OsmWay *w)
 		}
 
 		if (m_curLayer < 0 || m_curLayer == layer)
-			RenderWay(w, c, poly, c, 1, m_curLayer <0 ? layer : 0);
+			RenderWay(r, w, c, poly, c, 1, m_curLayer <0 ? layer : 0);
 	}
 }
 
 
-void TileDrawer::RenderWay(OsmWay *w, wxColour lineColour, bool poly, wxColour fillColour, int width, int layer)
+void TileDrawer::RenderWay(Renderer *r, OsmWay *w, wxColour lineColour, bool poly, wxColour fillColour, int width, int layer)
 {
 
 
-	m_renderer->SetLineWidth(width);
-	m_renderer->SetLineColor(lineColour.Red(), lineColour.Green(), lineColour.Blue());
-	m_renderer->SetFillColor(fillColour.Red(), fillColour.Green(), fillColour.Blue());
+	r->SetLineWidth(width);
+	r->SetLineColor(lineColour.Red(), lineColour.Green(), lineColour.Blue());
+	r->SetFillColor(fillColour.Red(), fillColour.Green(), fillColour.Blue());
 
 	if (!poly)
 	{
-		m_renderer->Begin(Renderer::R_LINE, layer);
+		r->Begin(Renderer::R_LINE, layer);
 		for (unsigned j = 0; j < w->m_numResolvedNodes; j++)
 		{
 			OsmNode *node = w->m_resolvedNodes[j];
 		
 			if (node)
 			{
-				m_renderer->AddPoint(node->m_lon, node->m_lat);
+				r->AddPoint(node->m_lon, node->m_lat);
 			}
 			else
 			{
-				m_renderer->End();
-				m_renderer->Begin(Renderer::R_LINE, layer);
+				r->End();
+				r->Begin(Renderer::R_LINE, layer);
 			}
 		
 		}
-		m_renderer->End();
+		r->End();
 	}
 	else
 	{
-		m_renderer->Begin(Renderer::R_POLYGON, layer);
+		r->Begin(Renderer::R_POLYGON, layer);
 		for (unsigned j = 0; j < w->m_numResolvedNodes; j++)
 		{
 			OsmNode *node = w->m_resolvedNodes[j];
 		
 			if (node)
 			{
-				m_renderer->AddPoint(node->m_lon, node->m_lat);
+				r->AddPoint(node->m_lon, node->m_lat);
 			}
 			
 		}
-		m_renderer->End();
+		r->End();
 	}
 }
 
@@ -349,9 +349,6 @@ bool TileDrawer::SetSelection(double lon, double lat)
 	if (s != m_selection)
 	{
 		m_selection = s;
-		DrawOverlay(true);
-//		Rect(wxEmptyString, DRect(lon, lat, 0, 0), 2, 0,0,255, NUMLAYERS);
-		m_renderer->Commit();
 		return true;
 	}
 
@@ -363,9 +360,6 @@ bool TileDrawer::SetSelectedWay(OsmWay *way)
 	if (way != m_selectedWay)
 	{
 		m_selectedWay = way;
-		DrawOverlay(true);
-		m_renderer->Commit();
-
 		return true;
 	}
 	return false;
@@ -373,26 +367,26 @@ bool TileDrawer::SetSelectedWay(OsmWay *way)
 
 
 
-void TileDrawer::DrawOverlay(bool clear)
+void TileDrawer::DrawOverlay(Renderer *r, bool clear)
 {
-	if (!m_renderer->SupportsLayers())
+	if (!r->SupportsLayers())
 	{
 		return; //! warn maybe?
 	}
 
 	if (clear)
-		m_renderer->Clear(NUMLAYERS);
+		r->Clear(NUMLAYERS);
 		
 	if (m_selection)
 	{
 		double lon = m_selection->m_lon;
 		double lat = m_selection->m_lat;
-		m_renderer->Rect(lon, lat, 0, 0, 4, m_selectionColor.Red(), m_selectionColor.Green(), m_selectionColor.Blue(), 200, true, NUMLAYERS);
+		r->Rect(lon, lat, 0, 0, 4, m_selectionColor.Red(), m_selectionColor.Green(), m_selectionColor.Blue(), 100, true, NUMLAYERS);
 	}
 
 	if (m_selectedWay)
 	{
-		RenderWay(m_selectedWay, m_selectionColor, false, wxColour(0,0,0), 3, NUMLAYERS);
+		RenderWay(r, m_selectedWay, m_selectionColor, false, wxColour(0,0,0), 3, NUMLAYERS);
 	}
 }
 
@@ -407,7 +401,7 @@ TileWay *TileDrawer::GetWaysContainingNode(OsmNode *node)
 	return m_tileArray[x][y]->GetWaysContainingNode(node);
 }
 
-bool TileDrawer::SetSelectionColor(int r, int g, int b, bool redraw)
+bool TileDrawer::SetSelectionColor(int r, int g, int b)
 {
 	wxColour newColor(r, g, b);
 
@@ -415,10 +409,8 @@ bool TileDrawer::SetSelectionColor(int r, int g, int b, bool redraw)
 
 	m_selectionColor = newColor;
 
-	if (changed && redraw)
+	if (changed)
 	{
-		DrawOverlay(true);
-		m_renderer->Commit();
 		return true;
 	}
 

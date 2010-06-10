@@ -94,11 +94,11 @@ OsmCanvas::OsmCanvas(wxApp * app, wxWindow *parent, wxString const &fileName, in
 
 	m_lastX = m_lastY = 0;
 
-	m_tileDrawer = new TileDrawer(&m_renderer, m_data->m_minlon, m_data->m_minlat, m_data->m_maxlon, m_data->m_maxlat, .05, .04);
+	m_tileDrawer = new TileDrawer(m_data->m_minlon, m_data->m_minlat, m_data->m_maxlon, m_data->m_maxlat, .05, .04);
 
 	m_tileDrawer->AddWays(static_cast<OsmWay *>(m_data->m_ways.m_content));
 
-	m_tileDrawer->SetSelectionColor(255,100,100, false);
+	m_tileDrawer->SetSelectionColor(255,100,100);
 
 	m_timer.Start(100);
 }
@@ -139,10 +139,10 @@ void OsmCanvas::Render(bool force)
 	}
 
 	double progress;
-	m_done = m_tileDrawer->RenderTiles(m_app, this, m_xOffset, m_yOffset, w / xScale, h / m_scale, m_restart, 10, &progress);
+	m_done = m_tileDrawer->RenderTiles(m_app, &m_renderer, m_xOffset, m_yOffset, w / xScale, h / m_scale, m_restart, 10, &progress);
 	m_restart = false;
 
-	m_tileDrawer->DrawOverlay();
+	m_tileDrawer->DrawOverlay(&m_renderer);
 	
 	m_renderer.Commit();
 	Draw(NULL);
@@ -209,6 +209,8 @@ void OsmCanvas::OnMouseMove(wxMouseEvent &evt)
 			double lat = m_yOffset + (m_backBuffer.GetHeight() - evt.m_y) / m_scale;
 			if (m_tileDrawer->SetSelection(lon, lat))
 			{
+				m_tileDrawer->DrawOverlay(&m_renderer, true);
+				m_renderer.Commit();
 				Draw();
 	
 				if (m_info)
@@ -253,14 +255,12 @@ void OsmCanvas::OnLeftUp(wxMouseEvent &evt)
 		m_cursorLocked = !m_cursorLocked;
 		if (!m_cursorLocked)
 		{
-			m_tileDrawer->SetSelectionColor(255,100,100, true);
+			m_tileDrawer->SetSelectionColor(255,100,100);
 			double scaleCorrection = cos(m_yOffset * M_PI / 180);
 			double lon = m_xOffset + evt.m_x / (m_scale * scaleCorrection);
 			double lat = m_yOffset + (m_backBuffer.GetHeight() - evt.m_y) / m_scale;
 			if (m_tileDrawer->SetSelection(lon, lat))
 			{
-				Draw();
-
 				if (m_info)
 				{
 					TileWay *list = m_tileDrawer->GetSelection();
@@ -274,9 +274,11 @@ void OsmCanvas::OnLeftUp(wxMouseEvent &evt)
 		}
 		else
 		{
-			m_tileDrawer->SetSelectionColor(255,0,0, true);
+			m_tileDrawer->SetSelectionColor(255,0,0);
 		}
-
+		m_tileDrawer->DrawOverlay(&m_renderer, true);
+		m_renderer.Commit();
+		Draw();
 	}
 
 }
@@ -324,21 +326,18 @@ void OsmCanvas::SaveView(wxString const &fileName, MainFrame *mainFrame)
 
 	r->Setup(&m_backBuffer, DRect(m_xOffset, m_yOffset, w /  xScale, h / m_scale));
 
-	Renderer *old = m_tileDrawer->SetRenderer(r);
-
 	double progress;
 
-	bool done = m_tileDrawer->RenderTiles(m_app, this, m_xOffset, m_yOffset, w / xScale, h / m_scale, true, 10, &progress);
+	bool done = m_tileDrawer->RenderTiles(m_app, r, m_xOffset, m_yOffset, w / xScale, h / m_scale, true, 10, &progress);
 	mainFrame->SetProgress(progress);
 
 	while (!done)
 	{
-		done = m_tileDrawer->RenderTiles(m_app, this, m_xOffset, m_yOffset, w / xScale, h / m_scale, false, 10, &progress);
+		done = m_tileDrawer->RenderTiles(m_app, r, m_xOffset, m_yOffset, w / xScale, h / m_scale, false, 10, &progress);
 		mainFrame->SetProgress(progress);
 	}
 
 	mainFrame->SetProgress(-1);
-	m_tileDrawer->SetRenderer(old);
 
 	delete r;
 }

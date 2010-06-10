@@ -234,7 +234,7 @@ class OsmCanvas;
 class TileDrawer
 {
 	public:
-		TileDrawer(Renderer *renderer, double minLon,double minLat, double maxLon, double maxLat, double dLon, double dLat);
+		TileDrawer(double minLon,double minLat, double maxLon, double maxLat, double dLon, double dLat);
 
 		~TileDrawer()
 		{
@@ -245,14 +245,6 @@ class TileDrawer
 			}
 
 			delete [] m_tileArray;
-		}
-
-		Renderer *SetRenderer(Renderer *renderer)
-		{
-			Renderer *old = m_renderer;
-			m_renderer = renderer;
-
-			return old;
 		}
 
 		void AddWays(OsmWay *ways)
@@ -298,13 +290,13 @@ class TileDrawer
 		// you should UnRef the list when done, which will destroy it if not used anymore
 		TileList *GetTiles(double minLon, double minLat, double maxLon, double maxLat);
 
-		// renders the next numToRender tiles using the current renderer
+		// renders the next numToRender tiles
 		// lon,lat,w,h  - rectangle to render
 		// restart - start from the beginning (clears the current drawing)
 		// numToRender  - render this many tiles and then return (so you can do progress displays etc)
 		// progress - if non null the progress will be reported (in the range 0-1)
 		// returns true when all tiles are rendered
-		bool RenderTiles(wxApp *app, OsmCanvas *canvas, double lon, double lat, double w, double h, bool restart, int numToRender, double *progress);
+		bool RenderTiles(wxApp *app, Renderer *renderer, double lon, double lat, double w, double h, bool restart, int numToRender, double *progress);
 
 		OsmNode *GetClosestNodeInTile(int x, int y, double lon, double lat, double *foundDistSq);
 
@@ -316,7 +308,7 @@ class TileDrawer
 		// returns true if the selection has changed and you should refresh the canvas
 		bool SetSelection(double lon, double lat);
 
-		void DrawOverlay(bool clear = false);
+		void DrawOverlay(Renderer *r, bool clear = false);
 
 		void SetDrawRuleControl(RuleControl *r)
 		{
@@ -329,16 +321,16 @@ class TileDrawer
 		}
 
 		// with explicit colours
-		void RenderWay(OsmWay *w, wxColour lineColour, bool polygon, wxColour fillColour, int width, int layer);
+		void RenderWay(Renderer *r, OsmWay *w, wxColour lineColour, bool polygon, wxColour fillColour, int width, int layer);
 
 		// with default colours
-		void RenderWay(OsmWay *w);
-		void Rect(wxString const &text, DRect const &re, double border, int r, int g, int b, int a, int layer)
+		void RenderWay(Renderer *r, OsmWay *w);
+		void Rect(Renderer *renderer, wxString const &text, DRect const &re, double border, int r, int g, int b, int a, int layer)
 		{
-			Rect(text, re.m_x, re.m_y, re.m_x + re.m_w, re.m_y + re.m_h, border, r, g, b, a, layer);
+			Rect(renderer, text, re.m_x, re.m_y, re.m_x + re.m_w, re.m_y + re.m_h, border, r, g, b, a, layer);
 		}
 		
-		void Rect(wxString const &text, double lon1, double lat1, double lon2, double lat2, double border, int r, int g, int b,int a, int layer);
+		void Rect(Renderer *renderer, wxString const &text, double lon1, double lat1, double lon2, double lat2, double border, int r, int g, int b,int a, int layer);
 
 		TileWay *GetSelection()
 		{
@@ -352,7 +344,7 @@ class TileDrawer
 
 		bool SetSelectedWay(OsmWay *way);
 
-		bool SetSelectionColor(int r, int g, int b, bool redraw);
+		bool SetSelectionColor(int r, int g, int b);
 
 	private:
 
@@ -367,9 +359,6 @@ class TileDrawer
 		TileSpans m_renderedTiles;
 		int m_curLayer;
 		int m_numTilesRendered, m_numTilesToRender;
-
-
-		Renderer *m_renderer;
 
 		RuleControl *m_drawRule;
 		ColorRules *m_colorRules;
