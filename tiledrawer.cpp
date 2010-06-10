@@ -125,6 +125,8 @@ bool TileDrawer::RenderTiles(wxApp *app, OsmCanvas *canvas, double lon, double l
 				}
 			}	// for way
 		}  // if overlaps
+
+		//not needed anymore for cairo renderer. move to mustcancel callback?
 		mustCancel = app->Pending();
 
 		m_renderedTiles.Add(t);
