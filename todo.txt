@@ -5,8 +5,7 @@
 - also read attributes? (otherwise we lose info on saving)
 - on pan draw only new parts
 - draw wide roads/ line/fill styles
-- render with agg/opengl/cairo instead of ugly wx gfx
 - empty or/and should act as disabled
-- disabled rule should rteurn false (so it is ot applied)
+- disabled rule should not be evaluated at all
 - read multiple files
 - read shapefiles?
