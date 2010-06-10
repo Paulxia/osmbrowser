@@ -50,6 +50,7 @@ class OsmCanvas
 
 		void SelectWay(OsmWay *way);
 	private:
+		void SetupRenderer();
 		OsmData *m_data;
 		InfoTreeCtrl *m_info;
 		DECLARE_EVENT_TABLE();
@@ -86,10 +87,7 @@ class OsmCanvas
 		bool m_locked;
 		wxTimer m_timer;
 
-		void SetupRenderer();
-//		RendererWxBitmap m_renderer;
-
-		CairoRenderer m_renderer;
+		Renderer *m_renderer;
 
 		bool m_cursorLocked;
 		bool m_firstDragStep;

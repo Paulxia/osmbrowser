@@ -13,8 +13,8 @@ class CairoRendererBase
 	CairoRendererBase(int numLayers)
 		: Renderer(numLayers)
 	{
-			m_width = m_height = -1;
 	}
+
 
 	void SetLineColor(int r, int g, int b, int a = 0)
 	{
@@ -41,7 +41,6 @@ class CairoRendererBase
 		double m_fillR, m_fillG, m_fillB, m_fillA;
 		double m_lineR, m_lineG, m_lineB, m_lineA;
 		double m_lineWidth;
-		int m_width, m_height;
 
 } ;
 
@@ -49,50 +48,26 @@ class CairoRenderer
 	: public CairoRendererBase
 {
 	public:
-		CairoRenderer(int numLayers)
+		CairoRenderer(wxBitmap *output, int numLayers)
 			: CairoRendererBase(numLayers)
 		{
 			layerBuffers = new cairo_surface_t *[m_numLayers];
 			layers = new cairo_t *[m_numLayers];
 
-			for (int i = 0; i < m_numLayers; i++)
-			{
-				layerBuffers[i] = NULL;
-				layers[i] = NULL;
-			}
+			Setup(output);
 		}
 
-		void Setup(wxBitmap *output, DRect const &viewport)
+		~CairoRenderer()
 		{
-			m_outputBitmap = output;
-			m_offX = viewport.m_x;
-			m_offY = viewport.m_y;
-			m_scaleX = output->GetWidth() / viewport.m_w;
-			m_scaleY = output->GetHeight() / viewport.m_h;
-			
 			for (int i = 0; i < m_numLayers; i++)
 			{
-				if (layers[i] && (m_width != output->GetWidth() || m_height != output->GetHeight()))
-				{
-					cairo_destroy(layers[i]);
-					cairo_surface_destroy(layerBuffers[i]);
-					layerBuffers[i] = NULL;
-					layers[i] = NULL;
-				}
-				
-				if (!layers[i])
-				{
-					layerBuffers[i] = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, output->GetWidth(), output->GetHeight());
-					layers[i] = cairo_create(layerBuffers[i]);
-				}
-				
+				cairo_surface_destroy(layerBuffers[i]);
+				cairo_destroy(layers[i]);
 			}
 
-			m_width = output->GetWidth();
-			m_height = output->GetHeight();
-
+			delete [] layerBuffers;
+			delete [] layers;
 		}
-
 
 		void Begin(Renderer::TYPE type, int layer)
 		{
@@ -104,7 +79,7 @@ class CairoRenderer
 
 		void AddPoint(double x, double y, double xshift = 0, double yshift = 0)
 		{
-			cairo_line_to(layers[m_curLayer], (x - m_offX) * m_scaleX + xshift, m_height - (y - m_offY) * m_scaleY + yshift);
+			cairo_line_to(layers[m_curLayer], (x - m_offX) * m_scaleX + xshift, m_outputHeight - (y - m_offY) * m_scaleY + yshift);
 		}
 
 		void End()
@@ -148,9 +123,24 @@ class CairoRenderer
 
 
 	private:
+		void Setup(wxBitmap *output)
+		{
+			m_outputBitmap = output;
+			
+			for (int i = 0; i < m_numLayers; i++)
+			{
+				layerBuffers[i] = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, output->GetWidth(), output->GetHeight());
+				layers[i] = cairo_create(layerBuffers[i]);
+
+			}
+
+			m_outputWidth = output->GetWidth();
+			m_outputHeight = output->GetHeight();
+
+		}
+
 		Renderer::TYPE  m_type;
 		int m_curLayer;
-		double m_scaleX, m_scaleY, m_offX, m_offY;
 		cairo_t **layers;
 		cairo_surface_t **layerBuffers;
 
@@ -167,20 +157,18 @@ class CairoPdfRenderer
 		{
 			m_surface = cairo_pdf_surface_create(fileName.mb_str(wxConvUTF8), w, h);
 			m_context = cairo_create(m_surface);
-			m_width = w;
-			m_height = h;
+			m_outputWidth = w;
+			m_outputHeight = h;
 		}
 
 		~CairoPdfRenderer()
 		{
-			printf("cleanup pdf\n");
 			cairo_show_page(m_context);
 			cairo_destroy(m_context);
 			cairo_surface_flush(m_surface);
 			cairo_surface_destroy(m_surface);
 		}
 
-		void Setup(wxBitmap *output, DRect const &viewport);
 		void Begin(Renderer::TYPE type, int layer);
 		void AddPoint(double x, double y, double xshift = 0, double yshift = 0);
 		void End();
@@ -196,53 +184,9 @@ class CairoPdfRenderer
 		
 	private:
 		Renderer::TYPE  m_type;
-		double m_offX, m_offY, m_scaleX, m_scaleY;
 		cairo_surface_t *m_surface;
 		cairo_t *m_context;
 };
 
-
-class CairoPsRenderer
-	: public CairoRendererBase
-{
-	public:
-		CairoPsRenderer(wxString const &fileName, int w, int h)
-			: CairoRendererBase(1)
-		{
-			m_surface = cairo_ps_surface_create(fileName.mb_str(wxConvUTF8), w, h);
-			cairo_ps_surface_set_eps(m_surface, true);
-			m_context = cairo_create(m_surface);
-			m_width = w;
-			m_height = h;
-		}
-
-		~CairoPsRenderer()
-		{
-			cairo_show_page(m_context);
-			cairo_destroy(m_context);
-			cairo_surface_flush(m_surface);
-			cairo_surface_destroy(m_surface);
-		}
-
-		void Setup(wxBitmap *output, DRect const &viewport);
-		void Begin(Renderer::TYPE type, int layer);
-		void AddPoint(double x, double y, double xshift = 0, double yshift = 0);
-		void End();
-		virtual void DrawCenteredText(char const *text, double x, double y, double angle, int r, int g, int b, int a, int layer);
-
-		bool SupportsLayers() { return false; }
-
-		void Clear(int layer = -1) { /* pdf doesn't support clearing */ }
-
-		void Commit() { /* nop, we don't support layers */ }
-
-
-		
-	private:
-		Renderer::TYPE  m_type;
-		double m_offX, m_offY, m_scaleX, m_scaleY;
-		cairo_surface_t *m_surface;
-		cairo_t *m_context;
-};
 
 #endif

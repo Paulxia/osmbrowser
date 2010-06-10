@@ -12,6 +12,9 @@ class Renderer
 			m_numLayers = numLayers;
 		}
 		virtual ~Renderer() { }
+
+		double GetWidth() { return m_outputWidth; }
+		double GetHeight() { return m_outputHeight; }
 		
 		enum TYPE
 		{
@@ -52,9 +55,18 @@ class Renderer
 		// merge all layers and output to screen
 		virtual void Commit() = 0;
 
-		virtual void Setup(wxBitmap *output, DRect const &viewport) = 0;
+		virtual void SetupViewport(DRect const &viewport)
+		{
+			  m_offX = viewport.m_x;
+			  m_offY = viewport.m_y;
+			  m_scaleX = m_outputWidth / viewport.m_w;
+			  m_scaleY = m_outputHeight/ viewport.m_h;
+			  
+		}
 
 	protected:
+		double m_offX, m_offY, m_scaleX, m_scaleY;
+		double m_outputWidth, m_outputHeight;
 		int m_numLayers;
 };
 
@@ -153,8 +165,8 @@ class RendererWxBitmap
 	: public RendererSimple
 {
 	public:
-		RendererWxBitmap(int numLayers)
-		:	RendererSimple(numLayers), m_size(-1,-1)
+		RendererWxBitmap(wxBitmap *output, int numLayers)
+		:	RendererSimple(numLayers)
 		{
 			m_wxPoints = NULL;
 			m_numWxPoints  = 0;
@@ -163,6 +175,7 @@ class RendererWxBitmap
 			m_pen.SetColour(0,0,0);
 			m_dc = new wxMemoryDC[m_numLayers];
 			m_layer = new wxBitmap[m_numLayers];
+			Setup(output);
 		}
 
 		~RendererWxBitmap()
@@ -205,11 +218,9 @@ class RendererWxBitmap
 			}
 		}
 
-		void Setup(wxBitmap *output, DRect const &viewport);
-
 		void Commit();
 	private:
-		double m_offX, m_offY, m_scaleX, m_scaleY;
+		void Setup(wxBitmap *outputBitmap);
 		wxBitmap *m_layer;
 		wxBitmap *m_output;
 		wxMemoryDC *m_dc;
@@ -218,7 +229,6 @@ class RendererWxBitmap
 		wxBrush m_brush;
 		wxColour m_maskColor;
 		unsigned m_numWxPoints;
-		wxSize m_size;
 	protected:
 		void ScalePoints()
 		{

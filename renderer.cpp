@@ -7,31 +7,23 @@ void RendererWxBitmap::DrawCenteredText(char const *s, double x, double y, doubl
 	// not implemented yet
 }
 
-void RendererWxBitmap::Setup(wxBitmap *bitmap, DRect const &viewport)
+void RendererWxBitmap::Setup(wxBitmap *bitmap)
 {
-	m_offX = viewport.m_x;
-	m_offY = viewport.m_y;
-
-	m_scaleX = bitmap->GetWidth() / viewport.m_w;
-	m_scaleY = bitmap->GetHeight() / viewport.m_h;
-
 	m_output = bitmap;
 
-	if (bitmap->GetWidth() != m_size.GetWidth() || bitmap->GetHeight() != m_size.GetHeight())
+	int w = bitmap->GetWidth();
+	int h = bitmap->GetHeight();
+	m_outputWidth = w;
+	m_outputHeight = h;
+	for (int i = 0; i < m_numLayers; i++)
 	{
-		m_size.SetWidth(bitmap->GetWidth());
-		m_size.SetHeight(bitmap->GetHeight());
-		for (int i = 0; i < m_numLayers; i++)
+		m_layer[i].Create(w, h);
+		m_dc[i].SelectObject(m_layer[i]);
+		if (i)
 		{
-			m_layer[i].Create(m_size.GetWidth(), m_size.GetHeight());
-			m_dc[i].SelectObject(m_layer[i]);
-			if (i)
-			{
-				m_dc[i].SetBackground(wxBrush(m_maskColor));
-			}
+			m_dc[i].SetBackground(wxBrush(m_maskColor));
 		}
 	}
-
 }
 
 void RendererWxBitmap::DrawPolygon()

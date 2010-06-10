@@ -19,7 +19,7 @@ END_EVENT_TABLE()
 
 
 OsmCanvas::OsmCanvas(wxApp * app, wxWindow *parent, wxString const &fileName, int numLayers)
-	: Canvas(parent), m_renderer(numLayers)
+	: Canvas(parent)
 {
 	m_timer.SetOwner(this);
 	m_done = false;
@@ -31,6 +31,7 @@ OsmCanvas::OsmCanvas(wxApp * app, wxWindow *parent, wxString const &fileName, in
 	m_cursorLocked = false;
 	m_firstDragStep = false;
 	wxString binFile = fileName;
+	m_renderer = NULL;
 
 	binFile.Append(wxT(".cache"));
 
@@ -135,16 +136,16 @@ void OsmCanvas::Render(bool force)
 
 	if (m_restart)
 	{
-		m_renderer.Clear();
+		m_renderer->Clear();
 	}
 
 	double progress;
-	m_done = m_tileDrawer->RenderTiles(m_app, &m_renderer, m_xOffset, m_yOffset, w / xScale, h / m_scale, m_restart, 10, &progress);
+	m_done = m_tileDrawer->RenderTiles(m_app, m_renderer, m_xOffset, m_yOffset, w / xScale, h / m_scale, m_restart, 10, &progress);
 	m_restart = false;
 
-	m_tileDrawer->DrawOverlay(&m_renderer);
+	m_tileDrawer->DrawOverlay(m_renderer);
 	
-	m_renderer.Commit();
+	m_renderer->Commit();
 	Draw(NULL);
 	return;
 }
@@ -209,8 +210,9 @@ void OsmCanvas::OnMouseMove(wxMouseEvent &evt)
 			double lat = m_yOffset + (m_backBuffer.GetHeight() - evt.m_y) / m_scale;
 			if (m_tileDrawer->SetSelection(lon, lat))
 			{
-				m_tileDrawer->DrawOverlay(&m_renderer, true);
-				m_renderer.Commit();
+				SetupRenderer();
+				m_tileDrawer->DrawOverlay(m_renderer, true);
+				m_renderer->Commit();
 				Draw();
 	
 				if (m_info)
@@ -276,8 +278,9 @@ void OsmCanvas::OnLeftUp(wxMouseEvent &evt)
 		{
 			m_tileDrawer->SetSelectionColor(255,0,0);
 		}
-		m_tileDrawer->DrawOverlay(&m_renderer, true);
-		m_renderer.Commit();
+		SetupRenderer();
+		m_tileDrawer->DrawOverlay(m_renderer, true);
+		m_renderer->Commit();
 		Draw();
 	}
 
@@ -286,6 +289,21 @@ void OsmCanvas::OnLeftUp(wxMouseEvent &evt)
 
 void OsmCanvas::SetupRenderer()
 {
+	if (m_renderer)
+	{
+		if (static_cast<int>(m_renderer->GetWidth()) != m_backBuffer.GetWidth()
+			|| static_cast<int>(m_renderer->GetHeight()) != m_backBuffer.GetHeight())
+		{
+			delete m_renderer;
+			m_renderer = NULL;
+		}
+	}
+	
+	if (!m_renderer)
+	{
+		m_renderer = new CairoRenderer(&m_backBuffer, NUMLAYERS + 1);
+	}
+
 	double scaleCorrection = cos(m_yOffset * M_PI / 180);
 
 	int renderW = m_backBuffer.GetWidth();
@@ -293,7 +311,7 @@ void OsmCanvas::SetupRenderer()
 	double sw = renderW / (scaleCorrection * m_scale);
 	double sh = renderH / m_scale;
 
-	m_renderer.Setup(&m_backBuffer, DRect(m_xOffset, m_yOffset, sw, sh));
+	m_renderer->SetupViewport(DRect(m_xOffset, m_yOffset, sw, sh));
 }
 
 void OsmCanvas::SetRuleControls(RuleControl *rules, ColorRules *colors)
@@ -324,7 +342,7 @@ void OsmCanvas::SaveView(wxString const &fileName, MainFrame *mainFrame)
 
 	Renderer *r = new CairoPdfRenderer(fileName, w*10, h*10);
 
-	r->Setup(&m_backBuffer, DRect(m_xOffset, m_yOffset, w /  xScale, h / m_scale));
+	r->SetupViewport(DRect(m_xOffset, m_yOffset, w /  xScale, h / m_scale));
 
 	double progress;
 
