@@ -71,11 +71,11 @@ OsmCanvas::OsmCanvas(wxApp * app, wxWindow *parent, wxString const &fileName, in
 	
 		if (fileName.EndsWith(wxT(".cache")))
 		{
-			m_data = parse_binary(infile, true);
+			m_data = parse_binary(infile);
 		}
 		else
 		{
-			m_data = parse_osm(infile, true);
+			m_data = parse_osm(infile);
 	
 			FILE *outFile = fopen(binFile.mb_str(wxConvUTF8) , "wb");
 	

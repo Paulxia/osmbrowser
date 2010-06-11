@@ -48,7 +48,7 @@ static void ReadAttribs(OsmData *o, XML_Char const **attrs)
 		char const *v = get_attribute(keys[i], attrs);
 
 		if (v)
-			o->AddTag(keys[i], v);
+			o->AddAttribute(keys[i], v);
 	}
 }
 
@@ -266,24 +266,6 @@ static void ReadNode(OsmData *d, FILE *f)
 
 }
 
-static void ReadNodeWithAttributes(OsmData *d, FILE *f)
-{
-	double lat, lon;
-	unsigned id, tagCount, attribCount;
-	fread(&id, sizeof(id), 1, f);
-	fread(&lat, sizeof(lat), 1, f);
-	fread(&lon, sizeof(lon), 1, f);
-	fread(&tagCount, sizeof(tagCount), 1, f);
-
-	d->StartNode(id, lat, lon);
-	ReadTags(d, tagCount, f);
-	fread(&attribCount, sizeof(attribCount), 1, f);
-	ReadTags(d, attribCount, f, true);
-	d->EndNode();
-
-}
-
-
 static void ReadWay(OsmData *d, FILE *f)
 {
 	unsigned id, tagCount, nodeRefCount;
@@ -299,25 +281,6 @@ static void ReadWay(OsmData *d, FILE *f)
 	ReadTags(d, tagCount, f);
 	d->EndWay();
 }
-
-static void ReadWayWithAttributes(OsmData *d, FILE *f)
-{
-	unsigned id, tagCount, nodeRefCount, attribCount;
-	fread(&id, sizeof(id), 1, f);
-	d->StartWay(id);
-	fread(&nodeRefCount, sizeof(nodeRefCount), 1, f);
-	for (unsigned i = 0; i < nodeRefCount; i++)
-	{
-		fread(&id, sizeof(id), 1, f);
-		d->AddNodeRef(id);
-	}
-	fread(&tagCount, sizeof(tagCount), 1, f);
-	ReadTags(d, tagCount, f);
-	fread(&attribCount, sizeof(attribCount), 1, f);
-	ReadTags(d, attribCount, f, true);
-	d->EndWay();
-}
-
 
 static void ReadRelation(OsmData *d, FILE *f)
 {
@@ -339,31 +302,6 @@ static void ReadRelation(OsmData *d, FILE *f)
 	}
 	fread(&tagCount, sizeof(tagCount), 1, f);
 	ReadTags(d, tagCount, f);
-	d->EndRelation();
-}
-
-static void ReadRelationWithAttributes(OsmData *d, FILE *f)
-{
-	unsigned id, tagCount, nodeRefCount, wayRefCount, attribCount;
-	fread(&id, sizeof(id), 1, f);
-	d->StartRelation(id);
-	fread(&nodeRefCount, sizeof(nodeRefCount), 1, f);
-	for (unsigned i = 0; i < nodeRefCount; i++)
-	{
-		fread(&id, sizeof(id), 1, f);
-		d->AddNodeRef(id);
-	}
-
-	fread(&wayRefCount, sizeof(wayRefCount), 1, f);
-	for (unsigned i = 0; i < wayRefCount; i++)
-	{
-		fread(&id, sizeof(id), 1, f);
-		d->AddWayRef(id);
-	}
-	fread(&tagCount, sizeof(tagCount), 1, f);
-	ReadTags(d, tagCount, f);
-	fread(&attribCount, sizeof(attribCount), 1, f);
-	ReadTags(d, attribCount, f, true);
 	d->EndRelation();
 }
 
@@ -401,15 +339,6 @@ OsmData *parse_binary(FILE *f, bool skipAttribs)
 				break;
 			case 'R':
 				ReadRelation(ret, f);
-				break;
-			case 'n':
-				ReadNodeWithAttributes(ret, f);
-				break;
-			case 'w':
-				ReadWayWithAttributes(ret, f);
-				break;
-			case 'r':
-				ReadRelationWithAttributes(ret, f);
 				break;
 			default:
 				printf("illegal element at position %u\n", count);
@@ -452,19 +381,18 @@ void write_binary(OsmData *d, FILE *f)
 	printf("writing nodes...\n" );
 	for (OsmNode *n = static_cast<OsmNode *>(d->m_nodes.m_content); n ; n = static_cast<OsmNode *>(n->m_next))
 	{
-		fputc('n', f);
+		fputc('N', f);
 		fwrite(&(n->m_id), sizeof(n->m_id), 1, f);
 		fwrite(&(n->m_lat), sizeof(n->m_lat), 1, f);
 		fwrite(&(n->m_lon), sizeof(n->m_lon), 1, f);
 
 		WriteTags(n->m_tags, f);
-		WriteTags(n->m_attribs, f);
 	}
 
 	printf("writing ways...\n" );
 	for (OsmWay *w = static_cast<OsmWay *>(d->m_ways.m_content); w; w = static_cast<OsmWay *>(w->m_next))
 	{
-		fputc('w', f);
+		fputc('W', f);
 		fwrite(&(w->m_id), sizeof(w->m_id), 1, f);
 
 		if (w->m_nodeRefs) // if the noderefs still exists, this means the way is not fully resolved, so use the refs
@@ -494,14 +422,13 @@ void write_binary(OsmData *d, FILE *f)
 		}
 
 		WriteTags(w->m_tags, f);
-		WriteTags(w->m_attribs, f);
 	}
 
 
 	printf("writing relations...\n" );
 	for (OsmRelation *r = static_cast<OsmRelation *>(d->m_relations.m_content); r; r = static_cast<OsmRelation *>(r->m_next))
 	{
-		fputc('r', f);
+		fputc('R', f);
 		fwrite(&(r->m_id), sizeof(r->m_id), 1, f);
 
 		if (r->m_nodeRefs)
@@ -557,7 +484,6 @@ void write_binary(OsmData *d, FILE *f)
 		}
 
 		WriteTags(r->m_tags, f);
-		WriteTags(r->m_attribs, f);
 	}
 	printf("done writing\n");
 }

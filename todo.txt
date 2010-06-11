@@ -9,3 +9,8 @@
 - read multiple files
 - start without cmdline args and open file from menu
 - read shapefiles?
+
+
+--- general ideas ----
+
+store attribs as tags (with some way to be able to recognise them) this is 4 bytes less on each object, which is quite a lot considering the sheer nr of nodes

@@ -368,6 +368,12 @@ void OsmData::AddAttribute(char const *key, char const *value)
 	{
 		return;
 	}
+
+	char newkey[1024];
+
+	newkey[0] = '@';
+	strncpy(newkey+1, key, 1022);
+	newkey[1023] = 0;
 	
 	switch(m_parsingState)
 	{
@@ -375,13 +381,13 @@ void OsmData::AddAttribute(char const *key, char const *value)
 			abort();
 			break;
 		case PARSE_NODE:
-			static_cast<IdObjectWithTagsAndAttributes *>(m_nodes.m_content)->AddAttribute(key, value);
+			static_cast<IdObjectWithTags *>(m_nodes.m_content)->AddTag(newkey, value);
 			break;
 		case PARSE_WAY:
-			static_cast<IdObjectWithTagsAndAttributes *>(m_ways.m_content)->AddAttribute(key, value);
+			static_cast<IdObjectWithTags *>(m_ways.m_content)->AddTag(newkey, value);
 			break;
 		case PARSE_RELATION:
-			static_cast<IdObjectWithTagsAndAttributes *>(m_relations.m_content)->AddAttribute(key, value);
+			static_cast<IdObjectWithTags *>(m_relations.m_content)->AddTag(newkey, value);
 			break;
 	}
 }
