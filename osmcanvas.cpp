@@ -49,7 +49,7 @@ OsmCanvas::OsmCanvas(wxApp * app, wxWindow *parent, wxString const &fileName, in
 	if (infile)
 	{
 		printf("found preprocessed file %s, opening that instead.\n", (char const *)(binFile.mb_str(wxConvUTF8)) );
-		m_data = parse_binary(infile);
+		m_data = parse_binary(infile, true);
 	}
 	else
 	{
@@ -71,11 +71,11 @@ OsmCanvas::OsmCanvas(wxApp * app, wxWindow *parent, wxString const &fileName, in
 	
 		if (fileName.EndsWith(wxT(".cache")))
 		{
-			m_data = parse_binary(infile);
+			m_data = parse_binary(infile, true);
 		}
 		else
 		{
-			m_data = parse_osm(infile);
+			m_data = parse_osm(infile, true);
 	
 			FILE *outFile = fopen(binFile.mb_str(wxConvUTF8) , "wb");
 	
