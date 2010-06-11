@@ -12,7 +12,12 @@ running
 
 ./osmbrowser <mapfile.osm>
 this will create a mapfile.osm.cache for faster loading the next time. You can safely delete that if you're not interested in faster loading,
-
+when you specify a - as filename, osmbrowser wil read from stdin (only osm format atm, no cache files). This is useful if you have a alrge osm
+file and don't want to unzip it.
+for example
+bzcat netherlands.osm.bz2 | ./osmbrowser -
+this will create a file stdin.cache, which you camn use to open faster the next time
+./osmbrowser stdin.cache
 
 
 interface explanation
@@ -22,7 +27,7 @@ The light read square is the currenly selected osm node. It's info is displayed 
 'locked' and won't follow your mouse, you can then click on the info on the right to select a way on the map. Clicking on the map again unlocks the selection.
 
 
-On the left is the filter display. The first box is for the draw rule, which determines what is going to be drawn. Below that you can add color rules which
+On the left is the filter display. In the first box you can type a name for your ruleset. If you type a name, the set will be remembered for the next run of the app. The second box is for the draw rule, which determines what is going to be drawn. Below that you can add color rules which
 determine the color of what is drawn. Each way is first matched against the drawrule. If this matches then it is matched to the color rules from top to bottom
 and the first match is used to determine how to draw this way. If no colorrule matches it is drawn in light gray.
 
