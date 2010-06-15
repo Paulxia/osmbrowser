@@ -153,6 +153,7 @@ void MainFrame::Save(wxString const &name)
 {
 	m_drawRule->Save(wxString(wxT("rules/")) + name + wxT("/"));
 	m_colorRules->Save(name);
+	wxConfig::Get()->Flush();
 }
 
 
