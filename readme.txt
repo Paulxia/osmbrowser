@@ -72,3 +72,15 @@ match only forests and parks
     (tag "leisure" "park")
 )
 
+
+You can (temporarily) disable subexpressions with a - direcly following the (
+
+example
+
+(or
+    (-tag "landuse" "forest")
+    (tag "landuse" "woodland")
+    (tag "leisure" "park")
+)
+
+will ignore the tag "landuse" "forest" part as if the line was not there.

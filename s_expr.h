@@ -35,22 +35,36 @@ class LogicalExpression
 				m_children->DestroyList();
 		}
 
+		enum STATE
+		{
+			S_FALSE,
+			S_TRUE,
+			S_IGNORE,
+			S_INVALID
+		};
+
 		void AddChildren(LogicalExpression *c)
 		{
 			m_children = static_cast<LogicalExpression *>(ListObject::Concat(m_children, c));
 		}
 		bool m_disabled;
 		LogicalExpression *m_children;
-		virtual bool GetValue(IdObjectWithTags *o) = 0;
+		virtual STATE GetValue(IdObjectWithTags *o) = 0;
 };
 
 class Not
 	: public LogicalExpression
 {
 	public:
-		virtual bool GetValue(IdObjectWithTags *o)
+		virtual STATE GetValue(IdObjectWithTags *o)
 		{
-			return !(m_children->GetValue(o));
+			if (m_disabled)
+				return S_IGNORE;
+
+			STATE states[] = { S_FALSE, S_TRUE, S_IGNORE, S_INVALID};
+			STATE s = m_children->GetValue(o);
+
+			return states[s];
 		}
 
 };
@@ -59,15 +73,27 @@ class And
 	: public LogicalExpression
 {
 	public:
-		bool GetValue(IdObjectWithTags *o)
+		STATE GetValue(IdObjectWithTags *o)
 		{
+			if (m_disabled)
+				return S_IGNORE;
+		
+			int trueCount = 0;
 			for (LogicalExpression *l = m_children; l; l = static_cast<LogicalExpression *>(l->m_next))
 			{
-				if (!l->GetValue(o) && !l->m_disabled)
-					return false;
+				if (!l->m_disabled)
+				{
+					STATE s = l->GetValue(o);
+					if (s == S_FALSE)
+						return S_FALSE;
+					else if (s == S_TRUE)
+						trueCount++;
+
+				}
+				
 			}
 
-			return true;
+			return trueCount ? S_TRUE : S_IGNORE;
 		}
 
 };
@@ -76,15 +102,33 @@ class Or
 	: public LogicalExpression
 {
 	public:
-		bool GetValue(IdObjectWithTags *o)
+		STATE GetValue(IdObjectWithTags *o)
 		{
+			if (m_disabled)
+				return S_IGNORE;
+
+			int falseCount = 0;
 			for (LogicalExpression *l = m_children; l; l = static_cast<LogicalExpression *>(l->m_next))
 			{
-				if (l->GetValue(o) && !l->m_disabled)
-					return true;
+				if ( !l->m_disabled)
+				{
+					STATE s = l->GetValue(o);
+
+					switch(s)
+					{
+						case S_TRUE:
+							return S_TRUE;
+							break;
+						case S_FALSE:
+							falseCount++;
+							break;
+						default:
+							break;
+					}
+				}
 			}
 
-			return false;
+			return falseCount ? S_FALSE : S_IGNORE;
 		}
 
 };
@@ -104,14 +148,16 @@ class Tag
 			delete m_tag;
 		}
 
-		bool Valid()
-		{
-			return m_tag->Valid();
-		}
+//		bool Valid()
+//		{
+//			return m_tag->Valid();
+//		}
 		
-		bool GetValue(IdObjectWithTags *o)
+		STATE GetValue(IdObjectWithTags *o)
 		{
-			return o->HasTag(*m_tag);
+			if (m_disabled)
+				return S_IGNORE;
+			return o->HasTag(*m_tag) ? S_TRUE : S_FALSE;
 		}
 	private:
 		OsmTag *m_tag;

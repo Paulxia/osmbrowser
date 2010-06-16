@@ -107,7 +107,18 @@ bool RuleControl::Evaluate(IdObjectWithTags *o)
 	if (!m_expr)
 		return m_valueOnEmpty;
 
-		return m_expr->GetValue(o);
+    LogicalExpression::STATE s = m_expr->GetValue(o);
+
+	if (s == LogicalExpression::S_TRUE)
+	{
+		return true;
+	}
+	else if (s == LogicalExpression::S_FALSE)
+	{
+		return false;
+	}
+
+	return m_valueOnEmpty;
 }
 
 
