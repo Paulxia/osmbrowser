@@ -9,5 +9,5 @@
 - read multiple files
 - start without cmdline args and open file from menu
 - read shapefiles?
-
+- create list of tags in map (with counts)
 
