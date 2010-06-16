@@ -255,10 +255,15 @@ static void ReadNode(OsmData *d, FILE *f)
 {
 	double lat, lon;
 	unsigned id, tagCount;
-	fread(&id, sizeof(id), 1, f);
-	fread(&lat, sizeof(lat), 1, f);
-	fread(&lon, sizeof(lon), 1, f);
-	fread(&tagCount, sizeof(tagCount), 1, f);
+	int ret;
+	ret = fread(&id, sizeof(id), 1, f);
+	assert(ret == sizeof(id));
+	ret = fread(&lat, sizeof(lat), 1, f);
+	assert(ret == sizeof(lat));
+	ret = fread(&lon, sizeof(lon), 1, f);
+	assert(ret == sizeof(lon));
+	ret =fread(&tagCount, sizeof(tagCount), 1, f);
+	assert(ret == sizeof(tagCount));
 
 	d->StartNode(id, lat, lon);
 	ReadTags(d, tagCount, f);
@@ -269,15 +274,20 @@ static void ReadNode(OsmData *d, FILE *f)
 static void ReadWay(OsmData *d, FILE *f)
 {
 	unsigned id, tagCount, nodeRefCount;
-	fread(&id, sizeof(id), 1, f);
+	int ret;
+	ret = fread(&id, sizeof(id), 1, f);
+	assert(ret == sizeof(id));
 	d->StartWay(id);
-	fread(&nodeRefCount, sizeof(nodeRefCount), 1, f);
+	ret = fread(&nodeRefCount, sizeof(nodeRefCount), 1, f);
+	assert(ret == sizeof(nodeRefCount));
 	for (unsigned i = 0; i < nodeRefCount; i++)
 	{
-		fread(&id, sizeof(id), 1, f);
+		ret = fread(&id, sizeof(id), 1, f);
+		assert(ret == sizeof(id));
 		d->AddNodeRef(id);
 	}
-	fread(&tagCount, sizeof(tagCount), 1, f);
+	ret = fread(&tagCount, sizeof(tagCount), 1, f);
+	assert(ret == sizeof(tagCount));
 	ReadTags(d, tagCount, f);
 	d->EndWay();
 }
@@ -285,22 +295,29 @@ static void ReadWay(OsmData *d, FILE *f)
 static void ReadRelation(OsmData *d, FILE *f)
 {
 	unsigned id, tagCount, nodeRefCount, wayRefCount;
-	fread(&id, sizeof(id), 1, f);
+	int ret;
+	ret = fread(&id, sizeof(id), 1, f);
+	assert(ret == sizeof(id));
 	d->StartRelation(id);
-	fread(&nodeRefCount, sizeof(nodeRefCount), 1, f);
+	ret = fread(&nodeRefCount, sizeof(nodeRefCount), 1, f);
+	assert(ret == sizeof(nodeRefCount));
 	for (unsigned i = 0; i < nodeRefCount; i++)
 	{
-		fread(&id, sizeof(id), 1, f);
+		ret = fread(&id, sizeof(id), 1, f);
+		assert(ret == sizeof(id));
 		d->AddNodeRef(id);
 	}
 
-	fread(&wayRefCount, sizeof(wayRefCount), 1, f);
+	ret = fread(&wayRefCount, sizeof(wayRefCount), 1, f);
+	assert(ret == sizeof(wayRefCount));
 	for (unsigned i = 0; i < wayRefCount; i++)
 	{
-		fread(&id, sizeof(id), 1, f);
+		ret = fread(&id, sizeof(id), 1, f);
+		assert(ret == sizeof(id));
 		d->AddWayRef(id);
 	}
-	fread(&tagCount, sizeof(tagCount), 1, f);
+	ret = fread(&tagCount, sizeof(tagCount), 1, f);
+	assert(ret == sizeof(tagCount));
 	ReadTags(d, tagCount, f);
 	d->EndRelation();
 }
