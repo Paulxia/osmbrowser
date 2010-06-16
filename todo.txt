@@ -10,4 +10,4 @@
 - start without cmdline args and open file from menu
 - read shapefiles?
 - create list of tags in map (with counts)
-
+-split drawingstyle to a different control, so multiple styling rules can reference the same style and the rule display is less cluttered
