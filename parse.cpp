@@ -257,13 +257,13 @@ static void ReadNode(OsmData *d, FILE *f)
 	unsigned id, tagCount;
 	int ret;
 	ret = fread(&id, sizeof(id), 1, f);
-	assert(ret == sizeof(id));
+	assert(ret == 1);
 	ret = fread(&lat, sizeof(lat), 1, f);
-	assert(ret == sizeof(lat));
+	assert(ret == 1);
 	ret = fread(&lon, sizeof(lon), 1, f);
-	assert(ret == sizeof(lon));
+	assert(ret == 1);
 	ret =fread(&tagCount, sizeof(tagCount), 1, f);
-	assert(ret == sizeof(tagCount));
+	assert(ret == 1);
 
 	d->StartNode(id, lat, lon);
 	ReadTags(d, tagCount, f);
@@ -276,18 +276,18 @@ static void ReadWay(OsmData *d, FILE *f)
 	unsigned id, tagCount, nodeRefCount;
 	int ret;
 	ret = fread(&id, sizeof(id), 1, f);
-	assert(ret == sizeof(id));
+	assert(ret == 1);
 	d->StartWay(id);
 	ret = fread(&nodeRefCount, sizeof(nodeRefCount), 1, f);
-	assert(ret == sizeof(nodeRefCount));
+	assert(ret == 1);
 	for (unsigned i = 0; i < nodeRefCount; i++)
 	{
 		ret = fread(&id, sizeof(id), 1, f);
-		assert(ret == sizeof(id));
+		assert(ret == 1);
 		d->AddNodeRef(id);
 	}
 	ret = fread(&tagCount, sizeof(tagCount), 1, f);
-	assert(ret == sizeof(tagCount));
+	assert(ret == 1);
 	ReadTags(d, tagCount, f);
 	d->EndWay();
 }
@@ -297,27 +297,27 @@ static void ReadRelation(OsmData *d, FILE *f)
 	unsigned id, tagCount, nodeRefCount, wayRefCount;
 	int ret;
 	ret = fread(&id, sizeof(id), 1, f);
-	assert(ret == sizeof(id));
+	assert(ret == 1);
 	d->StartRelation(id);
 	ret = fread(&nodeRefCount, sizeof(nodeRefCount), 1, f);
-	assert(ret == sizeof(nodeRefCount));
+	assert(ret == 1);
 	for (unsigned i = 0; i < nodeRefCount; i++)
 	{
 		ret = fread(&id, sizeof(id), 1, f);
-		assert(ret == sizeof(id));
+		assert(ret == 1);
 		d->AddNodeRef(id);
 	}
 
 	ret = fread(&wayRefCount, sizeof(wayRefCount), 1, f);
-	assert(ret == sizeof(wayRefCount));
+	assert(ret == 1);
 	for (unsigned i = 0; i < wayRefCount; i++)
 	{
 		ret = fread(&id, sizeof(id), 1, f);
-		assert(ret == sizeof(id));
+		assert(ret == 1);
 		d->AddWayRef(id);
 	}
 	ret = fread(&tagCount, sizeof(tagCount), 1, f);
-	assert(ret == sizeof(tagCount));
+	assert(ret == 1);
 	ReadTags(d, tagCount, f);
 	d->EndRelation();
 }
