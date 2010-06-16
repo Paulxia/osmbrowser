@@ -189,11 +189,11 @@ LogicalExpression *ExpressionParser::ParseSingle(char const *f, int *pos, char *
 				goto error;
 			}
 			
-			if (!OsmTag::KeyExists(key))
-			{
-				snprintf(logError, maxLogErrorSize, "unknown tag key '%s'", key);
-				goto error;
-			}
+//			if (!OsmTag::KeyExists(key))
+//			{
+//				snprintf(logError, maxLogErrorSize, "unknown tag key '%s'", key);
+//				goto error;
+//			}
 
 			ret = new Tag(key, value);
 
