@@ -105,9 +105,13 @@ CPPDEPRULES=$(foreach f,$(CPP_OBJECTS_BARE),$(call makedeprule,$(f)))
 CDEPRULES=$(foreach f,$(C_OBJECTS_BARE),$(call cmakedeprule,$(f)))
 
 
-$(PROGNAME) : $(CPPOBJECTS) $(COBJECTS)
+$(PROGNAME) : prepare $(CPPOBJECTS) $(COBJECTS)
 	$(LD) $(LDFLAGS) $(CPPOBJECTS) $(COBJECTS) $(LIBS) -o $(PROGNAME)
 
+
+prepare:
+	make fixbuild
+	make depend
 
 depend: $(CPPDEPS)  $(CDEPS)
 #	rm $(DEPDIR)/\*.dep
