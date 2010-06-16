@@ -7,22 +7,21 @@
 
 void CairoRenderer::Commit()
 {
-	wxImage tmp(m_outputBitmap->GetWidth(), m_outputBitmap->GetHeight());
 
-	ClearToWhite(&tmp);
+	ClearToWhite(m_outputBitmap);
 
 	for (int i = 0; i < m_numLayers; i++)
 	{
 		cairo_surface_flush(layerBuffers[i]);
-		OverlayImageSurface(layerBuffers[i], &tmp);
+		OverlayImageSurface(layerBuffers[i], m_outputBitmap);
 	}
 
-	wxBitmap tmpBitmap(tmp);
+//	wxBitmap tmpBitmap(tmp);
 
-	wxMemoryDC to;
-	to.SelectObject(*m_outputBitmap);
+//	wxMemoryDC to;
+//	to.SelectObject(*m_outputBitmap);
 
-	to.DrawBitmap(tmpBitmap, 0, 0);
+//	to.DrawBitmap(tmpBitmap, 0, 0);
 
 }
 

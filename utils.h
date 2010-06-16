@@ -5,6 +5,8 @@
 #define __UTILS_H__
 
 #include <wx/image.h>
+#include <wx/dcmemory.h>
+#include <wx/bitmap.h>
 
 inline void ClearToWhite(wxImage *image)
 {
@@ -13,6 +15,17 @@ inline void ClearToWhite(wxImage *image)
 
 	memset(image->GetData(), 255, size);
 }
+
+inline void ClearToWhite(wxBitmap *image)
+{
+	wxMemoryDC dc;
+	dc.SelectObject(*image);
+
+	dc.SetBackground(*wxWHITE_BRUSH);
+	dc.Clear();
+}
+
+
 
 
 #endif

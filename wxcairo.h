@@ -7,6 +7,9 @@
 #include <cairo.h>
 #include <wx/image.h>
 
+bool HaveRawBitmap();
+
 void OverlayImageSurface(cairo_surface_t *src, wxImage *dest);
+void OverlayImageSurface(cairo_surface_t *src, wxBitmap *dest);
 
 #endif
