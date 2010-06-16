@@ -131,6 +131,11 @@ void MainFrame::OnClose(wxCloseEvent & WXUNUSED(evt))
 }
 
 
+MainFrame::~MainFrame()
+{
+	delete m_colorRules;
+}
+
 void MainFrame::OnQuit(wxCommandEvent& WXUNUSED(event))
 {
     // true is to force the frame to close

@@ -18,6 +18,7 @@ class MainFrame : public wxFrame
 {
 public:
 	MainFrame(wxApp *app, const wxString& title, wxString const &fileName);
+	~MainFrame();
 
 	// event handlers (these functions should _not_ be virtual)
 	void OnQuit(wxCommandEvent& event);

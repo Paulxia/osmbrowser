@@ -155,6 +155,8 @@ void OsmCanvas::Render(bool force)
 
 OsmCanvas::~OsmCanvas()
 {
+	delete m_tileDrawer;
+	delete m_renderer;
 	delete m_data;
 }
 

@@ -110,6 +110,7 @@ class TileSpans
 		TileSpans()
 		{
 			m_spans = NULL;
+			m_refCount = 0;
 		}
 
 		~TileSpans()
@@ -192,7 +193,8 @@ class TileSpans
 		void UnRef()
 		{
 			m_refCount--;
-			if (!m_refCount)
+			assert(m_refCount >=0);
+			if (m_refCount <= 0)
 			{
 				delete this;
 			}
@@ -222,6 +224,7 @@ class TileList
 		void UnRef()
 		{
 			m_refCount--;
+			assert(m_refCount >=0);
 			if (m_refCount <=0)
 			{
 				DestroyList();
@@ -248,6 +251,11 @@ class TileDrawer
 			}
 
 			delete [] m_tileArray;
+
+			if (m_visibleTiles)
+			{
+				m_visibleTiles->UnRef();
+			}
 		}
 
 		void AddWays(OsmWay *ways)

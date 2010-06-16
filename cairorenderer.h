@@ -16,6 +16,10 @@ class CairoRendererBase
 	CairoRendererBase(int numLayers)
 		: Renderer(numLayers)
 	{
+		m_lineWidth = 1;
+		m_fillR = m_fillG = m_fillB = 0;
+		m_lineR = m_lineG = m_lineB = 0;
+		m_lineA = m_fillA = .5;
 	}
 
 

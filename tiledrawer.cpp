@@ -291,8 +291,10 @@ TileList *TileDrawer::GetTiles(double minLon, double minLat, double maxLon, doub
 
 	
 	if (ret)
+	{
 		ret->Ref();
-
+	}
+	
 	return ret;
 
 	

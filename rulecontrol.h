@@ -143,7 +143,14 @@ class ColorRules
 
 			sizer->Add(m_sizer, 1, wxEXPAND);
 		}
-
+		~ColorRules()
+		{
+			delete [] m_pickers;
+			delete [] m_rules;
+			delete [] m_checkBoxes;
+			delete [] m_layers;
+		}
+		
 		void Add();
 		void Remove (int number);
 		void Clear()
