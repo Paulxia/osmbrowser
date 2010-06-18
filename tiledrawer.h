@@ -40,7 +40,10 @@ class OsmTile
 
 		~OsmTile()
 		{
-			m_ways->DestroyList();
+			if (m_ways)
+			{
+				m_ways->DestroyList();
+			}
 		}
 
 
