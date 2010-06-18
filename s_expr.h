@@ -61,7 +61,7 @@ class Not
 			if (m_disabled)
 				return S_IGNORE;
 
-			STATE states[] = { S_FALSE, S_TRUE, S_IGNORE, S_INVALID};
+			STATE states[] = {  S_TRUE, S_FALSE, S_IGNORE, S_INVALID};
 			STATE s = m_children->GetValue(o);
 
 			return states[s];
