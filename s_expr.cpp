@@ -25,7 +25,7 @@ ExpressionParser::E_OPERATOR ExpressionParser::MatchOperator(char const *s, int 
 		if (!strncasecmp(operators[i], s + *pos, strlen(operators[i])))
 		{
 			int len = strlen(operators[i]);
-			SetColorD(*pos, *pos + len, EC_OPERATOR);
+			SetColorD(*pos, *pos + len, RuleDisplay::EC_OPERATOR);
 			*pos += len;
 			return static_cast<ExpressionParser::E_OPERATOR>(i);
 		}
@@ -77,7 +77,7 @@ char *ExpressionParser::ParseString(char const *f, int *pos, char *logError, uns
 
 	p++;
 
-	SetColorD(*pos, p, EC_STRING);
+	SetColorD(*pos, p, RuleDisplay::EC_STRING);
 
 	*pos = p;
 
@@ -130,7 +130,7 @@ void ExpressionParser::EatSpace(char const *s, int *pos)
 		p++;
 	}
 
-	SetColorD(*pos, p, EC_SPACE);
+	SetColorD(*pos, p, RuleDisplay::EC_SPACE);
 
 	*pos = p;
 }
@@ -160,7 +160,7 @@ LogicalExpression *ExpressionParser::ParseSingle(char const *f, int *pos, char *
 		goto error;
 	}
 
-	SetColorD(p, p+1, EC_BRACKET);
+	SetColorD(p, p+1, RuleDisplay::EC_BRACKET);
 
 	p++;
 
@@ -246,7 +246,7 @@ LogicalExpression *ExpressionParser::ParseSingle(char const *f, int *pos, char *
 		goto error;
 	}
 
-	SetColorD(p, p+1, EC_BRACKET);
+	SetColorD(p, p+1, RuleDisplay::EC_BRACKET);
 
 	p++;
 	*pos = p;
@@ -275,7 +275,7 @@ LogicalExpression *ExpressionParser::ParseSingle(char const *f, int *pos, char *
 	
 	*errorPos = p;
 
-	SetColorD(p, strlen(f), EC_ERROR);
+	SetColorD(p, strlen(f), RuleDisplay::EC_ERROR);
 	return NULL;
 	
 

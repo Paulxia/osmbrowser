@@ -36,37 +36,29 @@ END_EVENT_TABLE()
 RuleControl::RuleControl(wxWindow *parent, OsmCanvas *canvas, wxSize const &size)
 	: wxTextCtrl(parent, -1, wxEmptyString, wxDefaultPosition, size == wxDefaultSize ? wxSize(200,40) : size, wxTE_MULTILINE | wxTE_RICH | wxTE_PROCESS_TAB)
 {
-	m_expr = 0;
 	m_canvas = canvas;
 	m_valueOnEmpty = true;
 }
 
 RuleControl::~RuleControl()
 {
-	if (m_expr)
-	{
-		m_expr->DestroyList();
-	}
 }
 
 void RuleControl::OnText(wxCommandEvent &evt)
 {
-	char errors[1024];
-	unsigned int errorpos = 0;
-
-	LogicalExpression *e = Parse(GetValue().mb_str(wxConvUTF8), errors, 1024, &errorpos);
+	Rule newRule(GetValue(), this);
 
 
-
-	if (e || GetValue().Trim().IsEmpty())
+	if (newRule.IsValid() || GetValue().Trim().IsEmpty())
 	{
-		m_expr = e;
+		m_rule = newRule;
+		
 		m_canvas->Redraw();
 		SetToolTip(wxT("expression ok"));
 	}
 	else
 	{
-		SetToolTip(wxString(errors, wxConvUTF8));
+		SetToolTip(newRule.GetErrorLog());
 	}
 }
 
@@ -102,23 +94,9 @@ void RuleControl::SetColor(int from, int to, E_COLORS color)
 	SetStyle(from, to, style);
 }
 
-bool RuleControl::Evaluate(IdObjectWithTags *o)
+LogicalExpression::STATE RuleControl::Evaluate(IdObjectWithTags *o)
 {
-	if (!m_expr)
-		return m_valueOnEmpty;
-
-    LogicalExpression::STATE s = m_expr->GetValue(o);
-
-	if (s == LogicalExpression::S_TRUE)
-	{
-		return true;
-	}
-	else if (s == LogicalExpression::S_FALSE)
-	{
-		return false;
-	}
-
-	return m_valueOnEmpty;
+	return m_rule.Evaluate(o);
 }
 
 
@@ -140,8 +118,6 @@ void ColorRules::Add()
 	top->Add(m_layers[m_num], 1);
 	s->Add(m_checkBoxes[m_num]);
 	s->Add(m_rules[m_num], 0,wxEXPAND);
-
-	m_rules[m_num]->SetValueOnEmpty(false);
 
 	m_parent->FitInside();
 	m_num++;

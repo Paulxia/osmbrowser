@@ -20,30 +20,27 @@
 #define NUMLAYERS 3
 
 class RuleControl
-	: public wxTextCtrl, public ExpressionParser
+	: public wxTextCtrl, public RuleDisplay
 {
 	public:
 		RuleControl(wxWindow *parent, OsmCanvas *canvas, wxSize const &size = wxDefaultSize);
 
 		virtual ~RuleControl();
 
-		bool Evaluate(IdObjectWithTags *o);
+		LogicalExpression::STATE Evaluate(IdObjectWithTags *o);
 
 		void Save(wxString const &group);
 		void Load(wxString const &group);
 
-		void SetValueOnEmpty(bool val)
-		{
-			m_valueOnEmpty = val;
-		}
 	private:
 		DECLARE_EVENT_TABLE();
 
 		void OnText(wxCommandEvent &evt);
 
-		virtual void SetColor(int from, int to, E_COLORS color);
+		virtual void SetColor(int from, int to, RuleDisplay::E_COLORS color);
 
-		LogicalExpression *m_expr;
+		Rule m_rule;
+
 		OsmCanvas *m_canvas;
 		bool m_valueOnEmpty;
 };

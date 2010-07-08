@@ -164,6 +164,22 @@ class Tag
 
 };
 
+class RuleDisplay
+{
+	public:
+		enum E_COLORS
+		{
+			EC_SPACE,
+			EC_BRACKET,
+			EC_OPERATOR,
+			EC_STRING,
+			EC_ERROR,
+			EC_DISABLED
+		};
+
+		virtual void SetColor(int from, int to, E_COLORS color) = 0;
+};
+
 class ExpressionParser
 {
 	public:
@@ -183,6 +199,19 @@ class ExpressionParser
 		};
 		
 	
+
+		LogicalExpression *Parse(char const *from, char *logError, unsigned maxLogErrorSize, unsigned *errorPos, RuleDisplay *display = NULL)
+		{
+			int pos = 0;
+			m_display = display;
+			return ParseSingle(from, &pos, logError, maxLogErrorSize, errorPos);
+		}
+
+	private:
+		RuleDisplay *m_display;
+
+		void EatSpace(char const *s, int *pos);
+
 		E_OPERATOR MatchOperator(char const *s, int *pos, bool *disabled);
 		
 		char *ParseString(char const *f, int *pos, char *logError, unsigned maxLogErrorSize, unsigned *errorPos);
@@ -191,39 +220,21 @@ class ExpressionParser
 
 		LogicalExpression *ParseSingle(char const *f, int *pos, char *logError, unsigned maxLogErrorSize, unsigned *errorPos);
 
-		LogicalExpression *Parse(char const *from, char *logError, unsigned maxLogErrorSize, unsigned *errorPos)
+
+		void SetColorD(int from, int to, RuleDisplay::E_COLORS color)
 		{
-			int pos = 0;
-			return ParseSingle(from, &pos, logError, maxLogErrorSize, errorPos);
-		}
-
-		void EatSpace(char const *s, int *pos);
-
-
-		enum E_COLORS
-		{
-			EC_SPACE,
-			EC_BRACKET,
-			EC_OPERATOR,
-			EC_STRING,
-			EC_ERROR,
-			EC_DISABLED
-		};
-
-		virtual void SetColor(int from, int to, E_COLORS color)
-		{
-		}
-
-	private:
-		void SetColorD(int from, int to, E_COLORS color)
-		{
-			if (m_mustColorDisabled && color != EC_ERROR)
+			if (!m_display)
 			{
-				SetColor(from, to, EC_DISABLED);
+				return;
+			}
+			
+			if (m_mustColorDisabled && color != RuleDisplay::EC_ERROR)
+			{
+				m_display->SetColor(from, to, RuleDisplay::EC_DISABLED);
 			}
 			else
 			{
-				SetColor(from, to, color);
+				m_display->SetColor(from, to, color);
 			}
 			
 		}
@@ -231,6 +242,89 @@ class ExpressionParser
 		int m_mustColorDisabled;
 
         
+};
+
+class Rule
+	: public ExpressionParser
+{
+	public:
+
+		Rule(wxString const &text, RuleDisplay *display = NULL)
+		{
+			m_expr = NULL;
+			SetRule(text, display);
+		}
+	
+		Rule()
+		{
+			m_expr = NULL;
+			m_errorPos = 0;
+		}
+
+		Rule(Rule const &other)
+		{
+			m_expr = NULL;
+			Create(other);
+		}
+
+		Rule const &operator=(Rule const &other)
+		{
+			Create(other);
+
+			return *this;
+		}
+
+		~Rule()
+		{
+			delete m_expr;
+		}
+		// set a new ruletext. returns true if the text is a valid expression
+		bool SetRule(wxString const &text, RuleDisplay *display = NULL)
+		{
+			delete m_expr;
+			m_text = text;
+
+			char errorLog[1024] = {0};
+			m_expr = Parse(text.mb_str(wxConvUTF8),  errorLog, 1024, &m_errorPos, display);
+
+			m_errorLog = wxString::FromUTF8(errorLog);
+
+			return m_expr;
+		}
+
+
+		bool IsValid() { return m_expr; }
+		
+		wxString const &GetErrorLog()
+		{
+			return m_errorLog;
+		}
+		
+		unsigned int GetErrorPos()
+		{
+			return m_errorPos;
+		}
+
+		LogicalExpression::STATE Evaluate(IdObjectWithTags *o)
+		{
+			if (!m_expr)
+			{
+				return LogicalExpression::S_INVALID;
+			}
+
+			return m_expr->GetValue(o);
+		}
+	private:
+		void Create(Rule const &other)
+		{
+			SetRule(other.m_text);
+		}
+		
+		LogicalExpression *m_expr;
+		wxString m_text;
+		wxString m_errorLog;
+		unsigned int m_errorPos;
+		
 };
 
 

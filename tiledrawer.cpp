@@ -166,8 +166,14 @@ void TileDrawer::Rect(Renderer *renderer, wxString const &text, double lon1, dou
 // render using default colours. should plug in rule engine here
 void TileDrawer::RenderWay(Renderer *r, OsmWay *w)
 {
+	bool draw = true;
 
-	if ((!m_drawRule) || m_drawRule->Evaluate(w))
+	if (m_drawRule && (m_drawRule->Evaluate(w) == LogicalExpression::S_FALSE))
+	{
+		draw = false;
+	}
+
+	if (draw)
 	{
 		wxColour c = wxColour(150,150,150);
 		bool poly = false;
@@ -176,7 +182,7 @@ void TileDrawer::RenderWay(Renderer *r, OsmWay *w)
 		{
 			for (int i = 0; i < m_colorRules->m_num; i++)
 			{
-				if (m_colorRules->m_rules[i]->Evaluate(w))
+				if (m_colorRules->m_rules[i]->Evaluate(w) == LogicalExpression::S_TRUE)
 				{
 					c = m_colorRules->m_pickers[i]->GetColour();
 					poly = m_colorRules->m_checkBoxes[i]->IsChecked();
