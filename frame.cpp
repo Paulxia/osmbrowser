@@ -62,7 +62,7 @@ MainFrame::MainFrame(wxApp *app, const wxString& title, wxString const &fileName
 
 	wxSplitterWindow *subSplitter = new wxSplitterWindow(splitter, -1, wxDefaultPosition, wxDefaultSize, wxSP_3D);
 
-	m_canvas = new OsmCanvas(app, subSplitter, fileName, NUMLAYERS + 1);
+	m_canvas = new OsmCanvas(app, this, subSplitter, fileName, NUMLAYERS + 1);
 
 	wxPanel *rightPanel = new wxScrolledWindow(subSplitter);
 

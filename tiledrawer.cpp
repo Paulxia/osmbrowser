@@ -47,8 +47,6 @@ TileDrawer::TileDrawer(double minLon,double minLat, double maxLon, double maxLat
 	m_drawRule = NULL;
 	m_colorRules = NULL;
 
-	m_curTile = NULL;
-	m_curLayer = -1;
 	m_xNum = static_cast<int>((maxLon - minLon) / dLon) + 1;
 	m_yNum = static_cast<int>((maxLat - minLat) / dLat) + 1;
 	m_minLon = minLon;
@@ -57,7 +55,6 @@ TileDrawer::TileDrawer(double minLon,double minLat, double maxLon, double maxLat
 	m_h = m_yNum *dLat;
 	m_dLon = dLon;
 	m_dLat = dLat;
-	m_visibleTiles = NULL;
 	unsigned id = 0;
 	// build a list of empty tiles;
 	m_tileArray = new OsmTile **[m_xNum];
@@ -73,88 +70,77 @@ TileDrawer::TileDrawer(double minLon,double minLat, double maxLon, double maxLat
  }
 
 
-bool TileDrawer::RenderTiles(wxApp *app, Renderer *renderer, double lon, double lat, double w, double h, bool restart, int maxNumToRender, double *progress)
+bool TileDrawer::RenderTiles(RenderJob *job, int maxNumToRender)
 {
 	bool mustCancel = false;
 
-	DRect bb(lon, lat, w, h);
 
-	if (restart || !m_visibleTiles)
+	if (!job->m_visibleTiles)
 	{
-		if (m_visibleTiles)
-		{
-			m_visibleTiles->UnRef();
-		}
+		job->m_visibleTiles = GetTiles(job->m_bb);
 
-		if (progress)
-		{
-			*progress = 0.0;
-		}
+		job->m_curTile = job->m_visibleTiles;
 
-		m_renderedTiles.MakeEmpty();
-		m_visibleTiles = GetTiles(bb);
-
-		m_curTile = m_visibleTiles;
-
-		m_curLayer = renderer->SupportsLayers() ? -1 : 0;
-
-		m_numTilesToRender = m_visibleTiles->GetSize();
-		m_numTilesRendered = 0;
+		job->m_numTilesToRender = job->m_visibleTiles->GetSize();
+		job->m_numTilesRendered = 0;
 	}
 
-	if (!m_visibleTiles)
+	if (!job->m_visibleTiles || job->m_finished)
 	{
-		return false;
+		job->m_finished = true;
+		return true;
 	}
 
 	int count = 0;
-	while (m_curTile && !mustCancel && (count++ < maxNumToRender))
+	while (job->m_curTile && !mustCancel && (count++ < maxNumToRender))
 	{
-		OsmTile *t = m_curTile->m_tile;
-		if (m_curLayer < 0)
+		OsmTile *t = job->m_curTile->m_tile;
+		if (job->m_curLayer < 0)
 		{
-			Rect(renderer, wxEmptyString, *t, -1, 0,255,255, 200, NUMLAYERS);
+			Rect(job->m_renderer, wxEmptyString, *t, -1, 0,255,255, 200, NUMLAYERS);
 		}
 		
-		if (t->OverLaps(bb))
+		if (t->OverLaps(job->m_bb))
 		{
 			for (TileWay *w = t->m_ways; w && !mustCancel; w = static_cast<TileWay *>(w->m_next))
 			{
-				if (!w->m_tiles->InterSect(&m_renderedTiles))
+				if (!w->m_tiles->InterSect(&job->m_renderedTiles))
 				{
-					RenderWay(renderer, w->m_way);
+					RenderWay(job, w->m_way);
 				}
 			}	// for way
 		}  // if overlaps
 
 		//not needed anymore for cairo renderer. move to mustcancel callback?
-		mustCancel = app->Pending();
 
-		m_renderedTiles.Add(t);
-		m_curTile = static_cast<TileList *>(m_curTile->m_next);
-		m_numTilesRendered++;
+		job->m_renderedTiles.Add(t);
+		job->m_curTile = static_cast<TileList *>(job->m_curTile->m_next);
+		job->m_numTilesRendered++;
+
+		double progress = static_cast<double>(job->m_numTilesRendered)/ job->m_numTilesToRender;
+		if (job->m_curLayer >= 0)
+		{
+			progress /= NUMLAYERS;
+		}
+
+		mustCancel = job->MustCancel(progress);
 	}	 // while curTile
 
-	if (!m_curTile && m_curLayer >= 0)
+	if (!job->m_curTile && job->m_curLayer >= 0)
 	{
-		m_curLayer++;
-		if (m_curLayer < NUMLAYERS)
-			m_curTile = m_visibleTiles;
+		job->m_curLayer++;
+		if (job->m_curLayer < NUMLAYERS)
+			job->m_curTile = job->m_visibleTiles;
 	}
 
-	if (progress)
-	{
-		*progress = static_cast<double>(m_numTilesRendered)/ m_numTilesToRender;
+	DrawOverlay(job->m_renderer, true);
 
-		if (m_curLayer >= 0)
-		{
-			*progress /= NUMLAYERS;
-		}
+	if (!job->m_curTile)
+	{
+		job->m_finished = true;
 	}
 
-	DrawOverlay(renderer, true);
-
-	return !m_curTile;
+	return job->m_finished;
 }
 
 void TileDrawer::Rect(Renderer *renderer, wxString const &text, double lon1, double lat1, double lon2, double lat2, double border, int r, int g, int b, int a, int layer)
@@ -164,7 +150,7 @@ void TileDrawer::Rect(Renderer *renderer, wxString const &text, double lon1, dou
 }
 
 // render using default colours. should plug in rule engine here
-void TileDrawer::RenderWay(Renderer *r, OsmWay *w)
+void TileDrawer::RenderWay(RenderJob *job, OsmWay *w)
 {
 	bool draw = true;
 
@@ -192,8 +178,8 @@ void TileDrawer::RenderWay(Renderer *r, OsmWay *w)
 			}
 		}
 
-		if (m_curLayer < 0 || m_curLayer == layer)
-			RenderWay(r, w, c, poly, c, 1, m_curLayer <0 ? layer : 0);
+		if (job->m_curLayer < 0 || job->m_curLayer == layer)
+			RenderWay(job->m_renderer, w, c, poly, c, 1, job->m_curLayer <0 ? layer : 0);
 	}
 }
 

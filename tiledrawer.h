@@ -240,6 +240,38 @@ class TileList
 
 class OsmCanvas;
 
+class RenderJob
+{
+	public:
+		RenderJob(Renderer *renderer)
+		{
+			m_bb = renderer->GetViewport();
+			m_curLayer = renderer->SupportsLayers() ? -1 : 0;
+			m_visibleTiles = m_curTile = NULL;
+			m_numTilesToRender = m_numTilesRendered = 0;
+			m_finished = false;
+			m_renderer = renderer;
+		}
+		
+		virtual ~RenderJob() { }
+
+		// reports progress. returns true when the rendering should be aborted
+		virtual bool MustCancel(double progress) = 0;
+
+		bool Finished() { return m_finished; }
+
+	private:
+		friend class TileDrawer;
+		TileList *m_visibleTiles, *m_curTile;
+		int m_numTilesToRender, m_numTilesRendered;
+		int m_curLayer;
+		DRect m_bb;
+		bool m_finished;
+		TileSpans m_renderedTiles;
+		Renderer *m_renderer;
+
+};
+
 class TileDrawer
 {
 	public:
@@ -252,13 +284,7 @@ class TileDrawer
 			{
 				delete [] m_tileArray[x];
 			}
-
 			delete [] m_tileArray;
-
-			if (m_visibleTiles)
-			{
-				m_visibleTiles->UnRef();
-			}
 		}
 
 		void AddWays(OsmWay *ways)
@@ -304,13 +330,9 @@ class TileDrawer
 		// you should UnRef the list when done, which will destroy it if not used anymore
 		TileList *GetTiles(double minLon, double minLat, double maxLon, double maxLat);
 
-		// renders the next numToRender tiles
-		// lon,lat,w,h  - rectangle to render
-		// restart - start from the beginning (clears the current drawing)
 		// numToRender  - render this many tiles and then return (so you can do progress displays etc)
-		// progress - if non null the progress will be reported (in the range 0-1)
-		// returns true when all tiles are rendered
-		bool RenderTiles(wxApp *app, Renderer *renderer, double lon, double lat, double w, double h, bool restart, int numToRender, double *progress);
+		// returns true when the job is finished
+		bool RenderTiles(RenderJob *job,int numToRender);
 
 		OsmNode *GetClosestNodeInTile(int x, int y, double lon, double lat, double *foundDistSq);
 
@@ -338,7 +360,7 @@ class TileDrawer
 		void RenderWay(Renderer *r, OsmWay *w, wxColour lineColour, bool polygon, wxColour fillColour, int width, int layer);
 
 		// with default colours
-		void RenderWay(Renderer *r, OsmWay *w);
+		void RenderWay(RenderJob *j, OsmWay *w);
 		void Rect(Renderer *renderer, wxString const &text, DRect const &re, double border, int r, int g, int b, int a, int layer)
 		{
 			Rect(renderer, text, re.m_x, re.m_y, re.m_x + re.m_w, re.m_y + re.m_h, border, r, g, b, a, layer);
@@ -368,11 +390,6 @@ class TileDrawer
 		OsmTile ***m_tileArray;
 		unsigned m_xNum, m_yNum;
 		double m_minLon, m_minLat, m_w, m_h, m_dLon, m_dLat;
-
-		TileList *m_visibleTiles, *m_curTile;
-		TileSpans m_renderedTiles;
-		int m_curLayer;
-		int m_numTilesRendered, m_numTilesToRender;
 
 		RuleControl *m_drawRule;
 		ColorRules *m_colorRules;

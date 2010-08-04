@@ -21,13 +21,14 @@ BEGIN_EVENT_TABLE(OsmCanvas, Canvas)
 END_EVENT_TABLE()
 
 
-OsmCanvas::OsmCanvas(wxApp * app, wxWindow *parent, wxString const &fileName, int numLayers)
+OsmCanvas::OsmCanvas(wxApp * app, MainFrame *mainFrame, wxWindow *parent, wxString const &fileName, int numLayers)
 	: Canvas(parent)
 {
 	m_timer.SetOwner(this);
 	m_done = false;
 	m_restart = true;
 	m_app = app;
+	m_mainFrame = mainFrame;
 	m_dragging = false;
 	m_locked = true;
 	m_info = NULL;
@@ -35,6 +36,7 @@ OsmCanvas::OsmCanvas(wxApp * app, wxWindow *parent, wxString const &fileName, in
 	m_firstDragStep = false;
 	wxString binFile = fileName;
 	m_renderer = NULL;
+	m_renderJob = NULL;
 
 	binFile.Append(wxT(".cache"));
 
@@ -130,26 +132,34 @@ void OsmCanvas::Render(bool force)
 	{
 		return;
 	}
-	int w = m_backBuffer.GetWidth();
-	int h = m_backBuffer.GetHeight();
 
 	SetupRenderer();
 	
-	double xScale = cos(m_yOffset * M_PI / 180) * m_scale;
-
 	if (m_restart)
 	{
 		m_renderer->Clear();
+		delete m_renderJob;
+		m_renderJob = NULL;
+		m_restart = false;
 	}
 
-	double progress;
-	m_done = m_tileDrawer->RenderTiles(m_app, m_renderer, m_xOffset, m_yOffset, w / xScale, h / m_scale, m_restart, 10, &progress);
-	m_restart = false;
+	if (!m_renderJob)
+	{
+		m_renderJob = new CanvasJob(m_app, m_mainFrame, m_renderer);
+	}
+
+	m_done = m_tileDrawer->RenderTiles(m_renderJob, 10);
 
 	m_tileDrawer->DrawOverlay(m_renderer);
 	
 	m_renderer->Commit();
 	Draw(NULL);
+
+	if (m_done)
+	{
+		m_mainFrame->SetProgress(-1);
+	}
+	
 	return;
 }
 
@@ -351,19 +361,33 @@ void OsmCanvas::SaveView(wxString const &fileName, MainFrame *mainFrame)
 
 	r->SetupViewport(DRect(m_xOffset, m_yOffset, w /  xScale, h / m_scale));
 
-	double progress;
+//	double progress;
+//!todo
+//	bool done = m_tileDrawer->RenderTiles(m_app, r, m_xOffset, m_yOffset, w / xScale, h / m_scale, true, 10, &progress);
+//	mainFrame->SetProgress(progress);
 
-	bool done = m_tileDrawer->RenderTiles(m_app, r, m_xOffset, m_yOffset, w / xScale, h / m_scale, true, 10, &progress);
-	mainFrame->SetProgress(progress);
-
-	while (!done)
-	{
-		done = m_tileDrawer->RenderTiles(m_app, r, m_xOffset, m_yOffset, w / xScale, h / m_scale, false, 10, &progress);
-		mainFrame->SetProgress(progress);
-	}
+//	while (!done)
+//	{
+//		done = m_tileDrawer->RenderTiles(m_app, r, m_xOffset, m_yOffset, w / xScale, h / m_scale, false, 10, &progress);
+//		mainFrame->SetProgress(progress);
+//	}
 
 	mainFrame->SetProgress(-1);
 
 	delete r;
+}
+
+
+CanvasJob::CanvasJob(wxApp *app, MainFrame *mainFrame, Renderer *r)
+	: RenderJob(r)
+{
+	m_app = app;
+	m_mainFrame = mainFrame;
+}
+
+bool CanvasJob::MustCancel(double progress)
+{
+	m_mainFrame->SetProgress(progress);
+	return m_app->Pending();
 }
 

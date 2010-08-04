@@ -12,7 +12,7 @@
   | (and e e e e e ...)          true if all e's true
   | (or e e e e ...)             true if any e true
   | (not e)                      true if e false and vv
-  | (identity e)                 true if e is true (to esily change a not without changing hte whole tree
+  | (identity e)                 true if e is true (to esily change a not without changing the whole tree
   
   
 */

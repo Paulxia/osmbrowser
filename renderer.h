@@ -67,6 +67,12 @@ class Renderer
 			  
 		}
 
+		DRect GetViewport()
+		{
+			DRect ret(m_offX, m_offY, m_outputWidth/ m_scaleX, m_outputHeight / m_scaleY);
+			return ret;
+		}
+
 	protected:
 		double m_offX, m_offY, m_scaleX, m_scaleY;
 		double m_outputWidth, m_outputHeight;

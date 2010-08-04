@@ -10,18 +10,31 @@
 #include "osm.h"
 #include "renderer.h"
 #include "cairorenderer.h"
+#include "tiledrawer.h"
 
-class TileDrawer;
 class RuleControl;
 class ColorRules;
 class InfoTreeCtrl;
 class MainFrame;
 
+class CanvasJob
+	: public RenderJob
+{
+	public:
+		CanvasJob(wxApp *app, MainFrame *mainFrame, Renderer *r);
+
+		bool MustCancel(double progress);
+
+	private:
+		wxApp *m_app;
+		MainFrame *m_mainFrame;
+};
+
 class OsmCanvas
 	: public Canvas
 {
 	public:
-		OsmCanvas(wxApp *app, wxWindow *parent, wxString const &fileName, int numLayers);
+		OsmCanvas(wxApp *app, MainFrame *mainFrame, wxWindow *parent, wxString const &fileName, int numLayers);
 		void Render(bool force = false);
 
 		~OsmCanvas();
@@ -53,6 +66,7 @@ class OsmCanvas
 
 		void SelectWay(OsmWay *way);
 	private:
+		CanvasJob *m_renderJob;
 		void SetupRenderer();
 		OsmData *m_data;
 		InfoTreeCtrl *m_info;
@@ -85,6 +99,7 @@ class OsmCanvas
 		TileDrawer *m_tileDrawer;
 
 		wxApp *m_app;
+		MainFrame *m_mainFrame;
 		bool m_done;
 		bool m_restart;
 		bool m_locked;
