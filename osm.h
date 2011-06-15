@@ -611,7 +611,7 @@ class OsmWay
 	{
 		for (unsigned i = 0; i < m_numResolvedNodes; i++)
 		{
-			if (m_resolvedNodes[i]->m_id == node->m_id)
+			if (m_resolvedNodes[i] && (m_resolvedNodes[i]->m_id == node->m_id))
 				return true;
 		}
 
