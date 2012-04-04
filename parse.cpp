@@ -399,9 +399,11 @@ void write_binary(OsmData *d, FILE *f)
 	for (OsmNode *n = static_cast<OsmNode *>(d->m_nodes.m_content); n ; n = static_cast<OsmNode *>(n->m_next))
 	{
 		fputc('N', f);
+		double lat = n->Lat();
+		double lon = n->Lon();
 		fwrite(&(n->m_id), sizeof(n->m_id), 1, f);
-		fwrite(&(n->m_lat), sizeof(n->m_lat), 1, f);
-		fwrite(&(n->m_lon), sizeof(n->m_lon), 1, f);
+		fwrite(&(lat), sizeof(double), 1, f);
+		fwrite(&(lon), sizeof(double), 1, f);
 
 		WriteTags(n->m_tags, f);
 	}

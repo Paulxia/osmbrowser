@@ -367,7 +367,7 @@ OsmNode *OsmWay::GetClosestNode(double lon, double lat, double *foundDistSquared
 	{
 		if (m_resolvedNodes[i])
 		{
-			distsq = DISTSQUARED(m_resolvedNodes[i]->m_lon, m_resolvedNodes[i]->m_lat, lon, lat);
+			distsq = DISTSQUARED(m_resolvedNodes[i]->Lon(), m_resolvedNodes[i]->Lat(), lon, lat);
 
 //			printf("%p:  %f %f  %f %f  %f\n", m_resolvedNodes[i], m_resolvedNodes[i]->m_lon, m_resolvedNodes[i]->m_lat, lon, lat, distsq);
 			if (found < 0 || distsq < found)

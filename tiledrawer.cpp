@@ -201,7 +201,7 @@ void TileDrawer::RenderWay(Renderer *r, OsmWay *w, wxColour lineColour, bool pol
 		
 			if (node)
 			{
-				r->AddPoint(node->m_lon, node->m_lat);
+				r->AddPoint(node->Lon(), node->Lat());
 			}
 			else
 			{
@@ -221,7 +221,7 @@ void TileDrawer::RenderWay(Renderer *r, OsmWay *w, wxColour lineColour, bool pol
 		
 			if (node)
 			{
-				r->AddPoint(node->m_lon, node->m_lat);
+				r->AddPoint(node->Lon(), node->Lat());
 			}
 			
 		}
@@ -376,8 +376,8 @@ void TileDrawer::DrawOverlay(Renderer *r, bool clear)
 		
 	if (m_selection)
 	{
-		double lon = m_selection->m_lon;
-		double lat = m_selection->m_lat;
+		double lon = m_selection->Lon();
+		double lat = m_selection->Lat();
 		r->Rect(lon, lat, 0, 0, 4, m_selectionColor.Red(), m_selectionColor.Green(), m_selectionColor.Blue(), 100, true, NUMLAYERS);
 	}
 
@@ -392,7 +392,7 @@ TileWay *TileDrawer::GetWaysContainingNode(OsmNode *node)
 {
 
 	int x = 0, y = 0;
-	LonLatToIndex(node->m_lon, node->m_lat, &x, &y);
+	LonLatToIndex(node->Lon(), node->Lat(), &x, &y);
 	
 
 	return m_tileArray[x][y]->GetWaysContainingNode(node);

@@ -8,6 +8,8 @@
 #include <cairo-pdf.h>
 #include <cairo-ps.h>
 #include "renderer.h"
+#include "tiledrawer.h"
+#include "frame.h"
 
 class CairoRendererBase
 	: public Renderer
@@ -193,6 +195,26 @@ class CairoPdfRenderer
 		Renderer::TYPE  m_type;
 		cairo_surface_t *m_surface;
 		cairo_t *m_context;
+};
+
+class PdfJob
+	: public RenderJob
+{
+	public:
+		PdfJob(MainFrame *mainFrame, Renderer *r)
+			: RenderJob(r)
+		{
+			m_mainFrame = mainFrame;
+		}
+
+		bool MustCancel(double progress)
+		{
+			m_mainFrame->SetProgress(progress);
+			return false;
+		}
+
+	private:
+		MainFrame *m_mainFrame;
 };
 
 

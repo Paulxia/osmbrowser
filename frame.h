@@ -9,9 +9,10 @@
 #include <wx/gauge.h>
 #include <wx/app.h>
 
-#include "osmcanvas.h"
 class RuleControl;
 class InfoTreeCtrl;
+class OsmCanvas;
+class ColorRules;
 
 // Define a new frame type: this is going to be our main frame
 class MainFrame : public wxFrame

@@ -542,6 +542,7 @@ class IdObjectWithTags
 		OsmTag *m_tags;
 };
 
+#define LONLATRESOLUTION 0x7FFFFFFF
 
 class OsmNode
 	: public IdObjectWithTags
@@ -551,12 +552,33 @@ class OsmNode
 	OsmNode(unsigned id, double lat, double lon, OsmNode *next = NULL)
 		: IdObjectWithTags(id, next)
 	{
-		m_lat = lat;
-		m_lon = lon;
+		if (lon > 180.0)
+			lon -= 360.0;
+		if (lon < -180.0)
+			lon += 360.0;
+
+		m_ilat = (wxInt32)((lat/90.0) * LONLATRESOLUTION);
+		m_ilon = (wxInt32)((lon/180.0) * LONLATRESOLUTION);
 	}
-	
-	double m_lat;
-	double m_lon;
+
+
+	double Lon()
+	{
+		double r = (double)m_ilon/LONLATRESOLUTION;
+		 r *= 180.0;
+		 return r;
+	}
+
+	double Lat()
+	{
+		double r = (double)m_ilat/LONLATRESOLUTION;
+		 r *= 90.0;
+		 return r;
+	}
+
+
+	wxInt32 m_ilat;
+	wxInt32 m_ilon;
 
 };
 
@@ -596,7 +618,7 @@ class OsmWay
 			{
 				if (m_resolvedNodes[i])
 				{
-					m_bb.Include(m_resolvedNodes[i]->m_lon, m_resolvedNodes[i]->m_lat);
+					m_bb.Include(m_resolvedNodes[i]->Lon(), m_resolvedNodes[i]->Lat());
 				}
 			}
 		}

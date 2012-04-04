@@ -361,6 +361,11 @@ void OsmCanvas::SaveView(wxString const &fileName, MainFrame *mainFrame)
 
 	r->SetupViewport(DRect(m_xOffset, m_yOffset, w /  xScale, h / m_scale));
 
+	PdfJob *job = new PdfJob(mainFrame, r);
+
+
+	while(!m_tileDrawer->RenderTiles(job, 100));
+
 //	double progress;
 //!todo
 //	bool done = m_tileDrawer->RenderTiles(m_app, r, m_xOffset, m_yOffset, w / xScale, h / m_scale, true, 10, &progress);
