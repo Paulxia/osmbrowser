@@ -78,7 +78,6 @@ class OsmCanvas
 		void OnMouseMove(wxMouseEvent &evt);
 		void OnTimer(wxTimerEvent &evt)
 		{
-			m_timer.Stop();
 			if (m_restart || !m_done)
 			{
 				Render();
@@ -87,7 +86,7 @@ class OsmCanvas
 			if (m_done)
 				Draw(NULL);
 
-			m_timer.Start(100);
+			m_timer.Start(100, true);
 		}
 
 		double m_scale;

@@ -106,7 +106,7 @@ OsmCanvas::OsmCanvas(wxApp * app, MainFrame *mainFrame, wxWindow *parent, wxStri
 
 	m_tileDrawer->SetSelectionColor(255,100,100);
 
-	m_timer.Start(100);
+	m_timer.Start(100, true);
 }
 
 void OsmCanvas::Render(bool force)
@@ -148,7 +148,7 @@ void OsmCanvas::Render(bool force)
 		m_renderJob = new CanvasJob(m_app, m_mainFrame, m_renderer);
 	}
 
-	m_done = m_tileDrawer->RenderTiles(m_renderJob, 10);
+	m_done = m_tileDrawer->RenderTiles(m_renderJob, 1000);
 
 	m_tileDrawer->DrawOverlay(m_renderer);
 	
@@ -393,6 +393,6 @@ CanvasJob::CanvasJob(wxApp *app, MainFrame *mainFrame, Renderer *r)
 bool CanvasJob::MustCancel(double progress)
 {
 	m_mainFrame->SetProgress(progress);
-	return m_app->Pending();
+	return false; //m_app->Pending();
 }
 
