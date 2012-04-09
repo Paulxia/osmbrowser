@@ -38,6 +38,7 @@ A rule is a logical expression written down as a lisp s-expression.
 RULE =
         (tag "key")                        // true if the object matched has a tag with this key
         | (tag "key" "value")              // true if the object matched has this exact tag
+        | (tag "key" "value" "value" ...)  // true if the object matched has a tag with this key and any of the values
         | (or SUBRULES)                    // true if any of the SUBRULES is true
         | (and SUBRULES)                   // true if all SUBRULES are true
         | (not RULE)                       // true if RULE is false and vv
@@ -47,7 +48,7 @@ SUBRULE = RULE ...                         // one or more rules
 examples:
 
 match all naturals, waterways and boundaries
-
+--------------------------------------------
 (or
   (tag "natural")
   (tag "boundary")
@@ -55,7 +56,7 @@ match all naturals, waterways and boundaries
 )
 
 match everything but buildings and landuse
-
+-------------------------------------------
 (not
     (or
         (tag "building")
@@ -65,7 +66,7 @@ match everything but buildings and landuse
 
 
 match only forests and parks
-
+----------------------------
 (or
     (tag "landuse" "forest")
     (tag "landuse" "woodland")
@@ -74,7 +75,7 @@ match only forests and parks
 
 
 You can (temporarily) disable subexpressions with a - direcly following the (
-
+-----------------------------------------------------------------------------
 example
 
 (or
@@ -84,3 +85,20 @@ example
 )
 
 will ignore the tag "landuse" "forest" part as if the line was not there.
+
+
+There is a shorthand way to specify multiple values of a single tag
+--------------------------------------------------------------------
+
+(tag "landuse" "forest" "woodland" "industrial")
+
+is equivalent to
+
+(or
+    (tag "landuse" "forest")
+    (tag "landuse" "woodland")
+    (tag "landuse" "industrial")
+)
+
+
+
