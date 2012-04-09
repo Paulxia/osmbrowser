@@ -110,8 +110,8 @@ $(PROGNAME) : prepare $(CPPOBJECTS) $(COBJECTS)
 
 
 prepare:
-	make fixbuild
-	make depend
+	+make fixbuild
+	+make depend
 
 depend: $(CPPDEPS)  $(CDEPS)
 #	rm $(DEPDIR)/\*.dep
