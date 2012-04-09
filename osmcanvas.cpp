@@ -148,7 +148,7 @@ void OsmCanvas::Render(bool force)
 		m_renderJob = new CanvasJob(m_app, m_mainFrame, m_renderer);
 	}
 
-	m_done = m_tileDrawer->RenderTiles(m_renderJob, 1000);
+	m_done = m_tileDrawer->RenderTiles(m_renderJob, 100);
 
 	m_tileDrawer->DrawOverlay(m_renderer);
 	
