@@ -152,7 +152,12 @@ class Tag
 //		{
 //			return m_tag->Valid();
 //		}
-		
+
+		char const *Key() const
+		{
+			return m_tag->GetKey();
+		}
+
 		STATE GetValue(IdObjectWithTags *o)
 		{
 			if (m_disabled)

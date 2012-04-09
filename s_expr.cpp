@@ -195,7 +195,26 @@ LogicalExpression *ExpressionParser::ParseSingle(char const *f, int *pos, char *
 //				goto error;
 //			}
 
-			ret = new Tag(key, value);
+			Tag *tag = new Tag(key, value);
+
+			ret = tag;
+			if (value)	// if we had one value, try to see if there are more values specified and build an "or" expression of multiple tags if we do
+			{
+				value = ParseString(f, &p,logError, maxLogErrorSize, errorPos);
+				if (value)
+				{
+					LogicalExpression *orExpr = new Or;
+					LogicalExpression *orChildren = static_cast<LogicalExpression *>(ListObject::Concat(tag, new Tag(tag->Key(), value)));
+
+					while ((value = ParseString(f, &p,logError, maxLogErrorSize, errorPos)))
+					{
+						orChildren = static_cast<LogicalExpression *>(ListObject::Concat(orChildren, new Tag(tag->Key(), value)));
+					}
+
+					orExpr->AddChildren(orChildren);
+					ret = orExpr;
+				}
+			}
 
 		}
 		break;
