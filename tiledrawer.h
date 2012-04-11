@@ -267,7 +267,8 @@ class RenderJob
 		int m_curLayer;
 		DRect m_bb;
 		bool m_finished;
-		TileSpans m_renderedTiles;
+//		TileSpans m_renderedTiles;
+		IdSet m_renderedIds;
 		Renderer *m_renderer;
 
 };

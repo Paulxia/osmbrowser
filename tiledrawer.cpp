@@ -104,7 +104,7 @@ bool TileDrawer::RenderTiles(RenderJob *job, int maxNumToRender)
 		{
 			for (TileWay *w = t->m_ways; w && !mustCancel; w = static_cast<TileWay *>(w->m_next))
 			{
-				if (!w->m_tiles->InterSect(&job->m_renderedTiles))
+				if (!(job->m_renderedIds.Has(w->m_way->m_id)))
 				{
 					RenderWay(job, w->m_way);
 				}
@@ -113,7 +113,6 @@ bool TileDrawer::RenderTiles(RenderJob *job, int maxNumToRender)
 
 		//not needed anymore for cairo renderer. move to mustcancel callback?
 
-		job->m_renderedTiles.Add(t);
 		job->m_curTile = static_cast<TileList *>(job->m_curTile->m_next);
 		job->m_numTilesRendered++;
 
@@ -179,7 +178,10 @@ void TileDrawer::RenderWay(RenderJob *job, OsmWay *w)
 		}
 
 		if (job->m_curLayer < 0 || job->m_curLayer == layer)
+		{
 			RenderWay(job->m_renderer, w, c, poly, c, 1, job->m_curLayer <0 ? layer : 0);
+			job->m_renderedIds.Add(w->m_id);
+		}
 	}
 }
 

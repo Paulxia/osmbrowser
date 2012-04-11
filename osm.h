@@ -10,6 +10,7 @@
 #include <assert.h>
 //#include <stdio.h>
 #include <wx/hashmap.h>
+#include <wx/hashset.h>
 #include <wx/arrstr.h>
 
 #define DISTSQUARED(x1, y1, x2, y2)  (((x1) - (x2)) * ((x1) - (x2)) + ((y1) - (y2)) * ((y1) - (y2)))
@@ -444,7 +445,24 @@ class IdObject
 		unsigned m_id;
 };
 
+WX_DECLARE_HASH_SET(unsigned, wxIntegerHash, wxIntegerEqual, WXIdSet);
 
+class IdSet
+{
+	public:
+		void Add(unsigned id)
+		{
+			m_set.insert(id);
+		}
+
+		bool Has(unsigned id)
+		{
+			return m_set.find(id) != m_set.end();
+		}
+
+	private:
+		WXIdSet m_set;
+};
 
 class IdObjectStore
 {
@@ -652,6 +670,9 @@ class OsmWay
 	OsmNode **m_resolvedNodes;
 	unsigned m_numResolvedNodes;
 //	DRect m_bb;
+
+	// gets filled by OsmRelation::Resolve, so will be empty until the relations are resolved
+	OsmRelationList *m_relations;
 };
 
 
