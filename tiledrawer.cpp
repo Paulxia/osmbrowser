@@ -4,19 +4,14 @@
 #include "tiledrawer.h"
 #include "rulecontrol.h"
 
-TileWay::TileWay(OsmWay *way, TileSpans *allTiles, TileWay *next)
+TileWay::TileWay(OsmWay *way, TileWay *next)
 	: ListObject(next)
 {
 	m_way = way;
-	m_tiles = allTiles;
-	if (m_tiles)
-		m_tiles->Ref();
 }
 
 TileWay::~TileWay()
 {
-	if (m_tiles)
-		m_tiles->UnRef();
 }
 
 
@@ -28,7 +23,7 @@ TileWay *OsmTile::GetWaysContainingNode(OsmNode *node)
 	{
 		if (t->m_way->ContainsNode(node))
 		{
-			ret = new TileWay(t->m_way, NULL, ret);
+			ret = new TileWay(t->m_way, ret);
 		}
 	}
 

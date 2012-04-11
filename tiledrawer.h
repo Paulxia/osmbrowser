@@ -18,13 +18,11 @@ class TileWay
 	: public ListObject
 {
 	public:
-		TileWay(OsmWay *way, TileSpans *allTiles, TileWay *next);
+		TileWay(OsmWay *way,  TileWay *next);
 
 		~TileWay();
-		
+
 		OsmWay *m_way; // the way to render
-		TileSpans *m_tiles; // all tiles containing this way, to prevent multiple redraws
-		
 };
 
 class OsmTile
@@ -49,10 +47,10 @@ class OsmTile
 
 		TileWay *GetWaysContainingNode(OsmNode *node);
 
-		void AddWay(OsmWay *way, TileSpans *allTiles)
+		void AddWay(OsmWay *way)
 		{
 //            printf("tile %u add way %u\n", m_id, way->m_id);
-			m_ways = new TileWay(way, allTiles, m_ways);
+			m_ways = new TileWay(way, m_ways);
 		}
 
 		TileWay *m_ways;
@@ -308,17 +306,14 @@ class TileDrawer
 
 			TileList *tiles = GetTiles(bb);
 			assert(tiles);
-			TileSpans *spans = GetTileSpans(tiles);
-			assert(spans);
 			
 			for (TileList *l = tiles; l; l = static_cast<TileList *>(l->m_next))
 			{
-				l->m_tile->AddWay(way, spans);
+				l->m_tile->AddWay(way);
 			}
 
 
 			tiles->UnRef();
-			spans->UnRef();
 		}
 
 		TileSpans *GetTileSpans(TileList *tiles);
