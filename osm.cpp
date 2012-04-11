@@ -455,6 +455,11 @@ void OsmRelation::Resolve(IdObjectStore *nodeStore, IdObjectStore *wayStore)
 		{
 			resolvedAll = false;
 		}
+		else
+		{
+			// add ourselves to this way's relations
+			m_resolvedWays[i]->m_relations = new OsmRelationList(this, m_resolvedWays[i]->m_relations);
+		}
 	}
 
 	if (resolvedAll)

@@ -562,6 +562,8 @@ class IdObjectWithTags
 
 #define LONLATRESOLUTION 0x7FFFFFFF
 
+class OsmRelationList;
+
 class OsmNode
 	: public IdObjectWithTags
 {
@@ -612,6 +614,7 @@ class OsmWay
 		m_nodeRefs = NULL;
 		m_resolvedNodes = NULL;
 		m_numResolvedNodes = 0;
+		m_relations = NULL;
 	}
 
 	~OsmWay()
@@ -728,6 +731,19 @@ class OsmRelation
 	
 };
 
+
+class OsmRelationList
+	: public ListObject
+{
+	public:
+	OsmRelationList(OsmRelation *r, OsmRelationList *next)
+		: ListObject(next)
+	{
+		m_relation = r;
+	}
+
+	OsmRelation *m_relation;
+};
 
 class OsmData
 {
