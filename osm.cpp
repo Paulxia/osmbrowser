@@ -253,17 +253,22 @@ unsigned TagStore::AddValue(unsigned key, char const *value)
 	assert(m_values[key][m_numValues[key]]);
 
 
-//	if (m_numValues[key] > 10)
-//	{
+	if (m_numValues[key] > 10)
+	{
 		if (!m_valueMappers[key])
 		{
 			m_valueMappers[key] = new StringToIndexMapper;
+			for (unsigned i = 0; i < m_numValues[key]; i++)
+			{
+				wxString s = wxString(m_values[key][i], wxConvUTF8);
+				m_valueMappers[key]->insert(StringToIndexMapper::value_type(s, i));
+			}
 		}
 
 		wxString s = wxString(m_values[key][m_numValues[key]], wxConvUTF8);
 		m_valueMappers[key]->insert(StringToIndexMapper::value_type(s, m_numValues[key]));
 
-//	}
+	}
 
 
 	m_numValues[key]++;
