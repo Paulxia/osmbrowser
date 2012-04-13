@@ -253,7 +253,7 @@ unsigned TagStore::AddValue(unsigned key, char const *value)
 	assert(m_values[key][m_numValues[key]]);
 
 
-	if (m_numValues[key] > 10)
+	if (m_numValues[key] > 5)
 	{
 		if (!m_valueMappers[key])
 		{
