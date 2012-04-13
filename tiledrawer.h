@@ -357,6 +357,7 @@ class TileDrawer
 
 		// with default colours
 		void RenderWay(RenderJob *j, OsmWay *w);
+		void RenderRelation(RenderJob *j, OsmRelation *r);
 		void Rect(Renderer *renderer, wxString const &text, DRect const &re, double border, int r, int g, int b, int a, int layer)
 		{
 			Rect(renderer, text, re.m_x, re.m_y, re.m_x + re.m_w, re.m_y + re.m_h, border, r, g, b, a, layer);

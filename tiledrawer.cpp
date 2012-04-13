@@ -143,6 +143,48 @@ void TileDrawer::Rect(Renderer *renderer, wxString const &text, double lon1, dou
 	renderer->DrawCenteredText(text.mb_str(wxConvUTF8), (lon1 + lon2)/2, (lat1 + lat2)/2, 0, r, g, b, a,  layer);
 }
 
+
+// render using default colours. should plug in rule engine here
+void TileDrawer::RenderRelation(RenderJob *job, OsmRelation *r)
+{
+	bool draw = true;
+
+	if (m_drawRule && (m_drawRule->Evaluate(r) == LogicalExpression::S_FALSE))
+	{
+		draw = false;
+	}
+
+	if (draw)
+	{
+		wxColour c = wxColour(150,150,150);
+		bool poly = false;
+		int layer = 1;
+		if (m_colorRules)
+		{
+			for (int i = 0; i < m_colorRules->m_num; i++)
+			{
+				if (m_colorRules->m_rules[i]->Evaluate(r) == LogicalExpression::S_TRUE)
+				{
+					c = m_colorRules->m_pickers[i]->GetColour();
+					poly = m_colorRules->m_checkBoxes[i]->IsChecked();
+					layer = m_colorRules->m_layers[i]->GetSelection();
+					break; // stop after first match
+				}
+			}
+		}
+
+		if (job->m_curLayer < 0 || job->m_curLayer == layer)
+		{
+			for (unsigned i = 0; i < r->m_numResolvedWays; i++)
+			{
+				RenderWay(job->m_renderer, r->m_resolvedWays[i], c, poly, c, 1, job->m_curLayer <0 ? layer : 0);
+				job->m_renderedIds.Add(r->m_resolvedWays[i]->m_id);
+			}
+		}
+	}
+
+}
+
 // render using default colours. should plug in rule engine here
 void TileDrawer::RenderWay(RenderJob *job, OsmWay *w)
 {
